@@ -29,6 +29,7 @@
   <nav id="nav">
     <button class="nav active" data-view="dashboard">⌂ Dashboard</button>
     <button class="nav" data-view="today">✓ Today</button>
+    <button class="nav" data-view="sleepcentre">☾ Sleep Centre</button>
     <button class="nav" data-view="modern">✚ Modern Health</button>
     <button class="nav" data-view="ayurveda">ॐ Ayurveda</button>
     <button class="nav" data-view="ritu">☀ Ritu Intelligence</button>
@@ -36,9 +37,13 @@
     <button class="nav" data-view="investigations">⌁ Investigations</button>
     <button class="nav" data-view="medicines">Rx Medicines</button>
     <button class="nav" data-view="therapies">♨ Panchakarma & Therapies</button>
-    <button class="nav" data-view="lifestyle">⌁ Lifestyle</button>
+    <button class="nav" data-view="lifestyle">⌁ Lifestyle & Sadhana</button>
+    <button class="nav" data-view="physician">⚕ Physician Wellness</button>
     <button class="nav" data-view="mind">☯ Mind • Social • Spiritual</button>
-    <button class="nav" data-view="timeline">↗ Timeline & Outcomes</button>
+    <button class="nav" data-view="experiments">⚗ My Health Experiments</button>
+    <button class="nav" data-view="preventive">◷ Preventive Calendar</button>
+    <button class="nav" data-view="vault">▣ Health Vault</button>
+    <button class="nav" data-view="timeline">↗ Cause–Effect Timeline</button>
     <button class="nav" data-view="ai">✦ AI Health Review</button>
     <button class="nav" data-view="settings">⚙ Profile & Settings</button>
   </nav>
@@ -53,6 +58,14 @@
 
   <div class="alertbar" id="safetyBar">Add vitals and today’s check-in to activate personalized monitoring.</div>
 
+  <div class="domain-grid">
+    <article class="domain-card"><span>BODY</span><b id="domainBody">--</b><small>Vitals • pain • function</small></article>
+    <article class="domain-card"><span>RECOVERY</span><b id="domainRecovery">--</b><small>Sleep • energy • exercise</small></article>
+    <article class="domain-card"><span>METABOLIC</span><b id="domainMetabolic">--</b><small>Weight • BP • glucose</small></article>
+    <article class="domain-card"><span>AYURVEDA</span><b id="domainAyurveda">--</b><small>Agni • Ama • Dosha</small></article>
+    <article class="domain-card"><span>MIND</span><b id="domainMind">--</b><small>Peace • stress • social</small></article>
+    <article class="domain-card"><span>PURPOSE</span><b id="domainPurpose">--</b><small>Sadhana • study • consistency</small></article>
+  </div>
   <div class="metrics six">
     <article class="metric"><span>Weight</span><b id="mWeight">--</b><small>kg</small></article>
     <article class="metric"><span>BMI</span><b id="mBMI">--</b><small>kg/m²</small></article>
@@ -83,7 +96,7 @@
       <div id="trendWatch" class="timeline-mini"></div>
     </article>
     <article class="card">
-      <div class="cardtitle"><h3>AI Next Best Actions</h3><span class="pill teal">Rules + context</span></div>
+      <div class="cardtitle"><h3>Top 3 Priorities Today</h3><span class="pill teal">Rules + context</span></div>
       <ol id="nextActions" class="actions"></ol>
     </article>
   </div>
@@ -138,6 +151,42 @@
    <div id="dailyAutoSummary" class="summary-box">Add today’s data to generate your daily summary.</div>
  </article>
  <article class="card"><div class="cardtitle"><h3>Recent Daily Records</h3><span class="pill teal">Editable</span></div><div id="dailyTable"></div></article>
+</section>
+
+
+<section id="sleepcentre" class="view">
+ <div class="pagehead compact"><div><span class="eyebrow">RECOVERY INTELLIGENCE</span><h2>Sleep Centre</h2><p>Sleep timing, duration, quality and contributing habits — not just total hours.</p></div></div>
+ <div class="motivation">☾ “Recovery is not time wasted; it is the biological work that makes tomorrow possible.”</div>
+ <div class="grid2">
+  <article class="card">
+   <h3>Add / Edit Sleep Record</h3>
+   <div class="formgrid four">
+    <label>Date<input id="slDate" type="date"></label>
+    <label>Bedtime<input id="slBed" type="time"></label>
+    <label>Estimated sleep onset<input id="slOnset" type="time"></label>
+    <label>Wake time<input id="slWake" type="time"></label>
+    <label>Out of bed<input id="slOut" type="time"></label>
+    <label>Total sleep hours<input id="slHours" type="number" step=".1" readonly placeholder="Auto"></label>
+    <label>Night awakenings<input id="slAwaken" type="number"></label>
+    <label>Nap min<input id="slNap" type="number"></label>
+    <label>Sleep quality 0–10<input id="slQuality" type="number" min="0" max="10"></label>
+    <label>Late dinner<select id="slLateDinner"><option>No</option><option>Yes</option></select></label>
+    <label>Caffeine after 4 PM<select id="slCaffeine"><option>No</option><option>Yes</option></select></label>
+    <label>Screen last hour<select id="slScreen"><option>No</option><option>Yes</option></select></label>
+    <label>Exercise today min<input id="slExercise" type="number"></label>
+    <label>Stress 0–10<input id="slStress" type="number" min="0" max="10"></label>
+    <label>Jap/Meditation before sleep min<input id="slSadhana" type="number"></label>
+   </div>
+   <label>Notes<textarea id="slNote" placeholder="Pain, travel, unusual work hours, illness, alcohol, fasting, etc."></textarea></label>
+   <input type="hidden" id="slEditIndex">
+   <div class="buttons"><button class="primary" onclick="saveSleep()">Save Sleep</button><button class="ghost" onclick="resetSleepForm()">Clear</button></div>
+  </article>
+  <article class="card">
+   <div class="cardtitle"><h3>Sleep Intelligence</h3><span class="pill teal">7-day view</span></div>
+   <div id="sleepSummary" class="summary-box">Add sleep records to activate sleep intelligence.</div>
+  </article>
+ </div>
+ <article class="card"><div class="cardtitle"><h3>Sleep History</h3><span class="pill teal">Edit / Delete</span></div><div id="sleepTable"></div></article>
 </section>
 
 <section id="modern" class="view">
@@ -367,6 +416,38 @@
  <article class="card"><div class="cardtitle"><h3>Habit History</h3><span class="pill teal">Edit / Delete</span></div><div id="habitTable"></div></article>
 </section>
 
+
+<section id="physician" class="view">
+ <div class="pagehead compact"><div><span class="eyebrow">DOCTOR HEALTH</span><h2>Physician Wellness</h2><p>The clinician’s own health deserves a structured round too.</p></div></div>
+ <div class="motivation">⚕ “You can serve consistently only when recovery, nutrition, movement and meaning are protected.”</div>
+ <article class="card">
+  <div class="formgrid four">
+   <label>Date<input id="phDate" type="date"></label>
+   <label>Work hours<input id="phWork" type="number" step=".5"></label>
+   <label>Patients / clinical load<input id="phPatients" type="number"></label>
+   <label>Continuous sitting hours<input id="phSitting" type="number" step=".5"></label>
+   <label>Meal missed?<select id="phMeal"><option>No</option><option>Yes</option></select></label>
+   <label>Hydration missed?<select id="phWater"><option>No</option><option>Yes</option></select></label>
+   <label>Neck/back strain 0–10<input id="phPain" type="number" min="0" max="10"></label>
+   <label>Eye strain 0–10<input id="phEye" type="number" min="0" max="10"></label>
+   <label>Mental fatigue 0–10<input id="phFatigue" type="number" min="0" max="10"></label>
+   <label>Emotional exhaustion 0–10<input id="phExhaust" type="number" min="0" max="10"></label>
+   <label>Family/social time min<input id="phSocial" type="number"></label>
+   <label>Study min<input id="phStudy" type="number"></label>
+   <label>Sadhana min<input id="phSadhana" type="number"></label>
+   <label>Recovery break min<input id="phBreak" type="number"></label>
+  </div>
+  <label>What drained / restored me today?<textarea id="phNote"></textarea></label>
+  <input type="hidden" id="phEditIndex">
+  <div class="buttons"><button class="primary" onclick="savePhysician()">Save Physician Round</button><button class="ghost" onclick="resetPhysicianForm()">Clear</button></div>
+ </article>
+ <div class="grid2">
+  <article class="card"><h3>Physician Wellness Summary</h3><div id="physicianSummary" class="summary-box"></div></article>
+  <article class="card"><h3>Protective Actions</h3><div id="physicianActions" class="summary-box"></div></article>
+ </div>
+ <article class="card"><div id="physicianTable"></div></article>
+</section>
+
 <section id="mind" class="view">
  <div class="pagehead compact"><div><span class="eyebrow">WHOLE-PERSON WELLBEING</span><h2>Physical • Mental • Social • Spiritual</h2></div></div>
  <article class="card">
@@ -389,6 +470,72 @@
  </article>
 </section>
 
+
+<section id="experiments" class="view">
+ <div class="pagehead compact"><div><span class="eyebrow">N-OF-1 LEARNING</span><h2>My Health Experiments</h2><p>Track one intentional change, define outcome, and review association over time.</p></div></div>
+ <div class="alertbar warn">Association is not proof of causation. Use experiments for observation and behaviour learning, not unsafe medication or procedure self-testing.</div>
+ <article class="card">
+  <div class="formgrid four">
+   <label>Experiment<input id="exName" placeholder="Morning walk / hydration / earlier bedtime..."></label>
+   <label>Category<select id="exCategory"><option>Exercise</option><option>Sleep</option><option>Diet</option><option>Hydration</option><option>Sadhana</option><option>Ayurveda routine</option><option>Medication observation</option><option>Other</option></select></label>
+   <label>Start date<input id="exStart" type="date"></label>
+   <label>Planned end<input id="exEnd" type="date"></label>
+   <label>Primary outcome<input id="exOutcome" placeholder="BP / weight / pain / sleep quality..."></label>
+   <label>Baseline value<input id="exBaseline"></label>
+   <label>Latest value<input id="exLatest"></label>
+   <label>Status<select id="exStatus"><option>Planned</option><option>Active</option><option>Completed</option><option>Stopped</option></select></label>
+  </div>
+  <label>Protocol / what exactly will change<textarea id="exProtocol"></textarea></label>
+  <label>Interpretation / what I learned<textarea id="exLearning"></textarea></label>
+  <input type="hidden" id="exEditIndex">
+  <div class="buttons"><button class="primary" onclick="saveExperiment()">Save Experiment</button><button class="ghost" onclick="resetExperimentForm()">Clear</button></div>
+ </article>
+ <article class="card"><h3>Experiment Auto Summary</h3><div id="experimentSummary" class="summary-box"></div></article>
+ <article class="card"><div id="experimentTable"></div></article>
+</section>
+
+
+<section id="preventive" class="view">
+ <div class="pagehead compact"><div><span class="eyebrow">PREVENTIVE CARE</span><h2>Preventive Calendar</h2><p>Keep health maintenance visible without turning generic screening into unnecessary testing.</p></div></div>
+ <article class="card">
+  <div class="formgrid four">
+   <label>Item<input id="pvItem" placeholder="BP review / HbA1c / dental / eye..."></label>
+   <label>Category<select id="pvCategory"><option>Clinical review</option><option>Laboratory</option><option>Imaging</option><option>Dental</option><option>Eye</option><option>Vaccination</option><option>Ayurveda review</option><option>Other</option></select></label>
+   <label>Due date<input id="pvDue" type="date"></label>
+   <label>Priority<select id="pvPriority"><option>Routine</option><option>Important</option><option>High</option></select></label>
+   <label>Status<select id="pvStatus"><option>Due</option><option>Planned</option><option>Completed</option><option>Deferred after review</option></select></label>
+   <label>Last done<input id="pvLast" type="date"></label>
+  </div>
+  <label>Reason / clinical context<textarea id="pvNote" placeholder="Why is this due? Based on age, previous result, medicine, disease or clinician recommendation."></textarea></label>
+  <input type="hidden" id="pvEditIndex">
+  <div class="buttons"><button class="primary" onclick="savePreventive()">Save Preventive Item</button><button class="ghost" onclick="resetPreventiveForm()">Clear</button></div>
+ </article>
+ <article class="card"><h3>Due / Upcoming</h3><div id="preventiveSummary" class="summary-box"></div></article>
+ <article class="card"><div id="preventiveTable"></div></article>
+</section>
+
+
+<section id="vault" class="view">
+ <div class="pagehead compact"><div><span class="eyebrow">PERSONAL HEALTH RECORD</span><h2>Health Vault</h2><p>One searchable index for reports, prescriptions, images, Ayurveda assessments and preventive records.</p></div></div>
+ <article class="card">
+  <div class="formgrid four">
+   <label>Date<input id="vlDate" type="date"></label>
+   <label>Document type<select id="vlType"><option>Lab report</option><option>Prescription</option><option>X-Ray</option><option>USG</option><option>CT</option><option>MRI</option><option>ECG</option><option>DEXA</option><option>Clinical photo</option><option>Ayurveda assessment</option><option>Panchakarma record</option><option>Blood donation</option><option>Dental</option><option>Eye</option><option>Other</option></select></label>
+   <label>Body system<input id="vlSystem" placeholder="Spine / liver / metabolic..."></label>
+   <label>Title<input id="vlTitle"></label>
+  </div>
+  <label>Summary<textarea id="vlSummary"></textarea></label>
+  <div class="attachment-box">
+    <div><b>Attach file</b><small>Photo, camera image or PDF. V4 prototype indexes file metadata locally.</small></div>
+    <div class="attach-actions"><label class="filebtn">📎 File / PDF<input type="file" id="vlFile" accept="image/*,.pdf"></label><label class="filebtn">📷 Camera<input type="file" id="vlCamera" accept="image/*" capture="environment"></label></div>
+    <div id="vlFileName" class="file-name"></div>
+  </div>
+  <input type="hidden" id="vlEditIndex">
+  <div class="buttons"><button class="primary" onclick="saveVault()">Save to Vault</button><button class="ghost" onclick="resetVaultForm()">Clear</button></div>
+ </article>
+ <article class="card"><div class="cardtitle"><h3>Search Health Vault</h3><input class="search" id="vaultSearch" placeholder="MRI lumbar / uric acid / prescription..." oninput="renderVault()"></div><div id="vaultTable"></div></article>
+</section>
+
 <section id="timeline" class="view">
  <div class="pagehead compact"><div><span class="eyebrow">LONGITUDINAL OUTCOMES</span><h2>What changed, when, and after what?</h2><p>Designed to connect labs, medicines, procedures and habits across time.</p></div></div>
  <div class="toolbar"><select id="timelineFilter" onchange="renderTimeline()"><option>All</option><option>Daily</option><option>Lab</option><option>Imaging</option><option>Medicine</option><option>Therapy</option><option>Mind</option></select></div>
@@ -400,7 +547,7 @@
  <div class="grid2">
   <article class="card">
    <div class="cardtitle"><h3>AI Review Controls</h3><span class="pill teal">Local prototype</span></div>
-   <label>Focus<select id="aiFocus"><option>Whole health review</option><option>Metabolic health</option><option>Cardiovascular</option><option>Gut & digestion</option><option>Musculoskeletal</option><option>Sleep & recovery</option><option>Mental-spiritual balance</option><option>Ayurveda seasonal review</option></select></label>
+   <label>Copilot Mode<select id="aiFocus"><option>Integrated Review</option><option>Clinical Copilot</option><option>Ayurveda Copilot</option><option>Life & Habit Coach</option><option>Sleep & Recovery</option><option>Physician Wellness</option><option>Metabolic health</option><option>Cardiovascular</option><option>Gut & digestion</option><option>Musculoskeletal</option></select></label>
    <label>Question<textarea id="aiQuestion" placeholder="What should I review this month? Why did uric acid change? Which investigation is overdue?"></textarea></label>
    <button class="primary" onclick="generateAI()">Generate Integrated Review</button>
   </article>

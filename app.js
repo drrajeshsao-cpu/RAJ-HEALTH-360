@@ -2,7 +2,7 @@
 const KEY="raj_health_360_v2";
 const defaultDB={
  profile:{name:"",dob:"",sex:"Male",height:"",blood:"",allergy:"",conditions:"",emergency:"",goals:""},
- daily:[],labs:[],imaging:[],medicines:[],therapies:[],mind:[],habits:[],
+ daily:[],labs:[],imaging:[],medicines:[],therapies:[],mind:[],habits:[],sleep:[],physician:[],experiments:[],preventive:[],vault:[],
  ayurveda:{prakriti:"Vata-Pitta",vikriti:"",agni:"Sama",koshta:"Madhyama",ama:"Absent",bala:"Madhyama",ashtavidha:{},dashavidha:{},dosha:{vata:5,pitta:5,kapha:5,note:""}},
  ritu:{auto:true,ritu:"Varsha",desha:"Sadharana"}, shatkriya:{stage:"Sanchaya",note:""}
 };
@@ -19,7 +19,7 @@ function showView(id){
  window.scrollTo({top:0,behavior:"smooth"})
 }
 document.querySelectorAll(".nav").forEach(x=>x.onclick=()=>showView(x.dataset.view));
-["tdDate","labDate","imgDate","txDate","msDate"].forEach(id=>{if($(id))$(id).value=today()});
+["tdDate","labDate","imgDate","txDate","msDate","slDate","phDate","exStart","pvDue","vlDate"].forEach(id=>{if($(id))$(id).value=today()});
 $("themeBtn").onclick=()=>document.body.classList.toggle("dark");
 $("backupBtn").onclick=exportData;
 
@@ -101,10 +101,10 @@ function calcSleepDuration(){
 function fileMetaFromInput(id,key){
  const f=$(id)?.files?.[0]; if(!f)return;
  pendingFiles[key]={name:f.name,type:f.type,size:f.size};
- const label={td:"tdFileName",ayu:"ayuFileName",lab:"labFileName",img:"imgFileName",med:"medFileName",tx:"txFileName"}[key];
+ const label={td:"tdFileName",ayu:"ayuFileName",lab:"labFileName",img:"imgFileName",med:"medFileName",tx:"txFileName",vl:"vlFileName"}[key];
  if($(label))$(label).textContent=`Selected: ${f.name} (${Math.round(f.size/1024)} KB)`;
 }
-[["tdFile","td"],["tdCamera","td"],["ayuFile","ayu"],["ayuCamera","ayu"],["labFile","lab"],["labCamera","lab"],["imgFile","img"],["imgCamera","img"],["medFile","med"],["medCamera","med"],["txFile","tx"],["txCamera","tx"]].forEach(([id,key])=>{if($(id))$(id).addEventListener("change",()=>fileMetaFromInput(id,key))});
+[["tdFile","td"],["tdCamera","td"],["ayuFile","ayu"],["ayuCamera","ayu"],["labFile","lab"],["labCamera","lab"],["imgFile","img"],["imgCamera","img"],["medFile","med"],["medCamera","med"],["txFile","tx"],["txCamera","tx"],["vlFile","vl"],["vlCamera","vl"]].forEach(([id,key])=>{if($(id))$(id).addEventListener("change",()=>fileMetaFromInput(id,key))});
 
 function saveToday(){
  const obj={date:v("tdDate"),weight:n("tdWeight"),sbp:n("tdSBP"),dbp:n("tdDBP"),sugar:n("tdSugar"),
@@ -205,7 +205,7 @@ function nextActions(){
  const rd=rituData[db.ritu.ritu]; actions.push(`Ritu lens (${db.ritu.ritu}): ${rd.focus}.`);
  const lastTx=db.therapies[0]; if(lastTx&&lastTx.outcome==="Worsened")actions.push(`Review the recent ${lastTx.name} intervention before repeating it because you recorded worsening.`);
  if(actions.length<4)actions.push("Add one measurable health goal for the next 2–4 weeks and track outcome before changing multiple variables.");
- return actions.slice(0,6)
+ return actions.slice(0,3)
 }
 
 function saveHabit(){
@@ -219,6 +219,96 @@ function saveHabit(){
 function editHabit(i){const x=db.habits[i];showView("lifestyle");const map={hbDate:"date",hbHabit:"habit",hbStart:"start",hbEnd:"end",hbDuration:"duration",hbTarget:"target",hbQuality:"quality",hbStatus:"status",hbNote:"note"};Object.entries(map).forEach(([id,k])=>$(id).value=x[k]??"");$("hbEditIndex").value=i}
 function deleteHabit(i){if(confirm("Delete this habit entry?")){db.habits.splice(i,1);persist();generateHabitSummary()}}
 function resetHabitForm(){["hbStart","hbEnd","hbDuration","hbTarget","hbQuality","hbNote","hbEditIndex"].forEach(id=>$(id).value="");$("hbDate").value=today()}
+
+
+function timeDurationHours(start,end){
+ if(!start||!end)return 0;
+ let [sh,sm]=start.split(":").map(Number),[eh,em]=end.split(":").map(Number);
+ let mins=(eh*60+em)-(sh*60+sm); if(mins<0)mins+=1440; return +(mins/60).toFixed(1)
+}
+["slOnset","slWake"].forEach(id=>{if($(id))$(id).addEventListener("change",()=>{$("slHours").value=timeDurationHours(v("slOnset"),v("slWake"))||""})});
+
+function saveSleep(){
+ let obj={date:v("slDate"),bed:v("slBed"),onset:v("slOnset"),wake:v("slWake"),out:v("slOut"),hours:n("slHours")||timeDurationHours(v("slOnset"),v("slWake")),awaken:n("slAwaken"),nap:n("slNap"),quality:n("slQuality"),lateDinner:v("slLateDinner"),caffeine:v("slCaffeine"),screen:v("slScreen"),exercise:n("slExercise"),stress:n("slStress"),sadhana:n("slSadhana"),note:v("slNote")};
+ let i=v("slEditIndex"); if(i!=="")db.sleep[+i]=obj;else db.sleep.unshift(obj);resetSleepForm();persist()
+}
+function editSleep(i){let x=db.sleep[i];showView("sleepcentre");let m={slDate:"date",slBed:"bed",slOnset:"onset",slWake:"wake",slOut:"out",slHours:"hours",slAwaken:"awaken",slNap:"nap",slQuality:"quality",slLateDinner:"lateDinner",slCaffeine:"caffeine",slScreen:"screen",slExercise:"exercise",slStress:"stress",slSadhana:"sadhana",slNote:"note"};Object.entries(m).forEach(([id,k])=>$(id).value=x[k]??"");$("slEditIndex").value=i}
+function deleteSleep(i){if(confirm("Delete sleep record?")){db.sleep.splice(i,1);persist()}}
+function resetSleepForm(){["slBed","slOnset","slWake","slOut","slHours","slAwaken","slNap","slQuality","slExercise","slStress","slSadhana","slNote","slEditIndex"].forEach(id=>{if($(id))$(id).value=""});if($("slDate"))$("slDate").value=today()}
+function renderSleep(){
+ if(!$("sleepTable"))return;
+ let rows=db.sleep.map((x,i)=>({...x,window:`${x.onset||"-"} → ${x.wake||"-"}`,act:`<button class="action-btn edit-btn" onclick="editSleep(${i})">Edit</button><button class="action-btn delete-btn" onclick="deleteSleep(${i})">Delete</button>`}));
+ $("sleepTable").innerHTML=table(rows,[["Date","date"],["Sleep window","window"],["Hours","hours"],["Quality",x=>`${x.quality||0}/10`],["Awakenings","awaken"],["Stress",x=>`${x.stress||0}/10`],["Action","act"]]);
+ let s=db.sleep.slice(0,7);if(!s.length){$("sleepSummary").textContent="No sleep data yet.";return}
+ let avg=k=>(s.reduce((a,x)=>a+(Number(x[k])||0),0)/s.length).toFixed(1);
+ let irregular=s.map(x=>x.onset).filter(Boolean);
+ $("sleepSummary").textContent=`Last ${s.length} records\nAverage sleep: ${avg("hours")} h\nAverage quality: ${avg("quality")}/10\nAverage awakenings: ${avg("awaken")}\nAverage stress: ${avg("stress")}/10\n\nPattern check: ${s.filter(x=>x.screen==="Yes").length} night(s) had screen use in the last hour; ${s.filter(x=>x.caffeine==="Yes").length} had late caffeine; ${s.filter(x=>x.lateDinner==="Yes").length} had late dinner.\n\nFocus on timing consistency, adequate duration and the factor that most often accompanies poor-quality nights.`;
+}
+
+function savePhysician(){
+ let o={date:v("phDate"),work:n("phWork"),patients:n("phPatients"),sitting:n("phSitting"),meal:v("phMeal"),water:v("phWater"),pain:n("phPain"),eye:n("phEye"),fatigue:n("phFatigue"),exhaust:n("phExhaust"),social:n("phSocial"),study:n("phStudy"),sadhana:n("phSadhana"),breaks:n("phBreak"),note:v("phNote")};
+ let i=v("phEditIndex");if(i!=="")db.physician[+i]=o;else db.physician.unshift(o);resetPhysicianForm();persist()
+}
+function editPhysician(i){let x=db.physician[i];showView("physician");let m={phDate:"date",phWork:"work",phPatients:"patients",phSitting:"sitting",phMeal:"meal",phWater:"water",phPain:"pain",phEye:"eye",phFatigue:"fatigue",phExhaust:"exhaust",phSocial:"social",phStudy:"study",phSadhana:"sadhana",phBreak:"breaks",phNote:"note"};Object.entries(m).forEach(([id,k])=>$(id).value=x[k]??"");$("phEditIndex").value=i}
+function deletePhysician(i){if(confirm("Delete physician wellness record?")){db.physician.splice(i,1);persist()}}
+function resetPhysicianForm(){["phWork","phPatients","phSitting","phPain","phEye","phFatigue","phExhaust","phSocial","phStudy","phSadhana","phBreak","phNote","phEditIndex"].forEach(id=>{if($(id))$(id).value=""});if($("phDate"))$("phDate").value=today()}
+function renderPhysician(){
+ if(!$("physicianTable"))return;let p=db.physician.slice(0,14);
+ $("physicianTable").innerHTML=table(db.physician.map((x,i)=>({...x,act:`<button class="action-btn edit-btn" onclick="editPhysician(${i})">Edit</button><button class="action-btn delete-btn" onclick="deletePhysician(${i})">Delete</button>`})),[["Date","date"],["Work h","work"],["Patients","patients"],["Sitting h","sitting"],["Fatigue",x=>`${x.fatigue}/10`],["Exhaustion",x=>`${x.exhaust}/10`],["Action","act"]]);
+ if(!p.length){$("physicianSummary").textContent="No physician wellness records yet.";$("physicianActions").textContent="Add a workday round to get protective actions.";return}
+ let a=k=>(p.reduce((s,x)=>s+(Number(x[k])||0),0)/p.length).toFixed(1), latest=p[0], acts=[];
+ if(latest.sitting>=4)acts.push("Break prolonged sitting with short movement/mobility intervals.");
+ if(latest.meal==="Yes")acts.push("Protect a realistic meal window on heavy OPD days.");
+ if(latest.water==="Yes")acts.push("Pre-position water and use planned hydration cues.");
+ if(latest.fatigue>=7||latest.exhaust>=7)acts.push("Reduce nonessential load and protect sleep/recovery; persistent exhaustion deserves a broader review.");
+ if(latest.pain>=6)acts.push("Review workstation, posture, mobility and the clinical cause of persistent neck/back pain.");
+ if(!acts.length)acts.push("Current workday pattern has no major rule-based warning; preserve the habits that are working.");
+ $("physicianSummary").textContent=`Recent ${p.length} workdays\nAverage work: ${a("work")} h/day\nAverage sitting: ${a("sitting")} h/day\nMental fatigue: ${a("fatigue")}/10\nEmotional exhaustion: ${a("exhaust")}/10\nAverage sadhana: ${a("sadhana")} min/day`;
+ $("physicianActions").textContent="• "+acts.join("\n• ");
+}
+
+function saveExperiment(){
+ let o={name:v("exName"),category:v("exCategory"),start:v("exStart"),end:v("exEnd"),outcome:v("exOutcome"),baseline:v("exBaseline"),latest:v("exLatest"),status:v("exStatus"),protocol:v("exProtocol"),learning:v("exLearning")};
+ let i=v("exEditIndex");if(i!=="")db.experiments[+i]=o;else db.experiments.unshift(o);resetExperimentForm();persist()
+}
+function editExperiment(i){let x=db.experiments[i];showView("experiments");let m={exName:"name",exCategory:"category",exStart:"start",exEnd:"end",exOutcome:"outcome",exBaseline:"baseline",exLatest:"latest",exStatus:"status",exProtocol:"protocol",exLearning:"learning"};Object.entries(m).forEach(([id,k])=>$(id).value=x[k]??"");$("exEditIndex").value=i}
+function deleteExperiment(i){if(confirm("Delete experiment?")){db.experiments.splice(i,1);persist()}}
+function resetExperimentForm(){["exName","exEnd","exOutcome","exBaseline","exLatest","exProtocol","exLearning","exEditIndex"].forEach(id=>{if($(id))$(id).value=""});if($("exStart"))$("exStart").value=today()}
+function renderExperiments(){
+ if(!$("experimentTable"))return;
+ $("experimentTable").innerHTML=table(db.experiments.map((x,i)=>({...x,act:`<button class="action-btn edit-btn" onclick="editExperiment(${i})">Edit</button><button class="action-btn delete-btn" onclick="deleteExperiment(${i})">Delete</button>`})),[["Experiment","name"],["Category","category"],["Start","start"],["Outcome","outcome"],["Baseline","baseline"],["Latest","latest"],["Status","status"],["Action","act"]]);
+ let a=db.experiments;if(!a.length){$("experimentSummary").textContent="No health experiments yet.";return}
+ let active=a.filter(x=>x.status==="Active"), completed=a.filter(x=>x.status==="Completed");
+ $("experimentSummary").textContent=`${active.length} active • ${completed.length} completed.\n\nBest practice: change one major variable at a time, define an outcome before starting, and record confounders such as illness, travel, medication changes, sleep and season.`;
+}
+
+function savePreventive(){
+ let o={item:v("pvItem"),category:v("pvCategory"),due:v("pvDue"),priority:v("pvPriority"),status:v("pvStatus"),last:v("pvLast"),note:v("pvNote")};
+ let i=v("pvEditIndex");if(i!=="")db.preventive[+i]=o;else db.preventive.unshift(o);resetPreventiveForm();persist()
+}
+function editPreventive(i){let x=db.preventive[i];showView("preventive");let m={pvItem:"item",pvCategory:"category",pvDue:"due",pvPriority:"priority",pvStatus:"status",pvLast:"last",pvNote:"note"};Object.entries(m).forEach(([id,k])=>$(id).value=x[k]??"");$("pvEditIndex").value=i}
+function deletePreventive(i){if(confirm("Delete preventive item?")){db.preventive.splice(i,1);persist()}}
+function resetPreventiveForm(){["pvItem","pvLast","pvNote","pvEditIndex"].forEach(id=>{if($(id))$(id).value=""});if($("pvDue"))$("pvDue").value=today()}
+function renderPreventive(){
+ if(!$("preventiveTable"))return;
+ let rows=db.preventive.map((x,i)=>({...x,act:`<button class="action-btn edit-btn" onclick="editPreventive(${i})">Edit</button><button class="action-btn delete-btn" onclick="deletePreventive(${i})">Delete</button>`}));
+ $("preventiveTable").innerHTML=table(rows,[["Item","item"],["Category","category"],["Due","due"],["Priority","priority"],["Status","status"],["Last done","last"],["Action","act"]]);
+ let now=today(), due=db.preventive.filter(x=>x.status!=="Completed").sort((a,b)=>(a.due||"").localeCompare(b.due||"")).slice(0,6);
+ $("preventiveSummary").textContent=due.length?due.map(x=>`${x.due||"No date"} — ${x.item} [${x.priority}]`).join("\n"):"No due preventive items recorded.";
+}
+
+function saveVault(){
+ let o={date:v("vlDate"),type:v("vlType"),system:v("vlSystem"),title:v("vlTitle"),summary:v("vlSummary"),attachment:pendingFiles.vl||null};
+ let i=v("vlEditIndex");if(i!=="")db.vault[+i]=o;else db.vault.unshift(o);resetVaultForm();persist()
+}
+function editVault(i){let x=db.vault[i];showView("vault");let m={vlDate:"date",vlType:"type",vlSystem:"system",vlTitle:"title",vlSummary:"summary"};Object.entries(m).forEach(([id,k])=>$(id).value=x[k]??"");$("vlEditIndex").value=i}
+function deleteVault(i){if(confirm("Delete vault item?")){db.vault.splice(i,1);persist()}}
+function resetVaultForm(){["vlSystem","vlTitle","vlSummary","vlEditIndex"].forEach(id=>{if($(id))$(id).value=""});if($("vlDate"))$("vlDate").value=today();pendingFiles.vl=null;if($("vlFileName"))$("vlFileName").textContent=""}
+function renderVault(){
+ if(!$("vaultTable"))return;let q=(v("vaultSearch")||"").toLowerCase();
+ let rows=db.vault.map((x,i)=>({...x,file:x.attachment?.name||"",act:`<button class="action-btn edit-btn" onclick="editVault(${i})">Edit</button><button class="action-btn delete-btn" onclick="deleteVault(${i})">Delete</button>`})).filter(x=>JSON.stringify(x).toLowerCase().includes(q));
+ $("vaultTable").innerHTML=table(rows,[["Date","date"],["Type","type"],["System","system"],["Title","title"],["File","file"],["Summary","summary"],["Action","act"]])
+}
 
 function generateDailySummary(){
  const d=db.daily[0]; if(!d||!$("dailyAutoSummary"))return;
@@ -263,6 +353,22 @@ function generateHabitSummary(){
 
 function renderDashboard(){
  const d=db.daily[0]||{},p=db.profile||{};
+
+ const pct=x=>Math.max(0,Math.min(100,Math.round(x)));
+ let bodyVals=[]; if(d.pain||d.pain===0)bodyVals.push((10-d.pain)*10); if(d.energy||d.energy===0)bodyVals.push(d.energy*10);
+ let recoveryVals=[]; if(d.sleep)recoveryVals.push(Math.min(100,d.sleep/8*100)); if(d.exercise||d.exercise===0)recoveryVals.push(Math.min(100,d.exercise/30*100)); if(d.energy||d.energy===0)recoveryVals.push(d.energy*10);
+ let metabolicVals=[]; if(d.sbp)metabolicVals.push(d.sbp<130&&d.dbp<80?90:(d.sbp<140&&d.dbp<90?70:45)); if(d.sugar)metabolicVals.push(d.sugar<100?90:(d.sugar<126?70:45)); if(d.weight&&p.height){let bmi=d.weight/((p.height/100)**2);metabolicVals.push(bmi>=18.5&&bmi<25?90:(bmi<30?70:50))}
+ let ayuVals=[db.ayurveda.agni==="Sama"?90:65,db.ayurveda.ama==="Absent"?90:(db.ayurveda.ama==="Mild"?70:45)];
+ let mindVals=[]; if(d.peace||d.peace===0)mindVals.push(d.peace*10); if(d.stress||d.stress===0)mindVals.push((10-d.stress)*10);
+ let purposeVals=[]; if(d.jap||d.puja||d.meditation)purposeVals.push(Math.min(100,(d.jap+d.puja+d.meditation)/45*100)); if(d.study)purposeVals.push(Math.min(100,d.study/60*100));
+ const avg=v=>v.length?pct(v.reduce((a,b)=>a+b,0)/v.length):"--";
+ if($("domainBody"))$("domainBody").textContent=avg(bodyVals);
+ if($("domainRecovery"))$("domainRecovery").textContent=avg(recoveryVals);
+ if($("domainMetabolic"))$("domainMetabolic").textContent=avg(metabolicVals);
+ if($("domainAyurveda"))$("domainAyurveda").textContent=avg(ayuVals);
+ if($("domainMind"))$("domainMind").textContent=avg(mindVals);
+ if($("domainPurpose"))$("domainPurpose").textContent=avg(purposeVals);
+
  $("mWeight").textContent=d.weight||"--";
  $("mBMI").textContent=d.weight&&p.height?(d.weight/((p.height/100)**2)).toFixed(1):"--";
  $("mBP").textContent=d.sbp&&d.dbp?`${d.sbp}/${d.dbp}`:"--";
@@ -292,6 +398,9 @@ function getTimeline(){
  db.medicines.forEach(x=>a.push({date:x.start,type:"Medicine",text:`Started ${x.name} ${x.dose||""} ${x.freq||""} • ${x.benefit||""}`}));
  db.therapies.forEach(x=>a.push({date:x.date,type:"Therapy",text:`${x.name}: ${x.outcome} • before ${x.before||"-"}/10 → after ${x.after||"-"}/10`}));
  db.mind.forEach(x=>a.push({date:x.date,type:"Mind",text:`Peace ${x.peace}/10 • stress ${x.stress}/10 • social ${x.social}/10 • jap ${x.jap} min`}));
+ db.sleep.forEach(x=>a.push({date:x.date,type:"Sleep",text:`Sleep ${x.hours||"-"} h • quality ${x.quality||"-"}/10 • stress ${x.stress||"-"}/10`}));
+ db.physician.forEach(x=>a.push({date:x.date,type:"Physician",text:`Work ${x.work||"-"} h • fatigue ${x.fatigue||"-"}/10 • exhaustion ${x.exhaust||"-"}/10`}));
+ db.experiments.forEach(x=>a.push({date:x.start,type:"Experiment",text:`${x.name}: ${x.baseline||"-"} → ${x.latest||"-"} • ${x.status}`}));
  return a.sort((x,y)=>(y.date||"").localeCompare(x.date||""))
 }
 function renderTimeline(){
@@ -303,7 +412,12 @@ function generateAI(){
  const abnormal=clinicalAlerts(); const meds=db.medicines.filter(x=>!x.stop).slice(0,10).map(x=>`${x.name} (${x.type}) ${x.dose} ${x.freq} for ${x.purpose||x.target}`).join("\n• ");
  const recentLabs=db.labs.slice(0,10).map(x=>`${x.date} — ${x.test}: ${x.value} ${x.unit||""} [${x.range||"range not entered"}]`).join("\n• ");
  const tx=db.therapies.slice(0,5).map(x=>`${x.date} — ${x.name}: ${x.outcome}; adverse effect: ${x.ae||"none recorded"}`).join("\n• ");
- let out=`RAJ HEALTH 360 — INTEGRATED REVIEW\nFocus: ${focus}\nQuestion: ${q||"General review"}\n\n1) SAFETY / CLINICAL ATTENTION\n• ${abnormal.join("\n• ")}\n\n2) CURRENT SNAPSHOT\n• Weight: ${d.weight||"-"} kg | BP: ${d.sbp||"-"}/${d.dbp||"-"} | Glucose: ${d.sugar||"-"}\n• Sleep: ${d.sleep||"-"} h | Exercise: ${d.exercise||"-"} min | Water: ${d.water||"-"} L\n• Energy: ${d.energy||"-"}/10 | Peace: ${d.peace||"-"}/10 | Stress: ${d.stress||"-"}/10\n\n3) AYURVEDA CONTEXT\n• Prakriti: ${db.ayurveda.prakriti} | Vikriti: ${db.ayurveda.vikriti||"-"} | Agni: ${db.ayurveda.agni} | Ama: ${db.ayurveda.ama}\n• Ritu: ${db.ritu.ritu} — ${r.dosha}\n• Shatkriyakala conceptual stage: ${db.shatkriya.stage}\n• Seasonal focus: ${r.focus}\n\n4) NEXT BEST ACTIONS\n• ${nextActions().join("\n• ")}\n\n5) CURRENT MEDICINES\n• ${meds||"None entered"}\n\n6) RECENT LABS\n• ${recentLabs||"None entered"}\n\n7) RECENT INTERVENTIONS / OUTCOMES\n• ${tx||"None entered"}\n\n8) DECISION RULE\nChange the fewest variables needed, document the reason, set a measurable outcome, and reassess. Do not start/stop prescription medicines or intensive Panchakarma solely from this prototype.`;
+ let out=`RAJ HEALTH 360 — INTEGRATED REVIEW\nFocus: ${focus}\nQuestion: ${q||"General review"}\n\n1) SAFETY / CLINICAL ATTENTION\n• ${abnormal.join("\n• ")}\n\n2) CURRENT SNAPSHOT\n• Weight: ${d.weight||"-"} kg | BP: ${d.sbp||"-"}/${d.dbp||"-"} | Glucose: ${d.sugar||"-"}\n• Sleep: ${d.sleep||"-"} h | Exercise: ${d.exercise||"-"} min | Water: ${d.water||"-"} L\n• Energy: ${d.energy||"-"}/10 | Peace: ${d.peace||"-"}/10 | Stress: ${d.stress||"-"}/10\n\n3) AYURVEDA CONTEXT\n• Prakriti: ${db.ayurveda.prakriti} | Vikriti: ${db.ayurveda.vikriti||"-"} | Agni: ${db.ayurveda.agni} | Ama: ${db.ayurveda.ama}\n• Ritu: ${db.ritu.ritu} — ${r.dosha}\n• Shatkriyakala conceptual stage: ${db.shatkriya.stage}\n• Seasonal focus: ${r.focus}\n\n4) NEXT BEST ACTIONS\n• ${nextActions().join("\n• ")}\n\n5) CURRENT MEDICINES\n• ${meds||"None entered"}\n\n6) RECENT LABS\n• ${recentLabs||"None entered"}\n\n7) RECENT INTERVENTIONS / OUTCOMES\n• ${tx||"None entered"}\n\n8) PHYSICIAN / RECOVERY CONTEXT
+• Latest sleep: ${db.sleep[0]?`${db.sleep[0].hours} h, quality ${db.sleep[0].quality}/10`:"No Sleep Centre record"}
+• Latest physician wellness: ${db.physician[0]?`work ${db.physician[0].work} h, fatigue ${db.physician[0].fatigue}/10, exhaustion ${db.physician[0].exhaust}/10`:"No physician wellness record"}
+• Active health experiments: ${db.experiments.filter(x=>x.status==="Active").map(x=>x.name).join(", ")||"None"}
+
+9) DECISION RULE\nChange the fewest variables needed, document the reason, set a measurable outcome, and reassess. Do not start/stop prescription medicines or intensive Panchakarma solely from this prototype.`;
  $("aiOutput").textContent=out
 }
 function exportData(){const blob=new Blob([JSON.stringify(db,null,2)],{type:"application/json"});const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download=`RAJ_HEALTH_360_BACKUP_${today()}.json`;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),500)}
@@ -325,6 +439,6 @@ function renderTables(){
  if($("dailyTable"))$("dailyTable").innerHTML=table(db.daily.map((x,i)=>({...x,sl:`${x.sleepStart||"-"}→${x.sleepEnd||"-"} (${x.sleep||"-"}h)`,att:x.attachment?.name||"",act:`<button class="action-btn edit-btn" onclick="editToday(${i})">Edit</button><button class="action-btn delete-btn" onclick="deleteToday(${i})">Delete</button>`})),[["Date","date"],["Sleep","sl"],["BP",x=>`${x.sbp||"-"}/${x.dbp||"-"}`],["Exercise",x=>`${x.exercise||0} min`],["Peace",x=>`${x.peace||0}/10`],["Attachment","att"],["Action","act"]]);
  if($("habitTable"))$("habitTable").innerHTML=table(db.habits.map((x,i)=>({...x,when:`${x.start||"-"}→${x.end||"-"}`,act:`<button class="action-btn edit-btn" onclick="editHabit(${i})">Edit</button><button class="action-btn delete-btn" onclick="deleteHabit(${i})">Delete</button>`})),[["Date","date"],["Habit","habit"],["Time","when"],["Duration",x=>`${x.duration||0} min`],["Status","status"],["Quality",x=>`${x.quality||0}/10`],["Action","act"]]);
 }
-function renderAll(){applyAutoRitu();renderForms();renderDashboard();renderRitu();renderInvestigations();renderTables();renderTimeline();generateDailySummary();generateAyurvedaSummary();generateInvestigationSummary();generateHabitSummary()}
-if($("hbDate"))$("hbDate").value=today();
+function renderAll(){applyAutoRitu();renderForms();renderDashboard();renderRitu();renderInvestigations();renderTables();renderSleep();renderPhysician();renderExperiments();renderPreventive();renderVault();renderTimeline();generateDailySummary();generateAyurvedaSummary();generateInvestigationSummary();generateHabitSummary()}
+if($("hbDate"))$("hbDate").value=today(); if($("slDate"))$("slDate").value=today(); if($("phDate"))$("phDate").value=today(); if($("exStart"))$("exStart").value=today(); if($("pvDue"))$("pvDue").value=today(); if($("vlDate"))$("vlDate").value=today();
 renderAll();

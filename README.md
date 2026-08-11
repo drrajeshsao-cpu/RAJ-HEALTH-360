@@ -49,3 +49,17 @@ This app is a health tracking and decision-support prototype. It does not autono
 
 ### Attachment note
 V3 stores attachment metadata locally for the prototype UI. Durable cross-device storage of the actual files should be implemented with Firebase Storage in the next cloud phase.
+
+
+## V4 Professional additions
+- Six-domain dashboard: Body, Recovery, Metabolic, Ayurveda, Mind, Purpose
+- Dedicated Sleep Centre with timing, duration, quality and contributing-factor review
+- Physician Wellness module for workload, prolonged sitting, missed meals/water, strain, fatigue and recovery
+- My Health Experiments for before/after observational learning
+- Preventive Calendar with clinical-context notes
+- Searchable Health Vault
+- Cause-effect oriented timeline
+- Three major AI roles via Copilot modes: Clinical, Ayurveda, Life/Habit, plus integrated review
+- Dashboard limited to Top 3 actionable priorities to reduce overload
+
+Login/authentication code was not added or modified in this build.

@@ -40,3 +40,10 @@ footer{text-align:center;color:var(--muted);font-size:11px;padding:24px}
 .action-btn{border:0;border-radius:8px;padding:5px 8px;font-size:10px;font-weight:800;cursor:pointer;margin:2px}.edit-btn{background:var(--mint);color:var(--brand2)}.delete-btn{background:var(--redbg);color:var(--red)}
 .copilot-fab{position:fixed;right:24px;bottom:24px;z-index:30;background:linear-gradient(135deg,var(--brand),#14b8a6);color:#fff;border:0;border-radius:99px;padding:13px 18px;font-weight:900;box-shadow:0 10px 30px rgba(15,118,110,.32);cursor:pointer}
 @media(max-width:700px){.copilot-fab{right:12px;bottom:12px;padding:11px 14px}.attachment-box{align-items:flex-start}}
+
+.domain-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:12px;margin-bottom:16px}
+.domain-card{background:linear-gradient(145deg,var(--surface),var(--surface2));border:1px solid var(--line);border-radius:16px;padding:14px;box-shadow:var(--shadow)}
+.domain-card span{display:block;font-size:10px;font-weight:950;letter-spacing:1.2px;color:var(--brand)}
+.domain-card b{display:block;font-size:25px;margin:5px 0}.domain-card small{font-size:10px;color:var(--muted)}
+@media(max-width:1100px){.domain-grid{grid-template-columns:repeat(3,1fr)}}
+@media(max-width:700px){.domain-grid{grid-template-columns:repeat(2,1fr)}}
