@@ -58,6 +58,19 @@
 
   <div class="alertbar" id="safetyBar">Add vitals and today’s check-in to activate personalized monitoring.</div>
 
+  <article class="attention-panel card">
+    <div class="cardtitle">
+      <div><span class="eyebrow">WHAT NEEDS ATTENTION TODAY?</span><h3 style="margin-top:5px">Only the 3 most useful actions</h3></div>
+      <span class="pill teal">Focused</span>
+    </div>
+    <div id="attentionToday" class="attention-list">
+      <div class="attention-item"><b>1. Priority</b><span>Add today’s health data to activate recommendations.</span></div>
+      <div class="attention-item"><b>2. Recovery</b><span>Sleep/recovery guidance will appear here.</span></div>
+      <div class="attention-item"><b>3. Habit</b><span>Habit adherence guidance will appear here.</span></div>
+    </div>
+  </article>
+
+
   <div class="domain-grid">
     <article class="domain-card"><span>BODY</span><b id="domainBody">--</b><small>Vitals • pain • function</small></article>
     <article class="domain-card"><span>RECOVERY</span><b id="domainRecovery">--</b><small>Sleep • energy • exercise</small></article>
@@ -510,17 +523,26 @@
   <input type="hidden" id="pvEditIndex">
   <div class="buttons"><button class="primary" onclick="savePreventive()">Save Preventive Item</button><button class="ghost" onclick="resetPreventiveForm()">Clear</button></div>
  </article>
- <article class="card"><h3>Due / Upcoming</h3><div id="preventiveSummary" class="summary-box"></div></article>
+ 
+ <div class="preventive-buckets">
+   <article class="bucket due"><h3>Due Now</h3><div id="pvDueNow">No due items.</div></article>
+   <article class="bucket month"><h3>This Month</h3><div id="pvThisMonth">No items.</div></article>
+   <article class="bucket three"><h3>Next 3 Months</h3><div id="pv3Months">No items.</div></article>
+   <article class="bucket six"><h3>Next 6 Months</h3><div id="pv6Months">No items.</div></article>
+   <article class="bucket annual"><h3>Annual / Long-term</h3><div id="pvAnnual">No items.</div></article>
+ </div>
+
+<article class="card"><h3>Personalized Preventive Summary</h3><div id="preventiveSummary" class="summary-box"></div></article>
  <article class="card"><div id="preventiveTable"></div></article>
 </section>
 
 
 <section id="vault" class="view">
- <div class="pagehead compact"><div><span class="eyebrow">PERSONAL HEALTH RECORD</span><h2>Health Vault</h2><p>One searchable index for reports, prescriptions, images, Ayurveda assessments and preventive records.</p></div></div>
+ <div class="pagehead compact"><div><span class="eyebrow">PERSONAL HEALTH RECORD</span><h2>Health Vault</h2><p>One searchable index for Reports, Prescriptions, X-Ray, CT, MRI, USG, ECG, Photos, Ayurveda assessments, Panchakarma records, Blood Donation, Vaccination, Dental and Eye records.</p></div></div>
  <article class="card">
   <div class="formgrid four">
    <label>Date<input id="vlDate" type="date"></label>
-   <label>Document type<select id="vlType"><option>Lab report</option><option>Prescription</option><option>X-Ray</option><option>USG</option><option>CT</option><option>MRI</option><option>ECG</option><option>DEXA</option><option>Clinical photo</option><option>Ayurveda assessment</option><option>Panchakarma record</option><option>Blood donation</option><option>Dental</option><option>Eye</option><option>Other</option></select></label>
+   <label>Document type<select id="vlType"><option>Lab report</option><option>Prescription</option><option>X-Ray</option><option>USG</option><option>CT</option><option>MRI</option><option>ECG</option><option>DEXA</option><option>Clinical photo</option><option>Ayurveda assessment</option><option>Panchakarma record</option><option>Blood donation</option><option>Vaccination</option><option>Dental</option><option>Eye</option><option>Other</option></select></label>
    <label>Body system<input id="vlSystem" placeholder="Spine / liver / metabolic..."></label>
    <label>Title<input id="vlTitle"></label>
   </div>
@@ -533,7 +555,26 @@
   <input type="hidden" id="vlEditIndex">
   <div class="buttons"><button class="primary" onclick="saveVault()">Save to Vault</button><button class="ghost" onclick="resetVaultForm()">Clear</button></div>
  </article>
- <article class="card"><div class="cardtitle"><h3>Search Health Vault</h3><input class="search" id="vaultSearch" placeholder="MRI lumbar / uric acid / prescription..." oninput="renderVault()"></div><div id="vaultTable"></div></article>
+ 
+ <div class="vault-category-grid">
+   <button onclick="setVaultFilter('All')">All</button>
+   <button onclick="setVaultFilter('Lab report')">Reports</button>
+   <button onclick="setVaultFilter('Prescription')">Prescriptions</button>
+   <button onclick="setVaultFilter('X-Ray')">X-Ray</button>
+   <button onclick="setVaultFilter('CT')">CT</button>
+   <button onclick="setVaultFilter('MRI')">MRI</button>
+   <button onclick="setVaultFilter('USG')">USG</button>
+   <button onclick="setVaultFilter('ECG')">ECG</button>
+   <button onclick="setVaultFilter('Clinical photo')">Photos</button>
+   <button onclick="setVaultFilter('Ayurveda assessment')">Ayurveda</button>
+   <button onclick="setVaultFilter('Panchakarma record')">Panchakarma</button>
+   <button onclick="setVaultFilter('Blood donation')">Blood Donation</button>
+   <button onclick="setVaultFilter('Vaccination')">Vaccination</button>
+   <button onclick="setVaultFilter('Dental')">Dental</button>
+   <button onclick="setVaultFilter('Eye')">Eye</button>
+ </div>
+
+<article class="card"><div class="cardtitle"><h3>Search Health Vault</h3><input class="search" id="vaultSearch" placeholder="MRI lumbar / uric acid / prescription..." oninput="renderVault()"></div><div id="vaultTable"></div></article>
 </section>
 
 <section id="timeline" class="view">
@@ -544,6 +585,26 @@
 
 <section id="ai" class="view">
  <div class="pagehead compact"><div><span class="eyebrow">AI HEALTH COPILOT</span><h2>Context-aware review, not blind self-prescribing</h2><p>Combines trends, missing follow-ups, lifestyle, Ayurveda context and safety flags.</p></div></div>
+ 
+   <div class="ai-role-grid">
+     <button class="ai-role clinical" onclick="runCopilotMode('Clinical Copilot')">
+       <span>CLINICAL COPILOT</span>
+       <small>Labs • BP • Weight • Medicines • Imaging • Screening</small>
+     </button>
+     <button class="ai-role ayurveda" onclick="runCopilotMode('Ayurveda Copilot')">
+       <span>AYURVEDA COPILOT</span>
+       <small>Prakriti • Vikriti • Agni • Ama • Ashtavidha • Dashavidha • Ritu</small>
+     </button>
+     <button class="ai-role habit" onclick="runCopilotMode('Life & Habit Coach')">
+       <span>LIFE & HABIT COACH</span>
+       <small>Sleep • Exercise • Study • Sadhana • Social Balance • Consistency</small>
+     </button>
+     <button class="ai-role integrated" onclick="runCopilotMode('Integrated Review')">
+       <span>INTEGRATED REVIEW</span>
+       <small>Clinical + Ayurveda + Lifestyle combined</small>
+     </button>
+   </div>
+
  <div class="grid2">
   <article class="card">
    <div class="cardtitle"><h3>AI Review Controls</h3><span class="pill teal">Local prototype</span></div>

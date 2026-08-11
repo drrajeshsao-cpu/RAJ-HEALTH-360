@@ -289,14 +289,37 @@ function savePreventive(){
 function editPreventive(i){let x=db.preventive[i];showView("preventive");let m={pvItem:"item",pvCategory:"category",pvDue:"due",pvPriority:"priority",pvStatus:"status",pvLast:"last",pvNote:"note"};Object.entries(m).forEach(([id,k])=>$(id).value=x[k]??"");$("pvEditIndex").value=i}
 function deletePreventive(i){if(confirm("Delete preventive item?")){db.preventive.splice(i,1);persist()}}
 function resetPreventiveForm(){["pvItem","pvLast","pvNote","pvEditIndex"].forEach(id=>{if($(id))$(id).value=""});if($("pvDue"))$("pvDue").value=today()}
+function classifyPreventiveBuckets(){
+ if(!$("pvDueNow"))return;
+ const now=new Date(today()+"T00:00:00");
+ const addDays=(d,n)=>new Date(d.getTime()+n*86400000);
+ const endMonth=new Date(now.getFullYear(),now.getMonth()+1,0);
+ let groups={due:[],month:[],m3:[],m6:[],annual:[]};
+ db.preventive.filter(x=>x.status!=="Completed"&&x.due).forEach(x=>{
+   const dt=new Date(x.due+"T00:00:00");
+   if(dt<=now)groups.due.push(x);
+   else if(dt<=endMonth)groups.month.push(x);
+   else if(dt<=addDays(now,90))groups.m3.push(x);
+   else if(dt<=addDays(now,180))groups.m6.push(x);
+   else groups.annual.push(x);
+ });
+ const fmt=a=>a.length?a.slice(0,6).map(x=>`• ${x.item} — ${x.due}`).join("\n"):"No items.";
+ $("pvDueNow").textContent=fmt(groups.due);
+ $("pvThisMonth").textContent=fmt(groups.month);
+ $("pv3Months").textContent=fmt(groups.m3);
+ $("pv6Months").textContent=fmt(groups.m6);
+ $("pvAnnual").textContent=fmt(groups.annual);
+}
 function renderPreventive(){
  if(!$("preventiveTable"))return;
  let rows=db.preventive.map((x,i)=>({...x,act:`<button class="action-btn edit-btn" onclick="editPreventive(${i})">Edit</button><button class="action-btn delete-btn" onclick="deletePreventive(${i})">Delete</button>`}));
  $("preventiveTable").innerHTML=table(rows,[["Item","item"],["Category","category"],["Due","due"],["Priority","priority"],["Status","status"],["Last done","last"],["Action","act"]]);
  let now=today(), due=db.preventive.filter(x=>x.status!=="Completed").sort((a,b)=>(a.due||"").localeCompare(b.due||"")).slice(0,6);
- $("preventiveSummary").textContent=due.length?due.map(x=>`${x.due||"No date"} — ${x.item} [${x.priority}]`).join("\n"):"No due preventive items recorded.";
+ $("preventiveSummary").textContent=due.length?due.map(x=>`${x.due||"No date"} — ${x.item} [${x.priority}]`).join("\n"):"No due preventive items recorded."; classifyPreventiveBuckets();
 }
 
+let vaultTypeFilter="All";
+function setVaultFilter(type){vaultTypeFilter=type;renderVault()}
 function saveVault(){
  let o={date:v("vlDate"),type:v("vlType"),system:v("vlSystem"),title:v("vlTitle"),summary:v("vlSummary"),attachment:pendingFiles.vl||null};
  let i=v("vlEditIndex");if(i!=="")db.vault[+i]=o;else db.vault.unshift(o);resetVaultForm();persist()
@@ -306,7 +329,9 @@ function deleteVault(i){if(confirm("Delete vault item?")){db.vault.splice(i,1);p
 function resetVaultForm(){["vlSystem","vlTitle","vlSummary","vlEditIndex"].forEach(id=>{if($(id))$(id).value=""});if($("vlDate"))$("vlDate").value=today();pendingFiles.vl=null;if($("vlFileName"))$("vlFileName").textContent=""}
 function renderVault(){
  if(!$("vaultTable"))return;let q=(v("vaultSearch")||"").toLowerCase();
- let rows=db.vault.map((x,i)=>({...x,file:x.attachment?.name||"",act:`<button class="action-btn edit-btn" onclick="editVault(${i})">Edit</button><button class="action-btn delete-btn" onclick="deleteVault(${i})">Delete</button>`})).filter(x=>JSON.stringify(x).toLowerCase().includes(q));
+ let rows=db.vault.map((x,i)=>({...x,file:x.attachment?.name||"",act:`<button class="action-btn edit-btn" onclick="editVault(${i})">Edit</button><button class="action-btn delete-btn" onclick="deleteVault(${i})">Delete</button>`}))
+   .filter(x=>JSON.stringify(x).toLowerCase().includes(q))
+   .filter(x=>vaultTypeFilter==="All" || x.type===vaultTypeFilter);
  $("vaultTable").innerHTML=table(rows,[["Date","date"],["Type","type"],["System","system"],["Title","title"],["File","file"],["Summary","summary"],["Action","act"]])
 }
 
@@ -351,6 +376,29 @@ function generateHabitSummary(){
  $("habitAutoSummary").textContent=`Recent ${h.length} habit entries: ${done} done, ${partial} partial, ${miss} missed. Total intentional time: ${totalMin} min. Average quality: ${avgQ}/10. Most frequently tracked: ${top}.\n\nSelf-coaching: choose 2–3 keystone habits first—sleep timing, movement/exercise, and one stable sadhana practice. Build reliability before increasing intensity.`;
 }
 
+function renderAttentionToday(){
+ if(!$("attentionToday"))return;
+ const d=db.daily[0]||{}, items=[];
+ let priority="Add today’s BP, glucose, weight and symptoms to activate a clinical priority.";
+ if(d.sbp>=140||d.dbp>=90)priority=`Repeat BP today using standardized technique; latest reading is ${d.sbp}/${d.dbp}.`;
+ else if(d.sugar>=126)priority=`Review glucose context and trend; latest entered value is ${d.sugar} mg/dL.`;
+ else if(d.pain>=7)priority=`Pain is ${d.pain}/10; review cause and red flags rather than only tracking it.`;
+ else if(db.preventive.some(x=>x.status!=="Completed" && x.due && x.due<=today()))priority="One or more preventive items are due now; open Preventive Calendar.";
+
+ let recovery="Add sleep data to get a recovery recommendation.";
+ if(d.sleep && d.sleep<6) recovery=`You slept ${d.sleep} h; protect recovery and keep today’s training light–moderate.`;
+ else if(d.sleep && d.sleep>=7 && d.energy>=7) recovery=`Recovery looks reasonable: ${d.sleep} h sleep and energy ${d.energy}/10.`;
+ else if(db.sleep[0] && db.sleep[0].hours<6) recovery=`Latest Sleep Centre record is ${db.sleep[0].hours} h; prioritize recovery today.`;
+
+ let habit="Track one keystone habit today: sleep timing, movement or sadhana.";
+ const recent=db.habits.slice(0,7), jap=db.daily.slice(0,7).filter(x=>(x.jap||0)>=20).length;
+ if(recent.length){const done=recent.filter(x=>x.status==="Done").length;habit=`Recent habit adherence: ${Math.round(done/recent.length*100)}% done. Improve consistency before increasing intensity.`;}
+ else if(db.daily.length>=3) habit=`Mala-jap ≥20 min achieved on ${jap} of last ${Math.min(7,db.daily.length)} tracked days.`;
+
+ $("attentionToday").innerHTML=[
+   ["1. Priority",priority],["2. Recovery",recovery],["3. Habit",habit]
+ ].map(x=>`<div class="attention-item"><b>${x[0]}</b><span>${x[1]}</span></div>`).join("");
+}
 function renderDashboard(){
  const d=db.daily[0]||{},p=db.profile||{};
 
@@ -379,7 +427,7 @@ function renderDashboard(){
  $("ayuSnapshot").innerHTML=[["Prakriti",db.ayurveda.prakriti||"--"],["Vikriti",db.ayurveda.vikriti||"--"],["Agni",db.ayurveda.agni||"--"],["Ama",db.ayurveda.ama||"--"],["Shatkriyakala",db.shatkriya.stage||"--"]].map(x=>`<div><span>${x[0]}</span><b>${x[1]}</b></div>`).join("");
  const bars=[["Sleep",d.sleep?Math.min(100,d.sleep/8*100):0],["Exercise",d.exercise?Math.min(100,d.exercise/30*100):0],["Peace",d.peace?d.peace*10:0],["Energy",d.energy?d.energy*10:0],["Low stress",d.stress||d.stress===0?(10-d.stress)*10:0]];
  $("balanceBars").innerHTML=bars.map(x=>`<div class="bar"><div class="barrow"><span>${x[0]}</span><b>${Math.round(x[1])}%</b></div><div class="track"><div class="fill" style="width:${x[1]}%"></div></div></div>`).join("");
- $("nextActions").innerHTML=nextActions().map(x=>`<li>${x}</li>`).join("");
+ $("nextActions").innerHTML=nextActions().map(x=>`<li>${x}</li>`).join(""); renderAttentionToday();
  const ev=getTimeline().slice(0,5);$("trendWatch").innerHTML=ev.length?ev.map(e=>`<div class="event"><small>${e.date} <span class="tag">${e.type}</span></small><b>${e.text}</b></div>`).join(""):`<p class="muted">No longitudinal events yet.</p>`
 }
 function renderRitu(){
@@ -406,6 +454,11 @@ function getTimeline(){
 function renderTimeline(){
  const f=v("timelineFilter")||"All";let a=getTimeline().filter(x=>f==="All"||x.type===f);
  $("timelineList").innerHTML=a.length?`<div class="card timeline">${a.map(e=>`<div class="event"><small>${e.date} <span class="tag">${e.type}</span></small><b>${e.text}</b></div>`).join("")}</div>`:`<div class="card"><p class="muted">No records.</p></div>`
+}
+function runCopilotMode(mode){
+ if($("aiFocus"))$("aiFocus").value=mode;
+ showView("ai");
+ setTimeout(()=>generateAI(),50);
 }
 function generateAI(){
  const d=db.daily[0]||{}, p=db.profile||{}, r=rituData[db.ritu.ritu], focus=v("aiFocus"),q=v("aiQuestion");

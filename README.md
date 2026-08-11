@@ -63,3 +63,14 @@ V3 stores attachment metadata locally for the prototype UI. Durable cross-device
 - Dashboard limited to Top 3 actionable priorities to reduce overload
 
 Login/authentication code was not added or modified in this build.
+
+
+## V4.1 visible-feature correction
+This build makes previously planned professional features clearly visible in the UI:
+- Four dedicated AI Copilot buttons: Clinical, Ayurveda, Life & Habit, Integrated Review
+- Dashboard: explicit "What Needs Attention Today?" with exactly three focused recommendations
+- Preventive Health Calendar buckets: Due Now, This Month, Next 3 Months, Next 6 Months, Annual/Long-term
+- Health Vault category filters for Reports, Prescriptions, X-Ray, CT, MRI, USG, ECG, Photos, Ayurveda, Panchakarma, Blood Donation, Vaccination, Dental and Eye
+- Search remains active alongside category filters
+
+No login/authentication code was added or modified.
