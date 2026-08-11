@@ -224,7 +224,7 @@ function generateDailySummary(){
  const d=db.daily[0]; if(!d||!$("dailyAutoSummary"))return;
  let points=[];
  points.push(`Sleep: ${d.sleep||"-"} h (${d.sleepStart||"-"} → ${d.sleepEnd||"-"}), quality ${d.sleepQuality||"-"}/10.`);
- points.push(`BP ${d.sbp||"-"}/${d.dbp||"-}, glucose ${d.sugar||"-"}, weight ${d.weight||"-"} kg.`);
+ points.push(`BP ${d.sbp||"-"}/${d.dbp||"-"}, glucose ${d.sugar||"-"}, weight ${d.weight||"-"} kg.`);
  points.push(`Exercise ${d.exercise||0} min, steps ${d.steps||0}, water ${d.water||0} L.`);
  points.push(`Peace ${d.peace||0}/10, stress ${d.stress||0}/10, energy ${d.energy||0}/10.`);
  points.push(`Sadhana: Jap ${d.jap||0} min, Puja ${d.puja||0} min, Dhyana ${d.meditation||0} min, Mauna ${d.mauna||0} min.`);
