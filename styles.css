@@ -634,3 +634,240 @@ img,svg,canvas,video{max-width:100%;height:auto}
     font-size:16px!important;
   }
 }
+
+
+/* ===========================
+   V7.4.2 STABLE MOBILE SCREEN
+   =========================== */
+@media (max-width: 768px){
+  html,body{
+    width:100%!important;
+    max-width:100%!important;
+    overflow-x:hidden!important;
+    position:relative;
+  }
+  body{padding-bottom:92px!important}
+
+  .top{
+    display:grid!important;
+    grid-template-columns:minmax(0,1fr)!important;
+    gap:10px!important;
+    align-items:stretch!important;
+    width:100%!important;
+    max-width:100%!important;
+    padding:10px 10px 8px!important;
+    height:auto!important;
+    overflow:hidden!important;
+  }
+  .brand,.responsive-brand{
+    width:100%!important;
+    min-width:0!important;
+    max-width:100%!important;
+    gap:10px!important;
+    overflow:hidden!important;
+  }
+  .brand > div:last-child,
+  .responsive-brand > div:last-child{
+    min-width:0!important;
+    max-width:100%!important;
+  }
+  .brand h1,
+  .responsive-brand h1{
+    font-size:17px!important;
+    line-height:1.05!important;
+    white-space:nowrap!important;
+    overflow:hidden!important;
+    text-overflow:ellipsis!important;
+  }
+  .brand p{display:none!important}
+  .version-badge{
+    display:inline-block!important;
+    max-width:100%!important;
+    font-size:10px!important;
+    white-space:nowrap!important;
+    overflow:hidden!important;
+    text-overflow:ellipsis!important;
+  }
+
+  .top-actions,.responsive-top-actions{
+    display:flex!important;
+    flex-wrap:nowrap!important;
+    overflow-x:auto!important;
+    overflow-y:hidden!important;
+    gap:6px!important;
+    width:100%!important;
+    max-width:100%!important;
+    min-width:0!important;
+    padding-bottom:2px!important;
+    -webkit-overflow-scrolling:touch!important;
+    scrollbar-width:none!important;
+  }
+  .top-actions::-webkit-scrollbar,.responsive-top-actions::-webkit-scrollbar{display:none!important}
+  .top-actions > *, .responsive-top-actions > *{
+    flex:0 0 auto!important;
+    min-width:auto!important;
+    max-width:none!important;
+    white-space:nowrap!important;
+  }
+  .member-pill,.cloud-pill,.login-header-btn,.top-actions .ghost,.responsive-top-actions .ghost{
+    font-size:12px!important;
+    padding:9px 11px!important;
+    min-height:40px!important;
+    border-radius:18px!important;
+  }
+
+  .shell{
+    display:block!important;
+    width:100%!important;
+    max-width:100%!important;
+    min-height:0!important;
+    overflow-x:hidden!important;
+  }
+
+  .side{
+    width:100%!important;
+    max-width:100%!important;
+    display:block!important;
+    position:sticky!important;
+    top:111px!important;
+    z-index:12!important;
+    padding:0 0 8px!important;
+    margin:0!important;
+    border-right:0!important;
+    border-bottom:1px solid var(--line)!important;
+    overflow-x:auto!important;
+    overflow-y:hidden!important;
+    background:rgba(244,247,245,.98)!important;
+    backdrop-filter:blur(10px)!important;
+    -webkit-overflow-scrolling:touch!important;
+    scrollbar-width:none!important;
+  }
+  body.dark .side{background:rgba(12,21,20,.96)!important}
+  .side::-webkit-scrollbar{display:none!important}
+  .profile-mini{display:none!important}
+  #nav{
+    display:flex!important;
+    flex-wrap:nowrap!important;
+    gap:8px!important;
+    width:max-content!important;
+    min-width:100%!important;
+    padding:8px 10px 0!important;
+  }
+  .nav{
+    width:auto!important;
+    flex:0 0 auto!important;
+    white-space:nowrap!important;
+    border:1px solid var(--line)!important;
+    background:var(--surface)!important;
+    padding:11px 14px!important;
+    border-radius:16px!important;
+    margin:0!important;
+  }
+  .nav.active{background:var(--mint)!important}
+
+  .main{
+    width:100%!important;
+    max-width:100%!important;
+    min-width:0!important;
+    padding:10px!important;
+    margin:0!important;
+    overflow-x:hidden!important;
+  }
+  .view,.view.active{
+    width:100%!important;
+    max-width:100%!important;
+    min-width:0!important;
+    overflow-x:hidden!important;
+  }
+  .pagehead,.card,.alertbar,.summary-box,.family-context-bar,.attention-panel{
+    width:100%!important;
+    max-width:100%!important;
+    min-width:0!important;
+  }
+
+  #dashboard .pagehead{
+    display:grid!important;
+    grid-template-columns:minmax(0,1fr) 94px!important;
+    align-items:start!important;
+    gap:14px!important;
+    padding:18px!important;
+  }
+  #dashboard .pagehead > div:first-child{min-width:0!important}
+  #dashboard .pagehead h2{
+    font-size:24px!important;
+    line-height:1.08!important;
+    margin-right:0!important;
+    max-width:100%!important;
+    word-break:break-word!important;
+  }
+  #dashboard .pagehead p{
+    max-width:100%!important;
+    font-size:13px!important;
+    line-height:1.35!important;
+  }
+  #dashboard .pagehead .score-ring{
+    width:88px!important;
+    height:88px!important;
+    min-width:88px!important;
+    margin:0!important;
+    justify-self:end!important;
+  }
+
+  .dashboard-quick-actions{
+    width:100%!important;
+    max-width:100%!important;
+    grid-template-columns:repeat(2,minmax(0,1fr))!important;
+    gap:10px!important;
+  }
+  .dashboard-quick-actions button{
+    width:100%!important;
+    min-width:0!important;
+    min-height:96px!important;
+    padding:12px!important;
+  }
+
+  /* Prevent any child component from creating page-level horizontal scroll */
+  .grid2,.grid3,.formgrid.two,.formgrid.four,.formgrid.five,.stagegrid,
+  .metrics.six,.family-top-grid,.family-member-grid,.family-feature-grid,
+  .domain-grid,.attention-list,.ai-role-grid,.preventive-buckets,
+  .lab-layout,.lab-panel-buttons,.lab-panel-static-grid,.lab-use-flow{
+    width:100%!important;
+    max-width:100%!important;
+    min-width:0!important;
+  }
+  .grid2,.grid3,.formgrid.two,.formgrid.four,.formgrid.five,.stagegrid,
+  .metrics.six,.family-top-grid,.family-member-grid,.family-feature-grid,
+  .domain-grid,.attention-list,.ai-role-grid,.preventive-buckets,
+  .lab-layout,.lab-panel-buttons,.lab-panel-static-grid,.lab-use-flow{
+    grid-template-columns:1fr!important;
+  }
+  .dashboard-quick-actions{grid-template-columns:repeat(2,minmax(0,1fr))!important}
+  .lab-panel-static-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important}
+
+  .mobile-bottom-nav{
+    left:10px!important;
+    right:10px!important;
+    bottom:8px!important;
+    width:auto!important;
+    max-width:none!important;
+  }
+  .copilot-fab{
+    bottom:86px!important;
+    right:12px!important;
+    max-width:46vw!important;
+  }
+}
+
+@media (max-width: 420px){
+  .top{padding:9px 8px 7px!important}
+  .brand h1,.responsive-brand h1{font-size:16px!important}
+  .version-badge{font-size:9px!important}
+  .top-actions > *, .responsive-top-actions > *{font-size:11px!important}
+  #dashboard .pagehead{
+    grid-template-columns:1fr!important;
+  }
+  #dashboard .pagehead .score-ring{
+    justify-self:start!important;
+    margin-top:6px!important;
+  }
+}

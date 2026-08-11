@@ -292,3 +292,11 @@ Future rule: every release should update this visible version/build label before
 - Improves very-small-phone handling and table horizontal scrolling.
 - Keeps Firebase cloud sync, login, Family Health Hub and SLAIE unchanged.
 - Version V7.4.1 • Build 2026-08-12.
+
+
+## V7.4.2 Stable Mobile Screen
+- Fixes remaining page-level horizontal shifting on phones.
+- Makes header actions scroll inside header instead of widening the whole page.
+- Converts top mobile navigation row into a contained horizontal ribbon.
+- Locks dashboard, cards and hero to stable mobile width.
+- Reduces mobile layout jumpiness and improves perceived stability.
