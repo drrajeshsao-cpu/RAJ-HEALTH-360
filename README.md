@@ -209,3 +209,10 @@ Future rule: every release should update this visible version/build label before
 - Added Emergency Save JSON. If IndexedDB saving fails, the app automatically downloads a recoverable JSON snapshot so interpreted work is not lost.
 - Successful panel/full-body saves now show explicit confirmation.
 - If storage reports "blocked", close duplicate RAJ HEALTH 360 tabs and retry.
+
+## V6.6.1 Hotfix
+- Restores missing generateFullBodySummary function.
+- Wraps full-body summary generation so analysis/save cannot fail because of summary UI.
+- PDF/image blob-vault failure no longer prevents report parsing or interpreted-data saving.
+- Keeps selected file metadata and in-memory File object for analysis even when local attachment storage fails.
+- Version badge updated to V6.6.1.

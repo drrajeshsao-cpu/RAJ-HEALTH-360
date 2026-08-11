@@ -1,4 +1,4 @@
-const APP_VERSION="V6.6";
+const APP_VERSION="V6.6.1";
 const APP_BUILD_DATE="2026-08-11";
 
 const KEY="raj_health_360_v2";
@@ -542,7 +542,7 @@ async function saveLabInterpretation(){
 
    if(status){status.textContent=`✓ Saved permanently on this device: ${obj.title} • ${obj.date} • ${patient.name||"Patient"}`;status.className="file-name save-ok"}
    if($("archiveSaveStatus")){$("archiveSaveStatus").textContent="Panel archived successfully";$("archiveSaveStatus").className="archive-status-ok"}
-   renderSavedLabPanels();await renderReportArchive();generateFullBodySummary();renderTimeline();generateCurrentPanelSummary();
+   renderSavedLabPanels();await renderReportArchive();safeGenerateFullBodySummary();renderTimeline();generateCurrentPanelSummary();
    if($("liEditIndex"))$("liEditIndex").value="";
    alert("Interpreted panel saved successfully to Patient Report Archive.");
  }catch(e){
@@ -606,7 +606,7 @@ async function saveFullBodyReportArchive(){
  }catch(e){
    console.error("Full-body save failed",e);
    if(status){status.textContent="Full-body save failed: "+e.message;status.className="archive-status-error"}
-   try{emergencySaveCurrentReport("fullbody-save-failed")}catch(_){}
+   try{if(typeof emergencySaveCurrentReport==="function")emergencySaveCurrentReport("fullbody-save-failed")}catch(_){}
    alert("Full-body archive save failed, but an Emergency JSON backup was downloaded so the interpreted report is not lost. Close duplicate RAJ HEALTH 360 tabs, reload, and retry.");
  }
 }
@@ -615,6 +615,33 @@ function summarizePanelRecord(x){
  const flagged=vals.filter(v=>!["Normal","Not assessed"].includes(v.status));
  return {count:vals.length,flagged,txt:flagged.slice(0,6).map(v=>`${v.name}: ${v.value} ${v.unit||""} (${v.status})`).join("; ")};
 }
+
+function safeGenerateFullBodySummary(){
+ try{ if(typeof generateFullBodySummary==="function") generateFullBodySummary(); }
+ catch(e){ console.warn("Full body summary skipped",e); }
+}
+function generateFullBodySummary(){
+ const el=$("fullBodySummary"); if(!el)return;
+ try{
+   const attachmentName=pendingFiles.li?.name||activeImportedAttachmentName||"";
+   const date=v("liDate")||activeImportedDate||"";
+   let records=(db.labInterpretations||[]).filter(x=>x && x.panel);
+   if(attachmentName){const f=records.filter(x=>x.attachment?.name===attachmentName); if(f.length)records=f}
+   if(date){const d=records.filter(x=>x.date===date); if(d.length)records=d}
+   const map=new Map(); records.forEach(r=>{if(!map.has(r.panel))map.set(r.panel,r)}); records=[...map.values()];
+   if(!records.length){el.textContent="No imported full-body panel records available yet.";return}
+   let total=0,flagged=0,unverified=0; const lines=[];
+   for(const r of records){
+     const vals=Object.values(r.values||{}).filter(x=>x && x.value!=="" && x.value!=null);
+     const bad=vals.filter(x=>!["Normal","Not assessed"].includes(x.status));
+     const uv=vals.filter(x=>(x.verification||"Unverified")==="Unverified");
+     total+=vals.length; flagged+=bad.length; unverified+=uv.length;
+     lines.push(`${r.title||r.panel}: ${vals.length} imported • ${bad.length} flagged`+(bad.length?`\n  ↳ ${bad.slice(0,6).map(x=>`${x.name}: ${x.value} ${x.unit||""} (${x.status})`).join("; ")}`:""));
+   }
+   el.textContent=`Report: ${attachmentName||"Current report"}\nDate: ${date||"-"}\nPanels: ${records.length}\nMapped results: ${total}\nFlagged: ${flagged}\nUnverified: ${unverified}\n\n${lines.join("\n\n")}\n\nVerify smart-imported values against the original report before clinical use.`;
+ }catch(e){console.error('Full body summary failed',e);el.textContent='Full-body summary unavailable: '+e.message}
+}
+
 async function renderReportArchive(patientOnly=false){
  if(!$("reportArchiveList"))return;
  try{
@@ -1225,7 +1252,7 @@ async function analyzeAttachedLabReport(){
    generateCurrentPanelSummary();
    renderImportAudit();
    renderSavedLabPanels();
-   generateFullBodySummary();
+   safeGenerateFullBodySummary();
 
    const exactCount=precisionImportRows.length;
    if(status)status.textContent=`✓ ${exactCount||Object.keys(smartImportMapped).length} test row(s) mapped; ${matches.length} panel(s) created. Exact-row parser minimizes cross-row number capture. VERIFY every imported result before diagnosis.`;
@@ -1549,6 +1576,7 @@ function autoSelectOmegaTemplate(){
 async function fileMetaFromInput(id,key){
  const f=$(id)?.files?.[0]; if(!f)return;
  if(key==="li")lastLabUploadFile=f;
+ pendingFiles[key]={name:f.name,type:f.type,size:f.size,id:null,localStored:false};
  const label={td:"tdFileName",ayu:"ayuFileName",lab:"labFileName",img:"imgFileName",med:"medFileName",tx:"txFileName",vl:"vlFileName",li:"liFileName"}[key];
  try{
    if(label&&$(label))$(label).textContent=`Saving ${f.name} locally...`;
