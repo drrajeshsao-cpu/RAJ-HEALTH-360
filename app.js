@@ -430,11 +430,13 @@ function selectLabPanel(key){
    if($("liLabTemplate") && draft.referenceTemplate)$("liLabTemplate").value=draft.referenceTemplate;
    renderLabParameters(draft.values||{});
    generateCurrentPanelSummary();
+   renderImportAudit();
    const filled=countFilledValues(draft.values);
    if($("labCentreStatus"))$("labCentreStatus").textContent=`${labPanels[key].title} loaded from imported report — ${filled} value(s) auto-filled. VERIFY with original report.`;
  } else {
    renderLabParameters();
    generateCurrentPanelSummary();
+   renderImportAudit();
    if($("labCentreStatus"))$("labCentreStatus").textContent=`${labPanels[key].title} loaded — no smart-imported values found for this report.`;
  }
 }
@@ -477,9 +479,12 @@ function renderLabParameters(existing=null){
        ${["Not assessed","Normal","Borderline low","Low","Borderline high","High","Abnormal"].map(s=>`<option ${s===stat?"selected":""}>${s}</option>`).join("")}
      </select></td>
      <td><input id="remark_${p.id}" value="${old.remark||""}" placeholder="Remark"></td>
+     <td><select class="verify-select" id="verify_${p.id}">
+       ${["Unverified","Verified with PDF","Corrected manually"].map(s=>`<option ${s===(old.verification||"Unverified")?"selected":""}>${s}</option>`).join("")}
+     </select></td>
    </tr>`;
  }).join("");
- $("labParameterTable").innerHTML=`<div class="lab-param-table"><table><thead><tr><th>Parameter & meaning</th><th>Unit</th><th>Reference range</th><th>Your value</th><th>Status</th><th>Remark</th></tr></thead><tbody>${rows||`<tr><td colspan="6">No parameter matches search. Clear the search box to show all ${panel.params.length} parameters.</td></tr>`}</tbody></table></div>`;
+ $("labParameterTable").innerHTML=`<div class="lab-param-table"><table><thead><tr><th>Parameter & meaning</th><th>Unit</th><th>Reference range</th><th>Your value</th><th>Status</th><th>Remark</th><th>Verification</th></tr></thead><tbody>${rows||`<tr><td colspan="7">No parameter matches search. Clear the search box to show all ${panel.params.length} parameters.</td></tr>`}</tbody></table></div>`;
 }
 function updateParamStatus(id){
  const p=labPanels[currentLabPanel].params.find(x=>x.id===id);if(!p)return;
@@ -493,7 +498,17 @@ function collectCurrentPanelValues(){
  const out={};
  labPanels[currentLabPanel].params.forEach(p=>{
    if(!$("status_"+p.id))return;
-   const om=omegaRefFor(currentLabPanel,p,v("liSex")||"Male");out[p.id]={name:p.name,unit:om?.unit||p.unit,value:v("val_"+p.id),ref:v("ref_"+p.id),status:v("status_"+p.id),remark:v("remark_"+p.id),meaning:p.meaning,referenceSource:(v("liLabTemplate")||"omega")==="omega"?"Omega Diagnostics sample-derived":"Generic adult example",imported:(v("remark_"+p.id)||"").includes("Smart-imported")};
+   const draft=getImportedDraftForPanel(currentLabPanel);
+   const old=draft?.values?.[p.id]||{};
+   const om=omegaRefFor(currentLabPanel,p,v("liSex")||"Male");
+   out[p.id]={
+     name:p.name,unit:om?.unit||p.unit,value:v("val_"+p.id),ref:v("ref_"+p.id),
+     status:v("status_"+p.id),remark:v("remark_"+p.id),meaning:p.meaning,
+     referenceSource:old.referenceSource||((v("liLabTemplate")||"omega")==="omega"?"Omega Diagnostics sample-derived":"Generic adult example"),
+     imported:old.imported||false,parser:old.parser||"",confidence:old.confidence||null,
+     sourceRow:old.sourceRow||"",sourcePage:old.sourcePage||null,
+     verification:v("verify_"+p.id)||old.verification||"Unverified"
+   };
  });
  return out;
 }
@@ -547,17 +562,20 @@ function cbcPattern(vs){
 }
 function lftPattern(vs){
  let alt=numVal(vs,"alt"),ast=numVal(vs,"ast"),alp=numVal(vs,"alp"),ggt=numVal(vs,"ggt"),tb=numVal(vs,"tbili"),out=[];
- if((alt!==null&&alt>56)||(ast!==null&&ast>40))out.push("Transaminase-predominant elevation suggests a hepatocellular injury pattern; magnitude, persistence and clinical cause matter.");
- if(alp!==null&&alp>147 && (ggt===null||ggt>61))out.push("ALP/GGT-predominant elevation may suggest a cholestatic/hepatobiliary pattern; correlate with bilirubin and imaging when indicated.");
- if(tb!==null&&tb>1.2)out.push("Bilirubin is elevated; fractionation and clinical jaundice context help characterize the pattern.");
+ if(vs.alt?.status==="High"||vs.ast?.status==="High")out.push("Transaminase elevation is present. Interpret magnitude, AST/ALT relationship, symptoms, alcohol/medicine exposure and serial trend; AST is not liver-specific.");
+ if((vs.alp?.status==="High") && (vs.ggt?.status==="High"))out.push("ALP and GGT are both elevated, which can support a hepatobiliary/cholestatic pattern in the appropriate clinical context.");
+ if(vs.alp?.status==="High" && !(vs.ggt?.status==="High"))out.push("Isolated ALP elevation is not automatically hepatic; bone and other sources should be considered.");
+ if(vs.tbili?.status==="High")out.push("Total bilirubin is elevated; direct/indirect fractions help characterize the pattern.");
+ if(!out.length)out.push("No major abnormal liver-panel pattern detected from the verified/imported values currently shown.");
  return out.join("\n");
 }
 function rftPattern(vs){
- let e=numVal(vs,"egfr"),cr=numVal(vs,"creat"),uacr=numVal(vs,"uacr"),k=numVal(vs,"potassium"),out=[];
- if(e!==null&&e<60)out.push("eGFR below 60 is important if persistent; chronic kidney disease classification also uses duration and albuminuria.");
- if(uacr!==null&&uacr>=30)out.push("Albuminuria is elevated; persistence and eGFR together guide kidney-risk assessment.");
- if(cr!==null&&["High","Borderline high"].includes(vs.creat.status))out.push("Creatinine is above the selected range; review previous baseline, hydration, muscle mass and medicines.");
- if(k!==null&&(k<3.0||k>5.5))out.push("Potassium is substantially abnormal and may require prompt clinical reassessment depending on context.");
+ let out=[];
+ if(vs.egfr?.status==="Low")out.push("eGFR is reduced. CKD interpretation requires persistence over time and kidney-damage markers such as albuminuria, not a single eGFR alone.");
+ if(vs.creat?.status==="High"||vs.creat?.status==="Borderline high")out.push("Creatinine is above the selected reference range; compare with prior baseline, eGFR, hydration, muscle mass and medicines.");
+ if(vs.uacr?.status==="High"||vs.uacr?.status==="Borderline high")out.push("Urine albumin/creatinine ratio is elevated; persistence matters for kidney-risk classification.");
+ if(vs.potassium?.status==="High"||vs.potassium?.status==="Low")out.push("Potassium is outside the selected range; significance depends on degree, symptoms, renal function and medicines.");
+ if(!out.length)out.push("No major abnormal renal-panel pattern detected from the verified/imported values currently shown.");
  return out.join("\n");
 }
 function thyroidPattern(vs){
@@ -600,6 +618,243 @@ function renderSavedLabPanels(){
  }).join("");
 }
 
+
+
+const omegaExactRowMap = [
+ {panel:"CBC",id:"hb",canonical:"Hemoglobin",labels:["HAEMOGLOBIN","HEMOGLOBIN"]},
+ {panel:"CBC",id:"wbc",canonical:"Total WBC",labels:["TOTAL LEUCOCYTE COUNT","TOTAL LEUKOCYTE COUNT"]},
+ {panel:"CBC",id:"neut",canonical:"Neutrophils",labels:["NEUTROPHILS"]},
+ {panel:"CBC",id:"lymph",canonical:"Lymphocytes",labels:["LYMPHOCYTES"]},
+ {panel:"CBC",id:"eos",canonical:"Eosinophils",labels:["EOSINOPHILS"]},
+ {panel:"CBC",id:"mono",canonical:"Monocytes",labels:["MONOCYTES"]},
+ {panel:"CBC",id:"baso",canonical:"Basophils",labels:["BASOPHILS"]},
+ {panel:"CBC",id:"absNeut",canonical:"Absolute Neutrophils",labels:["ABSOLUTE NEUTROPHILS"]},
+ {panel:"CBC",id:"absLymph",canonical:"Absolute Lymphocytes",labels:["ABSOLUTE LYMPHOCYTES"]},
+ {panel:"CBC",id:"absEos",canonical:"Absolute Eosinophils",labels:["ABSOLUTE EOSINOPHILS"]},
+ {panel:"CBC",id:"absMono",canonical:"Absolute Monocytes",labels:["ABSOLUTE MONOCYTES"]},
+ {panel:"CBC",id:"absBaso",canonical:"Absolute Basophils",labels:["ABSOLUTE BASOPHILS"]},
+ {panel:"CBC",id:"rbc",canonical:"RBC count",labels:["RBC COUNT"]},
+ {panel:"CBC",id:"hct",canonical:"Hematocrit / PCV",labels:["HCT","HEMATOCRIT","PCV"]},
+ {panel:"CBC",id:"mcv",canonical:"MCV",labels:["MCV"]},
+ {panel:"CBC",id:"mch",canonical:"MCH",labels:["MCH"]},
+ {panel:"CBC",id:"mchc",canonical:"MCHC",labels:["MCHC"]},
+ {panel:"CBC",id:"rdw",canonical:"RDW",labels:["RDW-CV","RDW CV"]},
+ {panel:"CBC",id:"rdwsd",canonical:"RDW-SD",labels:["RDW-SD","RDW SD"]},
+ {panel:"CBC",id:"plt",canonical:"Platelets",labels:["PLATELET COUNT"]},
+ {panel:"CBC",id:"pct",canonical:"Plateletcrit (PCT)",labels:["PCT"]},
+ {panel:"CBC",id:"mpv",canonical:"MPV",labels:["MPV"]},
+ {panel:"CBC",id:"pdw",canonical:"PDW",labels:["PDW"]},
+ {panel:"CBC",id:"plcr",canonical:"P-LCR",labels:["P-LCR","PLCR"]},
+
+ {panel:"LFT",id:"tbili",canonical:"Total Bilirubin",labels:["BILIRUBIN TOTAL","TOTAL BILIRUBIN"]},
+ {panel:"LFT",id:"dbili",canonical:"Direct Bilirubin",labels:["BILIRUBIN DIRECT","DIRECT BILIRUBIN"]},
+ {panel:"LFT",id:"ibili",canonical:"Indirect Bilirubin",labels:["BILIRUBIN INDIRECT","INDIRECT BILIRUBIN"]},
+ {panel:"LFT",id:"alt",canonical:"ALT (SGPT)",labels:["SGPT","ALT"]},
+ {panel:"LFT",id:"ast",canonical:"AST (SGOT)",labels:["SGOT","AST"]},
+ {panel:"LFT",id:"astalt",canonical:"SGOT/SGPT Ratio",labels:["SGOT/SGPT RATIO","AST/ALT RATIO"]},
+ {panel:"LFT",id:"alp",canonical:"ALP",labels:["ALKALINE PHOSPHATASE","ALP"]},
+ {panel:"LFT",id:"ggt",canonical:"GGT",labels:["GAMMA GLUTAMYL TRANSFERASE (GGT)","GAMMA GLUTAMYL TRANSFERASE","GGT"]},
+ {panel:"LFT",id:"protein",canonical:"Total Protein",labels:["TOTAL PROTEINS","TOTAL PROTEIN"]},
+ {panel:"LFT",id:"albumin",canonical:"Albumin",labels:["ALBUMIN"]},
+ {panel:"LFT",id:"globulin",canonical:"Globulin",labels:["GLOBULIN"]},
+ {panel:"LFT",id:"agratio",canonical:"A:G Ratio",labels:["A : G RATIO","A:G RATIO","A/G RATIO"]},
+
+ {panel:"RFT",id:"urea",canonical:"Urea",labels:["UREA SERUM","SERUM UREA","UREA"]},
+ {panel:"RFT",id:"creat",canonical:"Serum Creatinine",labels:["CREATININE SERUM","SERUM CREATININE"]},
+ {panel:"RFT",id:"bun",canonical:"BUN",labels:["UREA NITROGEN (BUN)","BLOOD UREA NITROGEN","BUN"]},
+ {panel:"RFT",id:"buncr",canonical:"BUN/Creatinine Ratio",labels:["BUN/CREATININE RATIO"]},
+ {panel:"RFT",id:"ureacr",canonical:"Urea/Creatinine Ratio",labels:["UREA / CREATININE","UREA/CREATININE"]},
+ {panel:"RFT",id:"uric",canonical:"Uric Acid",labels:["SERUM URIC ACID","URIC ACID"]},
+ {panel:"RFT",id:"sodium",canonical:"Sodium",labels:["SERUM SODIUM (NA+)","SERUM SODIUM","SODIUM"]},
+ {panel:"RFT",id:"potassium",canonical:"Potassium",labels:["SERUM POTASSIUM (K+)","SERUM POTASSIUM","POTASSIUM"]},
+ {panel:"RFT",id:"chloride",canonical:"Chloride",labels:["SERUM CHLORIDE (CL-)","SERUM CHLORIDE","CHLORIDE"]},
+ {panel:"RFT",id:"egfr",canonical:"eGFR",labels:["ESTIMATED GFR (EGFR)","ESTIMATED GFR","EGFR"]},
+
+ {panel:"DIABETES",id:"hba1c",canonical:"HbA1c",labels:["HBA1C","GLYCATED HEMOGLOBIN"]},
+ {panel:"DIABETES",id:"eag",canonical:"Estimated Average Glucose",labels:["ESTIMATED AVERAGE GLUCOSE","EAG"]},
+
+ {panel:"IRON",id:"iron",canonical:"Serum Iron",labels:["SERUM IRON"]},
+ {panel:"IRON",id:"tibc",canonical:"Total Iron Binding Capacity",labels:["TOTAL IRON BINDING CAPACITY"]},
+ {panel:"IRON",id:"uibc",canonical:"Unsaturated Iron Binding Capacity",labels:["UNSATURATED IRON BINDING CAPACITY"]},
+ {panel:"IRON",id:"tsat",canonical:"Transferrin Saturation",labels:["TRANSFERRIN SATURATION"]},
+
+ {panel:"THYROID",id:"t3total",canonical:"Total T3",labels:["T3"]},
+ {panel:"THYROID",id:"t4total",canonical:"Total T4",labels:["T4"]},
+ {panel:"THYROID",id:"tsh",canonical:"TSH",labels:["TSH(SERUM)","TSH"]},
+
+ {panel:"MICRONUTRIENT",id:"vitd",canonical:"25-OH Vitamin D",labels:["SERUM VITAMIN D3","VITAMIN D3"]},
+ {panel:"MICRONUTRIENT",id:"b12",canonical:"Vitamin B12",labels:["VITAMIN B12"]},
+ {panel:"BONE",id:"vitd",canonical:"25-OH Vitamin D",labels:["SERUM VITAMIN D3","VITAMIN D3"]},
+ {panel:"IRON",id:"b12",canonical:"Vitamin B12",labels:["VITAMIN B12"]}
+];
+
+function normRowText(s){
+ return String(s||"").replace(/[–—]/g,"-").replace(/\s+/g," ").trim();
+}
+function normLabel(s){
+ return normRowText(s).toUpperCase().replace(/\s*:\s*/g," ").trim();
+}
+
+function getExactRuleForRow(rowText){
+ const row=normLabel(rowText);
+ let candidates=[];
+ omegaExactRowMap.forEach(rule=>{
+   rule.labels.forEach(label=>{
+     const L=normLabel(label);
+     if(row===L || row.startsWith(L+" ") || row.startsWith(L+"\t")) candidates.push({rule,label:L});
+   });
+ });
+ candidates.sort((a,b)=>b.label.length-a.label.length);
+ return candidates[0]?.rule||null;
+}
+
+function parseFirstResultAfterLabel(rowText,rule){
+ const raw=normRowText(rowText);
+ const upper=raw.toUpperCase();
+ let bestLabel="";
+ for(const lbl of rule.labels){
+   const L=normLabel(lbl);
+   if(upper.startsWith(L) && L.length>bestLabel.length)bestLabel=L;
+ }
+ if(!bestLabel)return null;
+ let rest=raw.slice(bestLabel.length).trim();
+
+ // Remove a standalone flag only after a numeric result, not before.
+ const valueMatch=rest.match(/^([<>]?\s*-?\d+(?:\.\d+)?|ABSENT|NEGATIVE|NILL|NIL|CLEAR|PALE YELLOW|NO GROWTH)\b/i);
+ if(!valueMatch)return null;
+ const value=valueMatch[1].replace(/\s/g,"");
+ rest=rest.slice(valueMatch[0].length).trim();
+
+ let flag="";
+ const flagMatch=rest.match(/^(H|L|HIGH|LOW)\b/i);
+ if(flagMatch){flag=flagMatch[1].toUpperCase();rest=rest.slice(flagMatch[0].length).trim()}
+
+ // Extract a simple range only if it occurs immediately after the result/flag.
+ let refText="";
+ const rangeMatch=rest.match(/^([<>]=?\s*-?\d+(?:\.\d+)?|>?\s*-?\d+(?:\.\d+)?)\s*-\s*(-?\d+(?:\.\d+)?)/);
+ if(rangeMatch){
+   refText=`${rangeMatch[1].replace(/\s/g,"")}-${rangeMatch[2]}`;
+ } else {
+   const minMatch=rest.match(/^>\s*(\d+(?:\.\d+)?)/);
+   if(minMatch)refText=`>${minMatch[1]}`;
+ }
+
+ return {value,flag,refText,rest};
+}
+
+async function extractPdfRows(file){
+ if(!window.pdfjsLib)throw new Error("PDF reader library did not load.");
+ pdfjsLib.GlobalWorkerOptions.workerSrc="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
+ const buf=await file.arrayBuffer();
+ const pdf=await pdfjsLib.getDocument({data:buf}).promise;
+ const all=[];
+ for(let pno=1;pno<=pdf.numPages;pno++){
+   const page=await pdf.getPage(pno);
+   const content=await page.getTextContent();
+   const items=content.items.map(it=>({
+     text:it.str||"",
+     x:it.transform?.[4]||0,
+     y:it.transform?.[5]||0,
+     w:it.width||0
+   })).filter(x=>x.text.trim());
+   items.sort((a,b)=>Math.abs(b.y-a.y)>2?b.y-a.y:a.x-b.x);
+   const rows=[];
+   for(const item of items){
+     let row=rows.find(r=>Math.abs(r.y-item.y)<=2.2);
+     if(!row){row={y:item.y,items:[]};rows.push(row)}
+     row.items.push(item);
+   }
+   rows.sort((a,b)=>b.y-a.y);
+   rows.forEach(r=>{
+     r.items.sort((a,b)=>a.x-b.x);
+     const text=r.items.map(x=>x.text.trim()).filter(Boolean).join(" ");
+     all.push({page:pno,y:r.y,text:normRowText(text),items:r.items});
+   });
+ }
+ return all;
+}
+
+function parseOmegaExactRows(rows,sex){
+ const results=[];
+ for(const row of rows){
+   const rule=getExactRuleForRow(row.text);
+   if(!rule)continue;
+   const parsed=parseFirstResultAfterLabel(row.text,rule);
+   if(!parsed)continue;
+
+   // Reject obvious impossible row collisions.
+   const numeric=Number(parsed.value);
+   if(Number.isFinite(numeric)){
+     if(rule.id==="hb" && (numeric<3 || numeric>25))continue;
+     if(rule.id==="creat" && (numeric<0.1 || numeric>25))continue;
+     if(rule.id==="ast" && numeric>5000)continue;
+     if(rule.id==="alt" && numeric>5000)continue;
+   }
+
+   const p=labPanels[rule.panel]?.params.find(x=>x.id===rule.id);
+   if(!p)continue;
+   const oldPanel=currentLabPanel;currentLabPanel=rule.panel;
+   const omega=omegaRefFor(rule.panel,p,sex);
+   currentLabPanel=oldPanel;
+
+   // Prefer sex-specific Omega template for known complex ranges; use extracted simple row range otherwise.
+   let ref=parsed.refText || omega?.text || "Lab-specific";
+   if(rule.id==="alp" && omega?.text)ref=omega.text;
+   if(rule.id==="hb" && omega?.text)ref=omega.text;
+   if(rule.id==="rbc" && omega?.text)ref=omega.text;
+   if(rule.id==="hct" && omega?.text)ref=omega.text;
+
+   results.push({
+     panel:rule.panel,id:rule.id,canonical:rule.canonical,
+     value:parsed.value,flag:parsed.flag,ref,
+     unit:omega?.unit||p.unit||"",
+     page:row.page,sourceRow:row.text,
+     confidence:0.99,parser:"Omega exact row"
+   });
+ }
+ return results;
+}
+
+function resultsToSmartMap(results){
+ smartImportMapped={};
+ results.forEach(r=>smartImportMapped[r.canonical]=r.value);
+ return smartImportMapped;
+}
+
+function findPrecisionResult(panelKey,paramId){
+ return precisionImportRows.find(r=>r.panel===panelKey&&r.id===paramId)||null;
+}
+
+function statusFromExplicitRef(value,ref,p,sex){
+ const num=Number(value);
+ if(Number.isNaN(num))return autoStatus(value,p,sex);
+ const m=String(ref||"").match(/(-?\d+(?:\.\d+)?)\s*[-–]\s*(-?\d+(?:\.\d+)?)/);
+ if(m){
+   const lo=Number(m[1]),hi=Number(m[2]);
+   if(lo>hi)return "Not assessed";
+   if(num<lo){const d=(lo-num)/(Math.abs(lo)||1);return d<=0.10?"Borderline low":"Low"}
+   if(num>hi){const d=(num-hi)/(Math.abs(hi)||1);return d<=0.10?"Borderline high":"High"}
+   return "Normal";
+ }
+ const gt=String(ref||"").match(/>\s*(\d+(?:\.\d+)?)/);
+ if(gt)return num>Number(gt[1])?"Normal":"Low";
+ return autoStatus(value,p,sex);
+}
+
+function renderImportAudit(){
+ if(!$("importAuditTable"))return;
+ const panelRows=precisionImportRows.filter(r=>r.panel===currentLabPanel);
+ if(!panelRows.length){
+   $("importAuditSummary").textContent="No exact-row import audit available for this panel.";
+   $("importAuditTable").innerHTML="";
+   return;
+ }
+ const low=panelRows.filter(r=>r.confidence<0.95).length;
+ $("importAuditSummary").textContent=`${panelRows.length} row(s) imported with exact page-row matching. ${low} lower-confidence row(s). Compare the Source PDF Row before marking Verified.`;
+ $("importAuditTable").innerHTML=`<div style="overflow:auto"><table><thead><tr><th>Test</th><th>Imported</th><th>Reference</th><th>Page</th><th>Confidence</th><th>Source PDF row</th></tr></thead><tbody>${
+   panelRows.map(r=>`<tr><td><b>${r.canonical}</b></td><td>${r.value}</td><td>${r.ref||""}</td><td>${r.page}</td><td class="${r.confidence>=.98?"conf-high":r.confidence>=.9?"conf-medium":"conf-low"}">${Math.round(r.confidence*100)}%</td><td class="audit-row-source">${r.sourceRow}</td></tr>`).join("")
+ }</tbody></table></div>`;
+}
 
 let smartImportMapped={};
 const testAliases={
@@ -692,25 +947,32 @@ function buildPanelValuesFromSmart(panelKey){
  const oldPanel=currentLabPanel;
  currentLabPanel=panelKey;
  panel.params.forEach(p=>{
-   const val=smartImportMapped[p.name]??"";
+   const exact=findPrecisionResult(panelKey,p.id);
+   const val=exact?.value ?? smartImportMapped[p.name] ?? "";
    if(val!=="")count++;
    const om=omegaRefFor(panelKey,p,sex);
+   const ref=exact?.ref || refRangeFor(p,sex);
+   const status=val!=="" ? statusFromExplicitRef(val,ref,p,sex) : "Not assessed";
    values[p.id]={
      name:p.name,
-     unit:om?.unit||p.unit||"",
+     unit:exact?.unit||om?.unit||p.unit||"",
      value:val,
-     ref:refRangeFor(p,sex),
-     status:autoStatus(val,p,sex),
+     ref,
+     status,
      remark:val!==""?"Smart-imported; verify with original report.":"",
      meaning:p.meaning,
-     referenceSource:(v("liLabTemplate")==="generic"?"Generic adult example":"Omega Diagnostics sample-derived"),
-     imported:val!==""
+     referenceSource:exact?`Original PDF row • page ${exact.page}`:((v("liLabTemplate")==="generic")?"Generic adult example":"Omega Diagnostics sample-derived"),
+     imported:val!=="",
+     parser:exact?.parser||"fallback",
+     confidence:exact?.confidence||0.60,
+     sourceRow:exact?.sourceRow||"",
+     sourcePage:exact?.page||null,
+     verification:"Unverified"
    };
  });
  currentLabPanel=oldPanel;
  return {values,count};
 }
-
 function saveSmartDraftsWithAttachment(){
  const matches=[];
  Object.entries(labPanels).forEach(([panelKey,panel])=>{
@@ -745,77 +1007,61 @@ async function analyzeAttachedLabReport(){
  if(!file){if(status)status.textContent="Please choose a PDF/image first.";return}
  autoSelectOmegaTemplate();
  if($("liSearch"))$("liSearch").value="";
- if(status)status.textContent=`Reading ${file.name}...`;
+ const mode=v("liImportMode")||"omega-exact";
+ if(status)status.textContent=`Reading ${file.name} using ${mode}...`;
  try{
    let text="";
-   if(file.type==="application/pdf"||file.name.toLowerCase().endsWith(".pdf"))text=await extractPdfText(file);
-   else text=await extractImageText(file);
+   precisionImportRows=[];
+   precisionImportAudit=[];
+
+   if(file.type==="application/pdf"||file.name.toLowerCase().endsWith(".pdf")){
+     if(mode==="omega-exact"||mode==="generic-row"){
+       const rows=await extractPdfRows(file);
+       precisionImportRows=parseOmegaExactRows(rows,v("liSex")||db.profile?.sex||"Male");
+       resultsToSmartMap(precisionImportRows);
+       text=rows.map(r=>`[p${r.page}] ${r.text}`).join("\n");
+     } else {
+       text=await extractPdfText(file);
+       mapReportText(text);
+     }
+   } else {
+     text=await extractImageText(file);
+     // OCR remains lower-confidence; never call it exact.
+     mapReportText(text);
+   }
+
    if($("smartImportText"))$("smartImportText").value=normalizeReportText(text);
-   mapReportText(text);
+   if(!Object.keys(smartImportMapped).length && mode!=="legacy-fuzzy"){
+     // Controlled fallback, clearly lower confidence.
+     mapReportText(text);
+   }
+
    activeImportedAttachmentName=pendingFiles.li?.name||file.name||"";
    activeImportedDate=v("liDate")||today();
    const matches=saveSmartDraftsWithAttachment();
    if(!matches.length){
-     if(status)status.textContent="Report was read, but no known test values were mapped. Try Smart Import text preview above.";
+     if(status)status.textContent="Report was read, but no known test rows were mapped. Do not use the result clinically; review the extracted text or tune the lab template.";
      return;
    }
    matches.sort((a,b)=>b.count-a.count);
    const best=matches[0];
    currentLabPanel=best.panelKey;
    renderLabPanelButtons();
-   renderLabParameters(best.values);
+   const draft=getImportedDraftForPanel(best.panelKey);
+   renderLabParameters(draft?.values||best.values);
    generateCurrentPanelSummary();
+   renderImportAudit();
    renderSavedLabPanels();
-   renderLabPanelButtons();
    generateFullBodySummary();
-   if(status)status.textContent=`✓ ${Object.keys(smartImportMapped).length} values recognized; ${matches.length} panel(s) created. Showing ${best.panel.title} with ${best.count} auto-filled value(s). VERIFY before use.`;
+
+   const exactCount=precisionImportRows.length;
+   if(status)status.textContent=`✓ ${exactCount||Object.keys(smartImportMapped).length} test row(s) mapped; ${matches.length} panel(s) created. Exact-row parser minimizes cross-row number capture. VERIFY every imported result before diagnosis.`;
    if($("liSaveStatus"))$("liSaveStatus").textContent="Smart-imported; verify with original report.";
  }catch(e){
    console.error(e);
    if(status)status.textContent=`Analysis failed: ${e.message}`;
  }
 }
-
-
-function panelSummaryText(record){
- const vals=Object.values(record.values||{});
- const assessed=vals.filter(x=>x.value!==""&&x.value!==null&&x.value!==undefined);
- const flagged=assessed.filter(x=>!["Normal","Not assessed"].includes(x.status));
- const normal=assessed.filter(x=>x.status==="Normal");
- return {
-   assessed:assessed.length,
-   flagged:flagged.length,
-   normal:normal.length,
-   flaggedText:flagged.slice(0,8).map(x=>`${x.name}: ${x.value} ${x.unit||""} — ${x.status}`).join("; ")
- };
-}
-
-function generateFullBodySummary(){
- if(!$("fullBodySummary"))return;
- const attachmentName=pendingFiles.li?.name||activeImportedAttachmentName||"";
- const date=v("liDate")||activeImportedDate||"";
- let records=db.labInterpretations.filter(x=>x.smartImported===true);
- if(attachmentName)records=records.filter(x=>x.attachment?.name===attachmentName);
- if(date){
-   const dated=records.filter(x=>x.date===date);
-   if(dated.length)records=dated;
- }
- const seen=new Set();
- records=records.filter(x=>{if(seen.has(x.panel))return false;seen.add(x.panel);return true});
- if(!records.length){
-   $("fullBodySummary").textContent="No smart-imported full-body panel records found yet.";
-   return;
- }
- let totalAssessed=0,totalFlagged=0,lines=[];
- records.forEach(r=>{
-   const s=panelSummaryText(r);
-   totalAssessed+=s.assessed;totalFlagged+=s.flagged;
-   lines.push(`${r.title}: ${s.assessed} result(s) imported • ${s.flagged} flagged${s.flaggedText?`\n  ↳ ${s.flaggedText}`:""}`);
- });
- $("fullBodySummary").textContent=
- `Imported report: ${attachmentName||"Current report"}\nDate: ${date||"Not specified"}\nPanels detected: ${records.length}\nTotal mapped results: ${totalAssessed}\nFlagged / borderline / abnormal: ${totalFlagged}\n\n${lines.join("\n\n")}\n\nAll smart-imported values must be verified against the original report before clinical use.`;
-}
-
 async function runSmartImport(){
  const file=$("smartReportFile")?.files?.[0];
  if(!file){$("smartImportProgress").textContent="Choose a PDF/image first.";return}
@@ -934,6 +1180,8 @@ let pendingFiles={};
 let lastLabUploadFile=null;
 let activeImportedAttachmentName="";
 let activeImportedDate="";
+let precisionImportRows=[];
+let precisionImportAudit=[];
 
 const FILE_DB_NAME="raj_health_360_files";
 const FILE_STORE="attachments";

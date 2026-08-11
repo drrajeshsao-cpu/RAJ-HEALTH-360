@@ -158,3 +158,20 @@ New behavior:
 - Panel buttons show how many values were imported.
 - Added Full Body Report Summary with detected panel count, total mapped tests and flagged results.
 - Smart-imported values remain labeled for verification against the original report.
+
+
+## V6.4 Precision Import — accuracy-first architecture
+Major parser redesign after direct comparison with the Omega Diagnostics PDF:
+- Replaced global fuzzy-number matching as the default with page-by-page, row-by-row exact label parsing for Omega digital PDFs.
+- Prevents cross-row collisions such as:
+  - Hb 11.4 being misread as 1
+  - SGOT 22.392 being misread from an unrelated value
+  - Creatinine 0.65 being confused with Urea/Creatinine ratio 34
+- Uses exact row labels and longest-label matching.
+- Stores source PDF page and original source row for every exact import.
+- Adds import confidence and row-level audit table.
+- Adds verification state: Unverified / Verified with PDF / Corrected manually.
+- User edits remain editable and saveable.
+- Smart-imported values preferentially use the report/Omega lab reference range; complex sex-specific ranges use the Omega template.
+- Image OCR remains a lower-confidence fallback and requires review.
+- Interpretation language is intentionally cautious and pattern-based; imported data must be verified before diagnosis or treatment decisions.

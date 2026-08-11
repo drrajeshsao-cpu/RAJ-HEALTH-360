@@ -304,6 +304,15 @@
       <label>Sex for reference<select id="liSex"><option>Male</option><option>Female</option></select></label>
       <label>Reference template<select id="liLabTemplate" onchange="renderLabParameters()"><option value="omega" selected>Omega Diagnostics — sample-derived</option><option value="generic">Generic adult examples</option></select></label>
       <label>Laboratory / facility<input id="liFacility" placeholder="Lab / hospital name"></label>
+      
+      <label>Import accuracy mode
+        <select id="liImportMode">
+          <option value="omega-exact" selected>Omega Exact Row Parser (recommended)</option>
+          <option value="generic-row">Generic Row Parser</option>
+          <option value="legacy-fuzzy">Legacy Fuzzy Parser (fallback only)</option>
+        </select>
+      </label>
+
       <label>Clinical context<input id="liContext" placeholder="Routine / fasting / symptoms / follow-up..."></label>
     </div>
 
