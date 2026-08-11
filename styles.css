@@ -111,3 +111,10 @@ footer{text-align:center;color:var(--muted);font-size:11px;padding:24px}
 .smart-verify-banner{margin-bottom:10px;padding:10px 12px;border:1px solid #f2c46d;background:#fff8e7;border-radius:10px;color:#7a4b00;font-size:12px}
 .imported-badge{display:inline-block;background:#fff3cd;color:#7a4b00;border:1px solid #f1cf78;border-radius:999px;padding:3px 7px;font-size:9px;font-weight:900;margin-left:5px}
 .ref-source{font-size:9px;color:var(--muted);margin-top:3px}
+
+.lab-use-flow{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin:12px 0 14px}
+.lab-use-flow div{display:flex;align-items:center;gap:8px;border:1px solid var(--line);background:var(--surface2);padding:9px 10px;border-radius:10px;font-size:11px;font-weight:750}
+.lab-use-flow b{width:24px;height:24px;border-radius:50%;display:grid;place-items:center;background:var(--brand);color:white;flex:0 0 auto}
+.report-analyze-row{width:100%;display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-top:8px}
+.analyze-status{font-size:11px;font-weight:750;color:var(--muted)}
+@media(max-width:900px){.lab-use-flow{grid-template-columns:1fr}}

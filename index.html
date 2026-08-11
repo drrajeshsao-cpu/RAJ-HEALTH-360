@@ -307,6 +307,15 @@
       <label>Clinical context<input id="liContext" placeholder="Routine / fasting / symptoms / follow-up..."></label>
     </div>
 
+    
+    <div class="lab-use-flow">
+      <div><b>1</b><span>Select Omega template</span></div>
+      <div><b>2</b><span>Upload full PDF/image</span></div>
+      <div><b>3</b><span>Analyze & Auto-fill</span></div>
+      <div><b>4</b><span>Verify values/ranges</span></div>
+      <div><b>5</b><span>Save interpreted panel</span></div>
+    </div>
+
     <div class="attachment-box">
       <div><b>Attach & save original report</b><small>PDF, image or direct camera capture. The actual file is stored locally on this device.</small></div>
       <div class="attach-actions">
@@ -314,6 +323,10 @@
         <label class="filebtn">📷 Camera<input type="file" id="liCamera" accept="image/*" capture="environment"></label>
       </div>
       <div id="liFileName" class="file-name"></div><div id="liSaveStatus" class="file-name"></div>
+      <div class="report-analyze-row">
+        <button class="primary" onclick="analyzeAttachedLabReport()">✦ Analyze Uploaded Report & Auto-fill</button>
+        <span id="liAnalyzeStatus" class="analyze-status">Upload a PDF/image, then click Analyze.</span>
+      </div>
     </div>
 
     <div class="lab-toolbar">

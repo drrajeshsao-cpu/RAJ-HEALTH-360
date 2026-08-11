@@ -135,3 +135,15 @@ Reference intervals are examples and may vary by lab, assay, age, sex, cycle day
 - Expanded CBC, LFT, RFT, Iron, Lipid, Urine, Thyroid, Vitamin D/B12 and eAG slots to match the report.
 - Smart-imported values are labelled: `Smart-imported; verify with original report.`
 - RDW-SD and SGOT/SGPT ratio printed ranges that appear internally unusual are flagged VERIFY rather than trusted automatically.
+
+
+## V6.2 One-Click Report Analyzer
+Critical usability fixes:
+- Fixed CBC/LFT/RFT parameter-table rendering.
+- Selecting a panel automatically clears accidental search text such as "CBC".
+- The same locally saved PDF/image can be analyzed directly; no second upload is required.
+- Added "Analyze Uploaded Report & Auto-fill".
+- Omega template auto-selects when the facility contains "Omega".
+- Recognized results create VERIFY drafts for all matching panels.
+- The best matched panel opens immediately with values visible and interpretation generated.
+- Every imported value is labeled: "Smart-imported; verify with original report."

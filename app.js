@@ -399,6 +399,7 @@ function statusClass(s){
 function selectLabPanel(key){
  if(!labPanels[key]){console.error("Unknown lab panel",key);return}
  currentLabPanel=key;
+ if($("liSearch"))$("liSearch").value="";
  document.querySelectorAll(".lab-panel-btn").forEach(b=>b.classList.toggle("active",b.dataset.panel===key));
  document.querySelectorAll("#labPanelStaticGrid button").forEach(b=>b.classList.toggle("active",b.getAttribute("onclick")?.includes(`'${key}'`)));
  renderLabParameters();
@@ -414,15 +415,34 @@ function renderLabParameters(existing=null){
  if(!$("labParameterTable"))return;
  const panel=labPanels[currentLabPanel]||labPanels.CBC;
  if(!panel||!Array.isArray(panel.params)){if($("labCentreStatus"))$("labCentreStatus").textContent="Panel configuration error.";return}
- const sex=v("liSex")||db.profile?.sex||"Male",q=(v("liSearch")||"").toLowerCase();
- if($("labPanelTitle"))$("labPanelTitle").textContent=panel.title;if($("labPanelSystem"))$("labPanelSystem").textContent=panel.system;if($("labPanelCount"))$("labPanelCount").textContent=`${panel.params.length} parameters`;
+ const sex=v("liSex")||db.profile?.sex||"Male";
+ let q=(v("liSearch")||"").trim().toLowerCase();
+ const panelAliases=[currentLabPanel.toLowerCase(),panel.title.toLowerCase(),panel.title.toLowerCase().replace(/\([^)]*\)/g,"").trim()];
+ if(panelAliases.includes(q))q="";
+ if($("labPanelTitle"))$("labPanelTitle").textContent=panel.title;
+ if($("labPanelSystem"))$("labPanelSystem").textContent=panel.system;
+ if($("labPanelCount"))$("labPanelCount").textContent=`${panel.params.length} parameters`;
  const previous=existing||{};
- let visible=panel.params.filter(p=>(p.name+" "+p.meaning).toLowerCase().includes(q));
- let rows=visible.map(p=>{
-   const old=previous[p.id]||{},ref=old.ref||refRangeFor(p,sex),val=old.value??"",stat=old.status||autoStatus(val,p,sex);
-   return `<tr><td><div class="param-name">${p.name}</div><div class="param-meaning">${p.meaning}</div></td><td>${displayUnit}<div class="ref-source">${omega?"Omega template":"Generic"}${omega?.verify?" • VERIFY RANGE":""}</div></td><td><input class="range-input" id="ref_${p.id}" value="${ref}"></td><td><input class="result-input" id="val_${p.id}" value="${val}" oninput="updateParamStatus('${p.id}')"></td><td><select class="status-select ${statusClass(stat)}" id="status_${p.id}" onchange="this.className='status-select '+statusClass(this.value)">${["Not assessed","Normal","Borderline low","Low","Borderline high","High","Abnormal"].map(s=>`<option ${s===stat?"selected":""}>${s}</option>`).join("")}</select></td><td><input id="remark_${p.id}" value="${old.remark||""}" placeholder="Remark"></td></tr>`;
+ const visible=panel.params.filter(p=>(p.name+" "+p.meaning).toLowerCase().includes(q));
+ const rows=visible.map(p=>{
+   const old=previous[p.id]||{};
+   const omega=omegaRefFor(currentLabPanel,p,sex);
+   const displayUnit=omega?.unit||p.unit||"";
+   const ref=old.ref||refRangeFor(p,sex);
+   const val=old.value??"";
+   const stat=old.status||autoStatus(val,p,sex);
+   return `<tr>
+     <td><div class="param-name">${p.name}</div><div class="param-meaning">${p.meaning}</div></td>
+     <td>${displayUnit}<div class="ref-source">${omega?"Omega template":"Generic"}${omega?.verify?" • VERIFY RANGE":""}</div></td>
+     <td><input class="range-input" id="ref_${p.id}" value="${ref}"></td>
+     <td><input class="result-input" id="val_${p.id}" value="${val}" oninput="updateParamStatus('${p.id}');generateCurrentPanelSummary()"></td>
+     <td><select class="status-select ${statusClass(stat)}" id="status_${p.id}" onchange="this.className='status-select '+statusClass(this.value);generateCurrentPanelSummary()">
+       ${["Not assessed","Normal","Borderline low","Low","Borderline high","High","Abnormal"].map(s=>`<option ${s===stat?"selected":""}>${s}</option>`).join("")}
+     </select></td>
+     <td><input id="remark_${p.id}" value="${old.remark||""}" placeholder="Remark"></td>
+   </tr>`;
  }).join("");
- $("labParameterTable").innerHTML=`<div class="lab-param-table"><table><thead><tr><th>Parameter & meaning</th><th>Unit</th><th>Reference range</th><th>Your value</th><th>Status</th><th>Remark</th></tr></thead><tbody>${rows||`<tr><td colspan="6">No parameter matches search.</td></tr>`}</tbody></table></div>`;
+ $("labParameterTable").innerHTML=`<div class="lab-param-table"><table><thead><tr><th>Parameter & meaning</th><th>Unit</th><th>Reference range</th><th>Your value</th><th>Status</th><th>Remark</th></tr></thead><tbody>${rows||`<tr><td colspan="6">No parameter matches search. Clear the search box to show all ${panel.params.length} parameters.</td></tr>`}</tbody></table></div>`;
 }
 function updateParamStatus(id){
  const p=labPanels[currentLabPanel].params.find(x=>x.id===id);if(!p)return;
@@ -550,7 +570,7 @@ const testAliases={
  "RBC count":["rbc count","total rbc","rbc"],
  "Hematocrit / PCV":["hematocrit","haematocrit","pcv","hct"],
  "MCV":["mcv"],"MCH":["mch"],"MCHC":["mchc"],"RDW":["rdw","rdw-cv"],
- "Total WBC":["total wbc","wbc count","tlc","total leukocyte count"],
+ "Total WBC":["total wbc","wbc count","tlc","total leukocyte count","total leucocyte count"],
  "Neutrophils":["neutrophils","neutrophil"],"Lymphocytes":["lymphocytes","lymphocyte"],
  "Eosinophils":["eosinophils","eosinophil"],"Monocytes":["monocytes","monocyte"],
  "Platelets":["platelet count","platelets"],
@@ -582,17 +602,27 @@ const testAliases={
  "Amylase":["amylase"],"Lipase":["lipase"],"PSA":["psa","prostate specific antigen"]
 };
 
-Object.assign(testAliases,{"Basophils":["basophils"],"Absolute Neutrophils":["absolute neutrophils"],"Absolute Lymphocytes":["absolute lymphocytes"],"Absolute Eosinophils":["absolute eosinophils"],"Absolute Monocytes":["absolute monocytes"],"Absolute Basophils":["absolute basophils"],"RDW-SD":["rdw-sd","rdw sd"],"Plateletcrit (PCT)":["plateletcrit","pct"],"MPV":["mpv"],"PDW":["pdw"],"P-LCR":["p-lcr","plcr"],"P-LCC":["p-lcc","plcc"],"Estimated Average Glucose":["estimated average glucose"],"Indirect Bilirubin":["bilirubin indirect","indirect bilirubin"],"SGOT/SGPT Ratio":["sgot/sgpt ratio","ast/alt ratio"],"Globulin":["globulin"],"A:G Ratio":["a : g ratio","a:g ratio","a/g ratio"],"Unsaturated Iron Binding Capacity":["unsaturated iron binding capacity","uibc"],"Transferrin Saturation":["transferrin saturation"],"BUN/Creatinine Ratio":["bun/creatinine ratio","bun/creatnine ratio"],"Urea/Creatinine Ratio":["urea / creatinine","urea/creatinine"],"Chloride":["serum chloride","chloride"],"VLDL-C":["vldl cholesterol","vldl"],"Cholesterol/HDL Ratio":["cholesterol/hdl ratio"],"LDL/HDL Ratio":["ldl/hdl ratio"],"Total T3":["t3"],"Total T4":["t4"],"Urine RBC":["rbc nill","rbc nil","urine rbc"],"Epithelial Cells":["epithelial cell","epithelial cells"],"Casts":["cast"],"Crystals":["crystal"],"Bacteria":["bacteria"]});
+Object.assign(testAliases,{
+"Serum Iron":["serum iron","iron serum"],
+"Total Iron Binding Capacity":["total iron binding capacity","tibc"],
+"Basophils":["basophils"],"Absolute Neutrophils":["absolute neutrophils"],"Absolute Lymphocytes":["absolute lymphocytes"],"Absolute Eosinophils":["absolute eosinophils"],"Absolute Monocytes":["absolute monocytes"],"Absolute Basophils":["absolute basophils"],"RDW-SD":["rdw-sd","rdw sd"],"Plateletcrit (PCT)":["plateletcrit","pct"],"MPV":["mpv"],"PDW":["pdw"],"P-LCR":["p-lcr","plcr"],"P-LCC":["p-lcc","plcc"],"Estimated Average Glucose":["estimated average glucose"],"Indirect Bilirubin":["bilirubin indirect","indirect bilirubin"],"SGOT/SGPT Ratio":["sgot/sgpt ratio","ast/alt ratio"],"Globulin":["globulin"],"A:G Ratio":["a : g ratio","a:g ratio","a/g ratio"],"Unsaturated Iron Binding Capacity":["unsaturated iron binding capacity","uibc"],"Transferrin Saturation":["transferrin saturation"],"BUN/Creatinine Ratio":["bun/creatinine ratio","bun/creatnine ratio"],"Urea/Creatinine Ratio":["urea / creatinine","urea/creatinine"],"Chloride":["serum chloride","chloride"],"VLDL-C":["vldl cholesterol","vldl"],"Cholesterol/HDL Ratio":["cholesterol/hdl ratio"],"LDL/HDL Ratio":["ldl/hdl ratio"],"Total T3":["t3"],"Total T4":["t4"],"Urine RBC":["rbc nill","rbc nil","urine rbc"],"Epithelial Cells":["epithelial cell","epithelial cells"],"Casts":["cast"],"Crystals":["crystal"],"Bacteria":["bacteria"]});
 function normalizeReportText(t){return (t||"").replace(/\r/g,"\n").replace(/[ \t]+/g," ").replace(/\n{2,}/g,"\n")}
 function escapeRegex(s){return s.replace(/[.*+?^${}()|[\]\\]/g,"\\$&")}
 function mapReportText(text){
- smartImportMapped={};const normalized=normalizeReportText(text),lower=normalized.toLowerCase();
+ smartImportMapped={};
+ const normalized=normalizeReportText(text);
  Object.entries(testAliases).forEach(([canonical,aliases])=>{
    let best=null;
    for(const alias of aliases){
-     const re=new RegExp(`(?:^|\\n|\\s)${escapeRegex(alias)}\\s*[:\\-]?\\s*([<>]?\\s*\\d+(?:\\.\\d+)?)`,"i");
-     const m=normalized.match(re);
-     if(m){best=m[1].replace(/\s/g,"");break}
+     const patterns=[
+       new RegExp(`${escapeRegex(alias)}\\s*[:\\-]?\\s*([<>]?\\s*\\d+(?:\\.\\d+)?)`,"i"),
+       new RegExp(`${escapeRegex(alias)}[^\\d\\n]{0,25}([<>]?\\s*\\d+(?:\\.\\d+)?)`,"i")
+     ];
+     for(const re of patterns){
+       const m=normalized.match(re);
+       if(m){best=m[1].replace(/\\s/g,"");break}
+     }
+     if(best!==null)break;
    }
    if(best!==null)smartImportMapped[canonical]=best;
  });
@@ -616,6 +646,95 @@ async function extractImageText(file){
  const result=await Tesseract.recognize(file,"eng",{logger:m=>{if($("smartImportProgress")&&m.status)$("smartImportProgress").textContent=`OCR: ${m.status} ${m.progress?Math.round(m.progress*100)+"%":""}`}});
  return result.data.text||"";
 }
+
+function buildPanelValuesFromSmart(panelKey){
+ const panel=labPanels[panelKey];
+ const sex=v("liSex")||db.profile?.sex||"Male";
+ const values={};
+ let count=0;
+ const oldPanel=currentLabPanel;
+ currentLabPanel=panelKey;
+ panel.params.forEach(p=>{
+   const val=smartImportMapped[p.name]??"";
+   if(val!=="")count++;
+   const om=omegaRefFor(panelKey,p,sex);
+   values[p.id]={
+     name:p.name,
+     unit:om?.unit||p.unit||"",
+     value:val,
+     ref:refRangeFor(p,sex),
+     status:autoStatus(val,p,sex),
+     remark:val!==""?"Smart-imported; verify with original report.":"",
+     meaning:p.meaning,
+     referenceSource:(v("liLabTemplate")==="generic"?"Generic adult example":"Omega Diagnostics sample-derived"),
+     imported:val!==""
+   };
+ });
+ currentLabPanel=oldPanel;
+ return {values,count};
+}
+
+function saveSmartDraftsWithAttachment(){
+ const matches=[];
+ Object.entries(labPanels).forEach(([panelKey,panel])=>{
+   const built=buildPanelValuesFromSmart(panelKey);
+   if(built.count>0)matches.push({panelKey,panel,values:built.values,count:built.count});
+ });
+ if(!matches.length)return [];
+ const attachment=pendingFiles.li||null;
+ matches.forEach(m=>{
+   const record={
+     panel:m.panelKey,title:m.panel.title,system:m.panel.system,date:v("liDate")||today(),
+     sex:v("liSex")||db.profile?.sex||"Male",
+     facility:v("liFacility")||"OMEGA LAB",
+     context:"Smart imported full report — VERIFY",
+     remarks:"Smart-imported; verify with original report. Verify every value, unit and reference range before clinical use.",
+     referenceTemplate:v("liLabTemplate")||"omega",
+     smartImported:true,
+     attachment,
+     values:m.values
+   };
+   const duplicate=db.labInterpretations.findIndex(x=>x.smartImported===true && x.date===record.date && x.panel===record.panel && x.attachment?.name===record.attachment?.name);
+   if(duplicate>=0)db.labInterpretations[duplicate]=record;
+   else db.labInterpretations.unshift(record);
+ });
+ persist();
+ return matches;
+}
+
+async function analyzeAttachedLabReport(){
+ const status=$("liAnalyzeStatus");
+ const file=lastLabUploadFile || $("liFile")?.files?.[0] || $("liCamera")?.files?.[0];
+ if(!file){if(status)status.textContent="Please choose a PDF/image first.";return}
+ autoSelectOmegaTemplate();
+ if($("liSearch"))$("liSearch").value="";
+ if(status)status.textContent=`Reading ${file.name}...`;
+ try{
+   let text="";
+   if(file.type==="application/pdf"||file.name.toLowerCase().endsWith(".pdf"))text=await extractPdfText(file);
+   else text=await extractImageText(file);
+   if($("smartImportText"))$("smartImportText").value=normalizeReportText(text);
+   mapReportText(text);
+   const matches=saveSmartDraftsWithAttachment();
+   if(!matches.length){
+     if(status)status.textContent="Report was read, but no known test values were mapped. Try Smart Import text preview above.";
+     return;
+   }
+   matches.sort((a,b)=>b.count-a.count);
+   const best=matches[0];
+   currentLabPanel=best.panelKey;
+   renderLabPanelButtons();
+   renderLabParameters(best.values);
+   generateCurrentPanelSummary();
+   renderSavedLabPanels();
+   if(status)status.textContent=`✓ ${Object.keys(smartImportMapped).length} values recognized; ${matches.length} panel(s) created. Showing ${best.panel.title} with ${best.count} auto-filled value(s). VERIFY before use.`;
+   if($("liSaveStatus"))$("liSaveStatus").textContent="Smart-imported; verify with original report.";
+ }catch(e){
+   console.error(e);
+   if(status)status.textContent=`Analysis failed: ${e.message}`;
+ }
+}
+
 async function runSmartImport(){
  const file=$("smartReportFile")?.files?.[0];
  if(!file){$("smartImportProgress").textContent="Choose a PDF/image first.";return}
@@ -731,6 +850,7 @@ $("autoRitu").onchange=()=>{db.ritu.auto=$("autoRitu").checked;applyAutoRitu();p
 
 function saveProfile(){db.profile={name:v("pName"),dob:v("pDob"),sex:v("pSex"),height:n("pHeight"),blood:v("pBlood"),allergy:v("pAllergy"),conditions:v("pConditions"),emergency:v("pEmergency"),goals:v("pGoals")};persist()}
 let pendingFiles={};
+let lastLabUploadFile=null;
 
 const FILE_DB_NAME="raj_health_360_files";
 const FILE_STORE="attachments";
@@ -754,8 +874,13 @@ function calcSleepDuration(){
 }
 ["tdSleepStart","tdSleepEnd"].forEach(id=>$(id).addEventListener("change",calcSleepDuration));
 
+function autoSelectOmegaTemplate(){
+ if(!$("liLabTemplate")||!$("liFacility"))return;
+ if((v("liFacility")||"").toLowerCase().includes("omega"))$("liLabTemplate").value="omega";
+}
 async function fileMetaFromInput(id,key){
  const f=$(id)?.files?.[0]; if(!f)return;
+ if(key==="li")lastLabUploadFile=f;
  const label={td:"tdFileName",ayu:"ayuFileName",lab:"labFileName",img:"imgFileName",med:"medFileName",tx:"txFileName",vl:"vlFileName",li:"liFileName"}[key];
  try{
    if(label&&$(label))$(label).textContent=`Saving ${f.name} locally...`;
@@ -1163,3 +1288,5 @@ renderAll();
 setTimeout(()=>{safeRun("Lab independent buttons",renderLabPanelButtons);safeRun("Lab independent parameters",()=>renderLabParameters());safeRun("Lab independent saved panels",renderSavedLabPanels)},0);
 
 if($("liSex"))$("liSex").addEventListener("change",()=>renderLabParameters());
+
+if($("liFacility"))$("liFacility").addEventListener("input",()=>{autoSelectOmegaTemplate();renderLabParameters()});
