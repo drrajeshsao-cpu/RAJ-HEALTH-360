@@ -187,3 +187,12 @@ footer{text-align:center;color:var(--muted);font-size:11px;padding:24px}
 
 .storage-health-card{border-left:5px solid #2563eb}
 .emergency-save{border-color:#f59e0b;color:#92400e;background:#fff7ed}
+
+.cloud-pill{border:1px solid var(--line);background:var(--surface);color:var(--muted);padding:8px 11px;border-radius:999px;font-weight:850;font-size:11px;cursor:pointer}
+.cloud-pill.online{background:#eaf8ef;color:#166534;border-color:#bde6c8}.cloud-pill.syncing{background:#eff6ff;color:#1d4ed8}.cloud-pill.error{background:#fff1f2;color:#b91c1c}
+.cloud-settings-card{border-left:5px solid #2563eb}.cloud-health-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:12px 0}
+.cloud-health-grid>div{background:var(--surface2);border:1px solid var(--line);border-radius:12px;padding:11px}.cloud-health-grid b{display:block;font-size:12px}.cloud-health-grid span{display:block;color:var(--muted);font-size:10px;margin-top:4px}
+.cloud-config-box{border:1px solid var(--line);border-radius:12px;padding:12px;margin:12px 0;background:var(--surface2)}.cloud-config-box summary{cursor:pointer;font-weight:900}.codebox{font-family:Consolas,monospace;min-height:130px}
+.inner-card{border:1px solid var(--line);border-radius:14px;padding:14px;background:var(--surface2)}.toggle-row{display:flex!important;flex-direction:row!important;align-items:center;gap:8px;margin:10px 0;font-weight:800}.toggle-row input{width:auto!important}
+.cloud-safety-note{margin-top:12px;padding:10px 12px;border-radius:10px;background:#eff6ff;border:1px solid #bfdbfe;color:#1e3a8a;font-size:11px}
+@media(max-width:800px){.cloud-health-grid{grid-template-columns:repeat(2,1fr)}}@media(max-width:520px){.cloud-health-grid{grid-template-columns:1fr}.cloud-pill{font-size:9px;padding:7px 8px}}

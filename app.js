@@ -1,4 +1,4 @@
-const APP_VERSION="V6.6.2";
+const APP_VERSION="V7.0";
 const APP_BUILD_DATE="2026-08-12";
 
 const KEY="raj_health_360_v2";
@@ -15,7 +15,7 @@ const $=id=>document.getElementById(id);
 const v=id=>$(id)?.value??"";
 const n=id=>Number(v(id))||0;
 const today=()=>new Date().toISOString().slice(0,10);
-function persist(){localStorage.setItem(KEY,JSON.stringify(db));renderAll()}
+function persist(){localStorage.setItem(KEY,JSON.stringify(db));renderAll();scheduleCloudSync()}
 function showView(id){
  document.querySelectorAll(".view").forEach(x=>x.classList.remove("active"));$(id).classList.add("active");
  document.querySelectorAll(".nav").forEach(x=>x.classList.toggle("active",x.dataset.view===id));
@@ -26,6 +26,99 @@ document.querySelectorAll(".nav").forEach(x=>x.onclick=()=>showView(x.dataset.vi
 $("themeBtn").onclick=()=>document.body.classList.toggle("dark");
 $("backupBtn").onclick=exportData;
 
+
+
+const CLOUD_CONFIG_KEY="raj_health_360_firebase_config_v1";
+const CLOUD_PREF_KEY="raj_health_360_cloud_prefs_v1";
+let cloudApp=null,cloudAuth=null,cloudStore=null,cloudStorage=null,cloudUser=null,cloudUnsubscribe=null,cloudApplyingRemote=false,cloudSyncTimer=null;
+
+function cloudPrefs(){try{return Object.assign({autoSync:true,realtime:true,uploadFiles:true},JSON.parse(localStorage.getItem(CLOUD_PREF_KEY)||"{}"))}catch(e){return {autoSync:true,realtime:true,uploadFiles:true}}}
+function saveCloudPreferences(){
+ const p={autoSync:!!$("cloudAutoSync")?.checked,realtime:!!$("cloudRealtime")?.checked,uploadFiles:!!$("cloudUploadFiles")?.checked};
+ localStorage.setItem(CLOUD_PREF_KEY,JSON.stringify(p));
+ p.realtime?startCloudRealtimeListener():stopCloudRealtimeListener();
+}
+function loadCloudPreferencesUI(){const p=cloudPrefs();if($("cloudAutoSync"))$("cloudAutoSync").checked=p.autoSync;if($("cloudRealtime"))$("cloudRealtime").checked=p.realtime;if($("cloudUploadFiles"))$("cloudUploadFiles").checked=p.uploadFiles}
+function setCloudHeader(state,text){const el=$("cloudHeaderStatus");if(!el)return;el.className="cloud-pill"+(state?" "+state:"");el.textContent=text}
+function cloudStatus(msg,error=false){if($("cloudSyncStatus"))$("cloudSyncStatus").textContent=msg;if(error)setCloudHeader("error","☁ Sync error")}
+function firebaseConfigSaved(){try{return JSON.parse(localStorage.getItem(CLOUD_CONFIG_KEY)||"null")}catch(e){return null}}
+async function saveFirebaseConfig(){
+ try{
+  const cfg=JSON.parse(v("firebaseConfigJson"));["apiKey","authDomain","projectId","appId"].forEach(k=>{if(!cfg[k])throw new Error("Missing "+k)});
+  localStorage.setItem(CLOUD_CONFIG_KEY,JSON.stringify(cfg));await initializeCloud(true);
+  if($("firebaseConfigStatus"))$("firebaseConfigStatus").textContent="✓ Firebase configuration saved on this device.";
+ }catch(e){if($("firebaseConfigStatus"))$("firebaseConfigStatus").textContent="Configuration error: "+e.message}
+}
+function clearFirebaseConfig(){if(!confirm("Remove cloud configuration from this device? Local data will remain safe."))return;stopCloudRealtimeListener();localStorage.removeItem(CLOUD_CONFIG_KEY);location.reload()}
+async function initializeCloud(){
+ const cfg=firebaseConfigSaved();loadCloudPreferencesUI();
+ if($("firebaseConfigJson")&&cfg)$("firebaseConfigJson").value=JSON.stringify(cfg,null,2);
+ if(!cfg){setCloudHeader("","☁ Local only");return false}
+ if(!window.firebase){cloudStatus("Firebase SDK unavailable. Internet is required for cloud sync.",true);return false}
+ try{
+  if(!cloudApp){
+   cloudApp=firebase.apps.length?firebase.app():firebase.initializeApp(cfg);
+   cloudAuth=firebase.auth();cloudStore=firebase.firestore();cloudStorage=firebase.storage();
+   try{await cloudStore.enablePersistence({synchronizeTabs:true})}catch(e){console.warn("Firestore persistence",e)}
+   cloudAuth.setPersistence(firebase.auth.Auth.Persistence.LOCAL).catch(console.warn);
+   cloudAuth.onAuthStateChanged(user=>{cloudUser=user||null;renderCloudAuthState();if(user){setCloudHeader("online","☁ Cloud ready");if(cloudPrefs().realtime)startCloudRealtimeListener()}else{stopCloudRealtimeListener();setCloudHeader("","☁ Sign in")}});
+  }
+  if($("cloudDataHealth"))$("cloudDataHealth").textContent="Ready";if($("cloudFileHealth"))$("cloudFileHealth").textContent="Ready";
+  return true;
+ }catch(e){cloudStatus("Cloud initialization failed: "+e.message,true);return false}
+}
+function renderCloudAuthState(){if(cloudUser){if($("cloudAuthHealth"))$("cloudAuthHealth").textContent=cloudUser.email||cloudUser.uid;if($("cloudAuthStatus"))$("cloudAuthStatus").textContent="✓ Signed in: "+(cloudUser.email||cloudUser.uid)}else{if($("cloudAuthHealth"))$("cloudAuthHealth").textContent="Not signed in";if($("cloudAuthStatus"))$("cloudAuthStatus").textContent="Not signed in."}}
+async function cloudSignIn(){if(!await initializeCloud())return;try{await cloudAuth.signInWithEmailAndPassword(v("cloudEmail").trim(),v("cloudPassword"));cloudStatus("Signed in. Ready to synchronize.")}catch(e){cloudStatus("Sign in failed: "+e.message,true)}}
+async function cloudCreateAccount(){if(!await initializeCloud())return;try{await cloudAuth.createUserWithEmailAndPassword(v("cloudEmail").trim(),v("cloudPassword"));cloudStatus("Account created and signed in.")}catch(e){cloudStatus("Account creation failed: "+e.message,true)}}
+async function cloudForgotPassword(){if(!await initializeCloud())return;const email=v("cloudEmail").trim();if(!email){alert("Enter your email first.");return}try{await cloudAuth.sendPasswordResetEmail(email);alert("Password reset email sent.")}catch(e){alert("Could not send reset email: "+e.message)}}
+async function cloudSignOut(){try{await cloudAuth?.signOut();cloudStatus("Signed out. Local data remains available.")}catch(e){cloudStatus("Sign out failed: "+e.message,true)}}
+async function testCloudConnection(){
+ if(!await initializeCloud())return;if(!cloudUser){cloudStatus("Firebase configured. Sign in to test private cloud data.");return}
+ try{const ref=cloudStore.collection("users").doc(cloudUser.uid).collection("health").doc("_test");await ref.set({t:firebase.firestore.FieldValue.serverTimestamp()});await ref.get();await ref.delete();if($("cloudDataHealth"))$("cloudDataHealth").textContent="Connected";cloudStatus("✓ Cloud connection test passed.")}catch(e){cloudStatus("Cloud test failed: "+e.message,true)}
+}
+function getCloudDeviceId(){let id=localStorage.getItem("raj_health_360_device_id");if(!id){id="dev_"+Date.now()+"_"+Math.random().toString(36).slice(2,8);localStorage.setItem("raj_health_360_device_id",id)}return id}
+function cloudStatePayload(){const clone=JSON.parse(JSON.stringify(db));clone.labInterpretations=(clone.labInterpretations||[]).slice(0,30);return {schema:1,appVersion:APP_VERSION,updatedAt:Date.now(),deviceId:getCloudDeviceId(),data:clone}}
+function mergeCloudDB(remote){
+ if(!remote)return;const out=Object.assign({},db);
+ for(const [k,val] of Object.entries(remote)){
+  if(Array.isArray(val)){const local=Array.isArray(out[k])?out[k]:[];const m=new Map();[...val,...local].forEach(item=>{const key=item?.id||item?.archiveId||[item?.date,item?.name,item?.title,item?.panel,JSON.stringify(item).slice(0,60)].join("|");m.set(key,item)});out[k]=Array.from(m.values())}
+  else if(val&&typeof val==="object")out[k]=Object.assign({},val,out[k]||{});
+  else if(out[k]===undefined)out[k]=val;
+ }
+ db=out;try{localStorage.setItem(KEY,JSON.stringify(db))}catch(e){}renderAll()
+}
+async function pushCoreState(){await cloudStore.collection("users").doc(cloudUser.uid).collection("health").doc("core").set(cloudStatePayload(),{merge:true})}
+async function pullCoreState(){const snap=await cloudStore.collection("users").doc(cloudUser.uid).collection("health").doc("core").get();if(snap.exists&&snap.data()?.data){cloudApplyingRemote=true;mergeCloudDB(snap.data().data);cloudApplyingRemote=false;return true}return false}
+async function uploadAttachmentToCloud(att){
+ if(!att?.id||!cloudPrefs().uploadFiles)return att;
+ try{
+  const rec=await getLocalAttachment(att.id);if(!rec?.blob)return att;
+  const safe=(rec.name||"report").replace(/[^a-zA-Z0-9._-]+/g,"_"),path=`users/${cloudUser.uid}/attachments/${att.id}/${safe}`;
+  await cloudStorage.ref().child(path).put(rec.blob,{contentType:rec.type||"application/octet-stream"});
+  return Object.assign({},att,{cloudPath:path,cloudSynced:true});
+ }catch(e){return Object.assign({},att,{cloudSynced:false,cloudError:e.message})}
+}
+async function syncArchivedReportsToCloud(){
+ const records=await getAllReportRecords();let count=0;
+ for(const rec0 of records){if(rec0.type==="test")continue;const rec=JSON.parse(JSON.stringify(rec0));if(rec.attachment?.id)rec.attachment=await uploadAttachmentToCloud(rec.attachment);await cloudStore.collection("users").doc(cloudUser.uid).collection("reports").doc(rec.id).set(Object.assign({},rec,{cloudUpdatedAt:firebase.firestore.FieldValue.serverTimestamp()}),{merge:true});count++}
+ return count
+}
+async function pullArchivedReportsFromCloud(){const snap=await cloudStore.collection("users").doc(cloudUser.uid).collection("reports").get();let count=0;for(const d of snap.docs){const r=d.data();if(r?.id){await putReportRecord(r);updateLocalReportIndex(r);count++}}try{await renderReportArchive()}catch(e){}return count}
+async function syncAllToCloud(){
+ if(!await initializeCloud())return;if(!cloudUser){cloudStatus("Please sign in first.",true);return}
+ setCloudHeader("syncing","☁ Syncing…");try{await pushCoreState();const n=await syncArchivedReportsToCloud();const s=new Date().toLocaleString();localStorage.setItem("raj_health_360_last_cloud_sync",s);if($("cloudLastSync"))$("cloudLastSync").textContent=s;setCloudHeader("online","☁ Synced");cloudStatus(`✓ Uploaded core health data + ${n} archived report(s).`)}catch(e){cloudStatus("Cloud upload failed: "+e.message,true)}
+}
+async function pullAllFromCloud(){
+ if(!await initializeCloud())return;if(!cloudUser){cloudStatus("Please sign in first.",true);return}
+ setCloudHeader("syncing","☁ Pulling…");try{const core=await pullCoreState(),n=await pullArchivedReportsFromCloud();const s=new Date().toLocaleString();localStorage.setItem("raj_health_360_last_cloud_sync",s);if($("cloudLastSync"))$("cloudLastSync").textContent=s;setCloudHeader("online","☁ Synced");cloudStatus(`✓ Download complete. ${core?"Core merged. ":""}${n} archived report(s) available.`)}catch(e){cloudStatus("Cloud download failed: "+e.message,true)}
+}
+async function cloudBidirectionalSync(){await pullAllFromCloud();if(cloudUser)await syncAllToCloud()}
+function scheduleCloudSync(){if(cloudApplyingRemote||!cloudPrefs().autoSync||!cloudUser)return;clearTimeout(cloudSyncTimer);cloudSyncTimer=setTimeout(()=>syncAllToCloud(),1800)}
+function stopCloudRealtimeListener(){if(cloudUnsubscribe){try{cloudUnsubscribe()}catch(e){}cloudUnsubscribe=null}}
+function startCloudRealtimeListener(){
+ stopCloudRealtimeListener();if(!cloudUser||!cloudStore||!cloudPrefs().realtime)return;
+ cloudUnsubscribe=cloudStore.collection("users").doc(cloudUser.uid).collection("health").doc("core").onSnapshot(s=>{if(!s.exists||s.metadata.hasPendingWrites)return;const p=s.data();if(p?.deviceId===getCloudDeviceId())return;if(p?.data){cloudApplyingRemote=true;mergeCloudDB(p.data);cloudApplyingRemote=false;setCloudHeader("online","☁ Updated");cloudStatus("✓ Changes received from another device.")}},e=>cloudStatus("Realtime sync error: "+e.message,true))
+}
 
 const labPanels = {
  "CBC":{group:"Core",
@@ -2047,3 +2140,9 @@ if($("liSex"))$("liSex").addEventListener("change",()=>renderLabParameters());
 if($("liFacility"))$("liFacility").addEventListener("input",()=>{autoSelectOmegaTemplate();renderLabParameters()});
 
 setTimeout(()=>{if($("reportStorageHealth"))checkReportStorageHealth();if($("attachmentStorageHealth"))checkAttachmentStorageHealth()},800);
+
+loadCloudPreferencesUI();
+if($("cloudLastSync"))$("cloudLastSync").textContent=localStorage.getItem("raj_health_360_last_cloud_sync")||"Never";
+setTimeout(()=>initializeCloud(),500);
+window.addEventListener("online",()=>{if(cloudUser&&cloudPrefs().autoSync)cloudBidirectionalSync()});
+window.addEventListener("offline",()=>setCloudHeader("","☁ Offline • local safe"));

@@ -12,9 +12,10 @@
 <header class="top">
   <div class="brand">
     <div class="logo">R360</div>
-    <div><h1>RAJ HEALTH 360</h1><div class="version-badge">Version V6.6.2 • Build 2026-08-12</div><p>Modern Medicine × Ayurveda × Lifestyle × Mind × Spiritual Health</p></div>
+    <div><h1>RAJ HEALTH 360</h1><div class="version-badge">Version V7.0 • Build 2026-08-12</div><p>Modern Medicine × Ayurveda × Lifestyle × Mind × Spiritual Health</p></div>
   </div>
   <div class="top-actions">
+    <button class="cloud-pill" id="cloudHeaderStatus" onclick="showView('settings')" title="Cloud sync status">☁ Local only</button>
     <button class="ghost" id="themeBtn">◐</button>
     <button class="ghost" id="backupBtn">Backup</button>
   </div>
@@ -830,6 +831,41 @@
 </section>
 
 <section id="settings" class="view">
+<article class="card cloud-settings-card">
+  <div class="cardtitle"><div><span class="eyebrow">CLOUD SYNC</span><h3>Firebase Multi-Device Sync</h3></div><span class="pill teal">Local-first</span></div>
+  <p class="muted">Keep the app usable offline, while synchronizing health data, patient reports and original PDFs/images across devices signed in to the same account.</p>
+  <div class="cloud-health-grid">
+    <div><b id="cloudAuthHealth">Not signed in</b><span>Account</span></div>
+    <div><b id="cloudDataHealth">Not configured</b><span>Firestore</span></div>
+    <div><b id="cloudFileHealth">Not configured</b><span>Storage</span></div>
+    <div><b id="cloudLastSync">Never</b><span>Last sync</span></div>
+  </div>
+  <details class="cloud-config-box">
+    <summary>One-time Firebase configuration</summary>
+    <label>Firebase configuration JSON<textarea id="firebaseConfigJson" class="codebox" placeholder='{"apiKey":"...","authDomain":"...","projectId":"...","storageBucket":"...","messagingSenderId":"...","appId":"..."}'></textarea></label>
+    <div class="buttons"><button class="primary" onclick="saveFirebaseConfig()">Save & Initialize Cloud</button><button class="ghost" onclick="testCloudConnection()">Test Cloud</button><button class="ghost" onclick="clearFirebaseConfig()">Remove Config</button></div>
+    <div id="firebaseConfigStatus" class="summary-box">Cloud is not configured yet.</div>
+  </details>
+  <div class="grid2">
+    <article class="inner-card">
+      <h4>Account</h4>
+      <label>Email<input id="cloudEmail" type="email" placeholder="your@email.com"></label>
+      <label>Password<input id="cloudPassword" type="password" placeholder="Password"></label>
+      <div class="buttons"><button class="primary" onclick="cloudSignIn()">Sign In</button><button class="ghost" onclick="cloudCreateAccount()">Create Account</button><button class="ghost" onclick="cloudForgotPassword()">Forgot Password</button><button class="ghost" onclick="cloudSignOut()">Sign Out</button></div>
+      <div id="cloudAuthStatus" class="summary-box">Not signed in.</div>
+    </article>
+    <article class="inner-card">
+      <h4>Synchronization</h4>
+      <label class="toggle-row"><input id="cloudAutoSync" type="checkbox" checked onchange="saveCloudPreferences()"> Auto-sync changes</label>
+      <label class="toggle-row"><input id="cloudRealtime" type="checkbox" checked onchange="saveCloudPreferences()"> Realtime updates from other devices</label>
+      <label class="toggle-row"><input id="cloudUploadFiles" type="checkbox" checked onchange="saveCloudPreferences()"> Upload original PDFs/images</label>
+      <div class="buttons"><button class="primary" onclick="syncAllToCloud()">↑ Local → Cloud</button><button class="ghost" onclick="pullAllFromCloud()">↓ Cloud → Device</button><button class="ghost" onclick="cloudBidirectionalSync()">↕ Sync Now</button></div>
+      <div id="cloudSyncStatus" class="summary-box">Local data remains safe until cloud setup is completed.</div>
+    </article>
+  </div>
+  <div class="cloud-safety-note"><b>Safety:</b> Cloud sync never automatically deletes local data. Local storage remains the fallback if internet or Firebase is unavailable.</div>
+</article>
+
  <div class="pagehead compact"><div><span class="eyebrow">PROFILE</span><h2>Your baseline matters</h2></div></div>
  <article class="card">
   <div class="formgrid four">
@@ -855,6 +891,10 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://www.gstatic.com/firebasejs/12.10.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/12.10.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/12.10.0/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/12.10.0/firebase-storage-compat.js"></script>
 <script src="app.js"></script>
-<div id="appVersionText" class="app-version-footer">RAJ HEALTH 360 V6.6.2 • Build 2026-08-12</div></body>
+<div id="appVersionText" class="app-version-footer">RAJ HEALTH 360 V7.0 • Build 2026-08-12</div></body>
 </html>

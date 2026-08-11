@@ -227,3 +227,14 @@ Future rule: every release should update this visible version/build label before
 - Omega report header attempts to auto-fill patient name, age, sex, phone and patient ID.
 - Permanent save warns if patient identity is blank.
 - Separate attachment storage health test added.
+
+
+## V7.0 Multi-Device Cloud Sync
+- Firebase Authentication, Cloud Firestore and Cloud Storage integration.
+- Local-first behavior remains intact.
+- Same signed-in account can synchronize mobile, laptop, tablet and desktop.
+- Original report PDFs/images can upload to Firebase Storage.
+- Core health data and archived reports sync to Firestore.
+- Auto-sync, realtime sync and manual push/pull controls.
+- Header cloud status.
+- Security rules and CLOUD_SETUP.md included.
