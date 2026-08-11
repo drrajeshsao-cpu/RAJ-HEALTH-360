@@ -34,3 +34,18 @@ This app is a health tracking and decision-support prototype. It does not autono
 7. Reminders for investigations, medicines, blood donation eligibility windows, follow-up and preventive screening
 8. Wearable/Health Connect integration where technically appropriate
 9. PDF health summary
+
+
+## V3 additions
+- Camera / gallery / PDF attachment selectors for daily health, Ayurveda, investigations, medicines and therapies
+- Editable and deletable daily, laboratory, imaging, medicine, intervention and habit records
+- Sleep start time, wake time and automatic sleep-duration calculation
+- Dedicated habit builder with start/end/duration/target/quality/status
+- Exercise, walking, yoga, pranayama, dhyana, mala-jap, puja/path, mauna, study, water, diet, fasting and digital-detox habits
+- Dropdown-based Ashtavidha and Dashavidha fields
+- Page-level automatic summaries for Daily, Ayurveda, Investigations and Habits
+- Motivational lines and health-behaviour coaching throughout the app
+- Floating AI Copilot access
+
+### Attachment note
+V3 stores attachment metadata locally for the prototype UI. Durable cross-device storage of the actual files should be implemented with Firebase Storage in the next cloud phase.

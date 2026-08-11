@@ -2,7 +2,7 @@
 const KEY="raj_health_360_v2";
 const defaultDB={
  profile:{name:"",dob:"",sex:"Male",height:"",blood:"",allergy:"",conditions:"",emergency:"",goals:""},
- daily:[],labs:[],imaging:[],medicines:[],therapies:[],mind:[],
+ daily:[],labs:[],imaging:[],medicines:[],therapies:[],mind:[],habits:[],
  ayurveda:{prakriti:"Vata-Pitta",vikriti:"",agni:"Sama",koshta:"Madhyama",ama:"Absent",bala:"Madhyama",ashtavidha:{},dashavidha:{},dosha:{vata:5,pitta:5,kapha:5,note:""}},
  ritu:{auto:true,ritu:"Varsha",desha:"Sadharana"}, shatkriya:{stage:"Sanchaya",note:""}
 };
@@ -89,17 +89,77 @@ $("autoRitu").onchange=()=>{db.ritu.auto=$("autoRitu").checked;applyAutoRitu();p
 ["vataScore","pittaScore","kaphaScore"].forEach(id=>$(id).oninput=()=>$(id.replace("Score","Out")).textContent=$(id).value);
 
 function saveProfile(){db.profile={name:v("pName"),dob:v("pDob"),sex:v("pSex"),height:n("pHeight"),blood:v("pBlood"),allergy:v("pAllergy"),conditions:v("pConditions"),emergency:v("pEmergency"),goals:v("pGoals")};persist()}
-function saveToday(){
- db.daily.unshift({date:v("tdDate"),weight:n("tdWeight"),sbp:n("tdSBP"),dbp:n("tdDBP"),sugar:n("tdSugar"),sleep:n("tdSleep"),water:n("tdWater"),exercise:n("tdExercise"),energy:n("tdEnergy"),peace:n("tdPeace"),stress:n("tdStress"),digestion:n("tdDigestion"),bowel:v("tdBowel"),pain:n("tdPain"),jap:n("tdJap"),study:n("tdStudy"),note:v("tdNote")});persist()
+let pendingFiles={};
+function calcSleepDuration(){
+ const s=v("tdSleepStart"),e=v("tdSleepEnd"); if(!s||!e)return;
+ let [sh,sm]=s.split(":").map(Number),[eh,em]=e.split(":").map(Number);
+ let mins=(eh*60+em)-(sh*60+sm); if(mins<0)mins+=1440;
+ $("tdSleep").value=(mins/60).toFixed(1);
 }
-function saveAyurveda(){db.ayurveda.prakriti=v("prakriti");db.ayurveda.vikriti=v("vikriti");db.ayurveda.agni=v("agni");db.ayurveda.koshta=v("koshta");db.ayurveda.ama=v("ama");db.ayurveda.bala=v("bala");persist()}
+["tdSleepStart","tdSleepEnd"].forEach(id=>$(id).addEventListener("change",calcSleepDuration));
+
+function fileMetaFromInput(id,key){
+ const f=$(id)?.files?.[0]; if(!f)return;
+ pendingFiles[key]={name:f.name,type:f.type,size:f.size};
+ const label={td:"tdFileName",ayu:"ayuFileName",lab:"labFileName",img:"imgFileName",med:"medFileName",tx:"txFileName"}[key];
+ if($(label))$(label).textContent=`Selected: ${f.name} (${Math.round(f.size/1024)} KB)`;
+}
+[["tdFile","td"],["tdCamera","td"],["ayuFile","ayu"],["ayuCamera","ayu"],["labFile","lab"],["labCamera","lab"],["imgFile","img"],["imgCamera","img"],["medFile","med"],["medCamera","med"],["txFile","tx"],["txCamera","tx"]].forEach(([id,key])=>{if($(id))$(id).addEventListener("change",()=>fileMetaFromInput(id,key))});
+
+function saveToday(){
+ const obj={date:v("tdDate"),weight:n("tdWeight"),sbp:n("tdSBP"),dbp:n("tdDBP"),sugar:n("tdSugar"),
+ sleepStart:v("tdSleepStart"),sleepEnd:v("tdSleepEnd"),sleep:n("tdSleep"),sleepQuality:n("tdSleepQuality"),
+ water:n("tdWater"),exercise:n("tdExercise"),steps:n("tdSteps"),energy:n("tdEnergy"),peace:n("tdPeace"),stress:n("tdStress"),
+ digestion:n("tdDigestion"),bowel:v("tdBowel"),pain:n("tdPain"),jap:n("tdJap"),puja:n("tdPuja"),meditation:n("tdMeditation"),
+ mauna:n("tdMauna"),study:n("tdStudy"),screen:n("tdScreen"),note:v("tdNote"),attachment:pendingFiles.td||null};
+ const idx=v("tdEditIndex");
+ if(idx!=="")db.daily[Number(idx)]=obj; else db.daily.unshift(obj);
+ resetTodayForm(false);persist();generateDailySummary();
+}
+function editToday(i){
+ const x=db.daily[i]; showView("today");
+ const map={tdDate:"date",tdWeight:"weight",tdSBP:"sbp",tdDBP:"dbp",tdSugar:"sugar",tdSleepStart:"sleepStart",tdSleepEnd:"sleepEnd",tdSleep:"sleep",tdSleepQuality:"sleepQuality",tdWater:"water",tdExercise:"exercise",tdSteps:"steps",tdEnergy:"energy",tdPeace:"peace",tdStress:"stress",tdDigestion:"digestion",tdBowel:"bowel",tdPain:"pain",tdJap:"jap",tdPuja:"puja",tdMeditation:"meditation",tdMauna:"mauna",tdStudy:"study",tdScreen:"screen",tdNote:"note"};
+ Object.entries(map).forEach(([id,k])=>{if($(id))$(id).value=x[k]??""});$("tdEditIndex").value=i;
+}
+function deleteToday(i){if(confirm("Delete this daily record?")){db.daily.splice(i,1);persist();generateDailySummary()}}
+function resetTodayForm(clearDate=true){["tdWeight","tdSBP","tdDBP","tdSugar","tdSleepStart","tdSleepEnd","tdSleep","tdSleepQuality","tdWater","tdExercise","tdSteps","tdEnergy","tdPeace","tdStress","tdDigestion","tdPain","tdJap","tdPuja","tdMeditation","tdMauna","tdStudy","tdScreen","tdNote","tdEditIndex"].forEach(id=>{if($(id))$(id).value=""});if(clearDate&&$("tdDate"))$("tdDate").value=today();pendingFiles.td=null;if($("tdFileName"))$("tdFileName").textContent=""}
+
+function saveAyurveda(){db.ayurveda.attachment=pendingFiles.ayu||db.ayurveda.attachment||null;db.ayurveda.prakriti=v("prakriti");db.ayurveda.vikriti=v("vikriti");db.ayurveda.agni=v("agni");db.ayurveda.koshta=v("koshta");db.ayurveda.ama=v("ama");db.ayurveda.bala=v("bala");persist()}
 function saveDosha(){db.ayurveda.dosha={vata:n("vataScore"),pitta:n("pittaScore"),kapha:n("kaphaScore"),note:v("doshaNote")};persist()}
-function saveAshtavidha(){db.ayurveda.ashtavidha={nadi:v("aNadi"),mutra:v("aMutra"),mala:v("aMala"),jihva:v("aJihva"),shabda:v("aShabda"),sparsha:v("aSparsha"),drik:v("aDrik"),akriti:v("aAkriti")};persist()}
-function saveDashavidha(){db.ayurveda.dashavidha={prakriti:v("dPrakriti"),vikriti:v("dVikriti"),sara:v("dSara"),samhanana:v("dSamhanana"),pramana:v("dPramana"),satmya:v("dSatmya"),satva:v("dSatva"),ahara:v("dAhara"),vyayama:v("dVyayama"),vaya:v("dVaya")};persist()}
-function addLab(){db.labs.unshift({date:v("labDate"),test:v("labTest"),value:v("labValue"),unit:v("labUnit"),range:v("labRange"),system:v("labSystem"),note:v("labNote")});persist()}
-function addImaging(){db.imaging.unshift({date:v("imgDate"),type:v("imgType"),body:v("imgBody"),facility:v("imgFacility"),finding:v("imgFinding"),impression:v("imgImpression")});persist()}
-function addMedicine(){db.medicines.unshift({name:v("medName"),type:v("medType"),dose:v("medDose"),freq:v("medFreq"),start:v("medStart"),stop:v("medStop"),target:v("medTarget"),purpose:v("medPurpose"),benefit:v("medBenefit"),ae:v("medAE")});persist()}
-function addTherapy(){db.therapies.unshift({name:v("txName"),date:v("txDate"),reason:v("txReason"),supervision:v("txSupervision"),before:n("txBefore"),after:n("txAfter"),outcome:v("txOutcome"),ae:v("txAE"),note:v("txNote")});persist()}
+function saveAshtavidha(){db.ayurveda.attachment=pendingFiles.ayu||db.ayurveda.attachment||null;db.ayurveda.ashtavidha={nadi:v("aNadi"),mutra:v("aMutra"),mala:v("aMala"),jihva:v("aJihva"),shabda:v("aShabda"),sparsha:v("aSparsha"),drik:v("aDrik"),akriti:v("aAkriti")};persist()}
+function saveDashavidha(){db.ayurveda.attachment=pendingFiles.ayu||db.ayurveda.attachment||null;db.ayurveda.dashavidha={prakriti:v("dPrakriti"),vikriti:v("dVikriti"),sara:v("dSara"),samhanana:v("dSamhanana"),pramana:v("dPramana"),satmya:v("dSatmya"),satva:v("dSatva"),ahara:v("dAhara"),vyayama:v("dVyayama"),vaya:v("dVaya")};persist()}
+function addLab(){
+ const obj={date:v("labDate"),test:v("labTest"),value:v("labValue"),unit:v("labUnit"),range:v("labRange"),system:v("labSystem"),note:v("labNote"),attachment:pendingFiles.lab||null};
+ const idx=v("labEditIndex"); if(idx!=="")db.labs[Number(idx)]=obj; else db.labs.unshift(obj); resetLabForm(false);persist();generateInvestigationSummary()
+}
+function editLab(i){const x=db.labs[i];showView("investigations");["date","test","value","unit","range","system","note"].forEach(k=>{let id={date:"labDate",test:"labTest",value:"labValue",unit:"labUnit",range:"labRange",system:"labSystem",note:"labNote"}[k];$(id).value=x[k]??""});$("labEditIndex").value=i}
+function deleteLab(i){if(confirm("Delete this lab?")){db.labs.splice(i,1);persist();generateInvestigationSummary()}}
+function resetLabForm(dateReset=true){["labTest","labValue","labUnit","labRange","labNote","labEditIndex"].forEach(id=>$(id).value="");if(dateReset)$("labDate").value=today();pendingFiles.lab=null;if($("labFileName"))$("labFileName").textContent=""}
+
+function addImaging(){
+ const obj={date:v("imgDate"),type:v("imgType"),body:v("imgBody"),facility:v("imgFacility"),finding:v("imgFinding"),impression:v("imgImpression"),attachment:pendingFiles.img||null};
+ const idx=v("imgEditIndex"); if(idx!=="")db.imaging[Number(idx)]=obj; else db.imaging.unshift(obj);resetImagingForm(false);persist();generateInvestigationSummary()
+}
+function editImaging(i){const x=db.imaging[i];showView("investigations");const map={imgDate:"date",imgType:"type",imgBody:"body",imgFacility:"facility",imgFinding:"finding",imgImpression:"impression"};Object.entries(map).forEach(([id,k])=>$(id).value=x[k]??"");$("imgEditIndex").value=i}
+function deleteImaging(i){if(confirm("Delete this report?")){db.imaging.splice(i,1);persist();generateInvestigationSummary()}}
+function resetImagingForm(dateReset=true){["imgBody","imgFacility","imgFinding","imgImpression","imgEditIndex"].forEach(id=>$(id).value="");if(dateReset)$("imgDate").value=today();pendingFiles.img=null;if($("imgFileName"))$("imgFileName").textContent=""}
+
+function addMedicine(){
+ const obj={name:v("medName"),type:v("medType"),dose:v("medDose"),freq:v("medFreq"),start:v("medStart"),stop:v("medStop"),target:v("medTarget"),purpose:v("medPurpose"),benefit:v("medBenefit"),ae:v("medAE"),attachment:pendingFiles.med||null};
+ const idx=v("medEditIndex");if(idx!=="")db.medicines[Number(idx)]=obj;else db.medicines.unshift(obj);resetMedForm();persist()
+}
+function editMedicine(i){const x=db.medicines[i];showView("medicines");const map={medName:"name",medType:"type",medDose:"dose",medFreq:"freq",medStart:"start",medStop:"stop",medTarget:"target",medPurpose:"purpose",medBenefit:"benefit",medAE:"ae"};Object.entries(map).forEach(([id,k])=>$(id).value=x[k]??"");$("medEditIndex").value=i}
+function deleteMedicine(i){if(confirm("Delete this medicine record?")){db.medicines.splice(i,1);persist()}}
+function resetMedForm(){["medName","medDose","medFreq","medStart","medStop","medTarget","medPurpose","medAE","medEditIndex"].forEach(id=>$(id).value="");pendingFiles.med=null;if($("medFileName"))$("medFileName").textContent=""}
+
+function addTherapy(){
+ const obj={name:v("txName"),date:v("txDate"),reason:v("txReason"),supervision:v("txSupervision"),before:n("txBefore"),after:n("txAfter"),outcome:v("txOutcome"),ae:v("txAE"),note:v("txNote"),attachment:pendingFiles.tx||null};
+ const idx=v("txEditIndex");if(idx!=="")db.therapies[Number(idx)]=obj;else db.therapies.unshift(obj);resetTxForm();persist()
+}
+function editTherapy(i){const x=db.therapies[i];showView("therapies");const map={txName:"name",txDate:"date",txReason:"reason",txSupervision:"supervision",txBefore:"before",txAfter:"after",txOutcome:"outcome",txAE:"ae",txNote:"note"};Object.entries(map).forEach(([id,k])=>$(id).value=x[k]??"");$("txEditIndex").value=i}
+function deleteTherapy(i){if(confirm("Delete this intervention?")){db.therapies.splice(i,1);persist()}}
+function resetTxForm(){["txReason","txBefore","txAfter","txAE","txNote","txEditIndex"].forEach(id=>$(id).value="");$("txDate").value=today();pendingFiles.tx=null;if($("txFileName"))$("txFileName").textContent=""}
+
 function saveMind(){db.mind.unshift({date:v("msDate"),peace:n("msPeace"),stress:n("msStress"),purpose:n("msPurpose"),social:n("msSocial"),lonely:n("msLonely"),jap:n("msJap"),puja:n("msPuja"),mauna:n("msMauna"),ekant:n("msEkant"),study:n("msStudy"),detox:n("msDetox"),reflection:v("msReflection")});persist()}
 
 function table(rows,cols){
@@ -107,12 +167,11 @@ function table(rows,cols){
  return `<div style="overflow:auto"><table><thead><tr>${cols.map(c=>`<th>${c[0]}</th>`).join("")}</tr></thead><tbody>${rows.map(r=>`<tr>${cols.map(c=>`<td>${typeof c[1]==="function"?c[1](r):(r[c[1]]??"")}</td>`).join("")}</tr>`).join("")}</tbody></table></div>`
 }
 function renderInvestigations(){
- let q=(v("invSearch")||"").toLowerCase();
- let rows=[];
- db.labs.forEach(x=>rows.push({date:x.date,kind:"Lab",name:x.test,value:`${x.value} ${x.unit||""}`,detail:x.note||x.range||""}));
- db.imaging.forEach(x=>rows.push({date:x.date,kind:x.type,name:x.body,value:x.impression||"",detail:x.finding||""}));
+ let q=(v("invSearch")||"").toLowerCase(), rows=[];
+ db.labs.forEach((x,i)=>rows.push({date:x.date,kind:"Lab",name:x.test,value:`${x.value} ${x.unit||""}`,detail:x.note||x.range||"",attachment:x.attachment?.name||"",actions:`<button class="action-btn edit-btn" onclick="editLab(${i})">Edit</button><button class="action-btn delete-btn" onclick="deleteLab(${i})">Delete</button>`}));
+ db.imaging.forEach((x,i)=>rows.push({date:x.date,kind:x.type,name:x.body,value:x.impression||"",detail:x.finding||"",attachment:x.attachment?.name||"",actions:`<button class="action-btn edit-btn" onclick="editImaging(${i})">Edit</button><button class="action-btn delete-btn" onclick="deleteImaging(${i})">Delete</button>`}));
  rows=rows.filter(x=>JSON.stringify(x).toLowerCase().includes(q)).sort((a,b)=>(b.date||"").localeCompare(a.date||""));
- $("invTable").innerHTML=table(rows,[["Date","date"],["Type","kind"],["Test / Body","name"],["Result","value"],["Detail","detail"]])
+ $("invTable").innerHTML=table(rows,[["Date","date"],["Type","kind"],["Test / Body","name"],["Result","value"],["Attachment","attachment"],["Action","actions"]])
 }
 function clinicalAlerts(){
  const d=db.daily[0]||{},a=[];
@@ -148,6 +207,60 @@ function nextActions(){
  if(actions.length<4)actions.push("Add one measurable health goal for the next 2–4 weeks and track outcome before changing multiple variables.");
  return actions.slice(0,6)
 }
+
+function saveHabit(){
+ let dur=n("hbDuration");
+ if(!dur&&v("hbStart")&&v("hbEnd")){
+   let [sh,sm]=v("hbStart").split(":").map(Number),[eh,em]=v("hbEnd").split(":").map(Number);dur=(eh*60+em)-(sh*60+sm);if(dur<0)dur+=1440;
+ }
+ const obj={date:v("hbDate"),habit:v("hbHabit"),start:v("hbStart"),end:v("hbEnd"),duration:dur,target:n("hbTarget"),quality:n("hbQuality"),status:v("hbStatus"),note:v("hbNote")};
+ const idx=v("hbEditIndex");if(idx!=="")db.habits[Number(idx)]=obj;else db.habits.unshift(obj);resetHabitForm();persist();generateHabitSummary()
+}
+function editHabit(i){const x=db.habits[i];showView("lifestyle");const map={hbDate:"date",hbHabit:"habit",hbStart:"start",hbEnd:"end",hbDuration:"duration",hbTarget:"target",hbQuality:"quality",hbStatus:"status",hbNote:"note"};Object.entries(map).forEach(([id,k])=>$(id).value=x[k]??"");$("hbEditIndex").value=i}
+function deleteHabit(i){if(confirm("Delete this habit entry?")){db.habits.splice(i,1);persist();generateHabitSummary()}}
+function resetHabitForm(){["hbStart","hbEnd","hbDuration","hbTarget","hbQuality","hbNote","hbEditIndex"].forEach(id=>$(id).value="");$("hbDate").value=today()}
+
+function generateDailySummary(){
+ const d=db.daily[0]; if(!d||!$("dailyAutoSummary"))return;
+ let points=[];
+ points.push(`Sleep: ${d.sleep||"-"} h (${d.sleepStart||"-"} → ${d.sleepEnd||"-"}), quality ${d.sleepQuality||"-"}/10.`);
+ points.push(`BP ${d.sbp||"-"}/${d.dbp||"-}, glucose ${d.sugar||"-"}, weight ${d.weight||"-"} kg.`);
+ points.push(`Exercise ${d.exercise||0} min, steps ${d.steps||0}, water ${d.water||0} L.`);
+ points.push(`Peace ${d.peace||0}/10, stress ${d.stress||0}/10, energy ${d.energy||0}/10.`);
+ points.push(`Sadhana: Jap ${d.jap||0} min, Puja ${d.puja||0} min, Dhyana ${d.meditation||0} min, Mauna ${d.mauna||0} min.`);
+ let coach=[];
+ if(d.sleep&&d.sleep<6)coach.push("Sleep is the main recovery gap today.");
+ if(d.exercise<20)coach.push("A small movement session can improve consistency.");
+ if(d.stress>=7)coach.push("High stress recorded—protect recovery and simplify nonessential load.");
+ if(d.peace>=7)coach.push("Mental peace was strong today; note what supported it.");
+ if(d.jap||d.meditation||d.puja)coach.push("Sadhana completed—continue the routine that feels sustainable.");
+ $("dailyAutoSummary").textContent=points.join("\n")+"\n\nSelf-coaching:\n• "+(coach.length?coach.join("\n• "):"Balanced day recorded. Focus on consistency rather than adding more tasks.")
+}
+function generateAyurvedaSummary(){
+ if(!$("ayuAutoSummary"))return;
+ const a=db.ayurveda,as=a.ashtavidha||{},ds=a.dashavidha||{},dos=a.dosha||{};
+ $("ayuAutoSummary").textContent=
+ `Prakriti: ${a.prakriti||"-"} | Vikriti: ${a.vikriti||"-"} | Agni: ${a.agni||"-"} | Koshta: ${a.koshta||"-"} | Ama: ${a.ama||"-"} | Bala: ${a.bala||"-"}\n`+
+ `Dosha state: Vata ${dos.vata??"-"}/10, Pitta ${dos.pitta??"-"}/10, Kapha ${dos.kapha??"-"}/10.\n`+
+ `Ashtavidha: Nadi ${as.nadi||"-"}, Mala ${as.mala||"-"}, Mutra ${as.mutra||"-"}, Jihva ${as.jihva||"-"}, Sparsha ${as.sparsha||"-"}, Drik ${as.drik||"-"}, Shabda ${as.shabda||"-"}, Akriti ${as.akriti||"-"}.\n`+
+ `Dashavidha: Sara ${ds.sara||"-"}, Samhanana ${ds.samhanana||"-"}, Satmya ${ds.satmya||"-"}, Satva ${ds.satva||"-"}, Ahara Shakti ${ds.ahara||"-"}, Vyayama Shakti ${ds.vyayama||"-"}.\n\nAI-style lens: interpret these together with symptoms, labs, ritu, desha and modern diagnosis; avoid changing multiple therapies at once without a clear reason.`;
+}
+function generateInvestigationSummary(){
+ if(!$("investigationAutoSummary"))return;
+ const labs=db.labs.slice(0,8).map(x=>`${x.test}: ${x.value} ${x.unit||""} (${x.date})`).join("; ");
+ const imgs=db.imaging.slice(0,5).map(x=>`${x.type} ${x.body}: ${x.impression||x.finding||"recorded"} (${x.date})`).join("; ");
+ $("investigationAutoSummary").textContent=`Recent labs: ${labs||"None entered"}\nRecent imaging/reports: ${imgs||"None entered"}\n\nTrend tip: use the same test name and unit consistently so future AI and charts can compare values correctly.`;
+}
+function generateHabitSummary(){
+ if(!$("habitAutoSummary"))return;
+ const h=db.habits.slice(0,14);if(!h.length){$("habitAutoSummary").textContent="No habit data yet.";return}
+ const done=h.filter(x=>x.status==="Done").length,partial=h.filter(x=>x.status==="Partial").length,miss=h.filter(x=>x.status==="Missed").length;
+ const totalMin=h.reduce((a,x)=>a+(Number(x.duration)||0),0);
+ const avgQ=(h.reduce((a,x)=>a+(Number(x.quality)||0),0)/h.length).toFixed(1);
+ const common={};h.forEach(x=>common[x.habit]=(common[x.habit]||0)+1);const top=Object.entries(common).sort((a,b)=>b[1]-a[1])[0]?.[0]||"-";
+ $("habitAutoSummary").textContent=`Recent ${h.length} habit entries: ${done} done, ${partial} partial, ${miss} missed. Total intentional time: ${totalMin} min. Average quality: ${avgQ}/10. Most frequently tracked: ${top}.\n\nSelf-coaching: choose 2–3 keystone habits first—sleep timing, movement/exercise, and one stable sadhana practice. Build reliability before increasing intensity.`;
+}
+
 function renderDashboard(){
  const d=db.daily[0]||{},p=db.profile||{};
  $("mWeight").textContent=d.weight||"--";
@@ -207,8 +320,11 @@ function renderForms(){
  document.querySelectorAll(".stage").forEach(x=>x.classList.toggle("active",x.dataset.stage===db.shatkriya.stage))
 }
 function renderTables(){
- $("medTable").innerHTML=table(db.medicines,[["Medicine","name"],["Type","type"],["Dose","dose"],["Frequency","freq"],["Start","start"],["Stop","stop"],["Target","target"],["Outcome","benefit"],["Adverse effect","ae"]]);
- $("txTable").innerHTML=table(db.therapies,[["Date","date"],["Intervention","name"],["Reason","reason"],["Supervision","supervision"],["Before→After",x=>`${x.before||"-"} → ${x.after||"-"}`],["Outcome","outcome"],["Adverse effect","ae"]]);
+ $("medTable").innerHTML=table(db.medicines.map((x,i)=>({...x,att:x.attachment?.name||"",act:`<button class="action-btn edit-btn" onclick="editMedicine(${i})">Edit</button><button class="action-btn delete-btn" onclick="deleteMedicine(${i})">Delete</button>`})),[["Medicine","name"],["Type","type"],["Dose","dose"],["Frequency","freq"],["Start","start"],["Stop","stop"],["Target","target"],["Outcome","benefit"],["Attachment","att"],["Action","act"]]);
+ $("txTable").innerHTML=table(db.therapies.map((x,i)=>({...x,att:x.attachment?.name||"",act:`<button class="action-btn edit-btn" onclick="editTherapy(${i})">Edit</button><button class="action-btn delete-btn" onclick="deleteTherapy(${i})">Delete</button>`})),[["Date","date"],["Intervention","name"],["Reason","reason"],["Supervision","supervision"],["Before→After",x=>`${x.before||"-"} → ${x.after||"-"}`],["Outcome","outcome"],["Attachment","att"],["Action","act"]]);
+ if($("dailyTable"))$("dailyTable").innerHTML=table(db.daily.map((x,i)=>({...x,sl:`${x.sleepStart||"-"}→${x.sleepEnd||"-"} (${x.sleep||"-"}h)`,att:x.attachment?.name||"",act:`<button class="action-btn edit-btn" onclick="editToday(${i})">Edit</button><button class="action-btn delete-btn" onclick="deleteToday(${i})">Delete</button>`})),[["Date","date"],["Sleep","sl"],["BP",x=>`${x.sbp||"-"}/${x.dbp||"-"}`],["Exercise",x=>`${x.exercise||0} min`],["Peace",x=>`${x.peace||0}/10`],["Attachment","att"],["Action","act"]]);
+ if($("habitTable"))$("habitTable").innerHTML=table(db.habits.map((x,i)=>({...x,when:`${x.start||"-"}→${x.end||"-"}`,act:`<button class="action-btn edit-btn" onclick="editHabit(${i})">Edit</button><button class="action-btn delete-btn" onclick="deleteHabit(${i})">Delete</button>`})),[["Date","date"],["Habit","habit"],["Time","when"],["Duration",x=>`${x.duration||0} min`],["Status","status"],["Quality",x=>`${x.quality||0}/10`],["Action","act"]]);
 }
-function renderAll(){applyAutoRitu();renderForms();renderDashboard();renderRitu();renderInvestigations();renderTables();renderTimeline()}
+function renderAll(){applyAutoRitu();renderForms();renderDashboard();renderRitu();renderInvestigations();renderTables();renderTimeline();generateDailySummary();generateAyurvedaSummary();generateInvestigationSummary();generateHabitSummary()}
+if($("hbDate"))$("hbDate").value=today();
 renderAll();

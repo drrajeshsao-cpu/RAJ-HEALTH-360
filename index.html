@@ -89,8 +89,10 @@
   </div>
 </section>
 
+
 <section id="today" class="view">
- <div class="pagehead compact"><div><span class="eyebrow">DAILY CHECK-IN</span><h2>60-second health round</h2><p>Designed like a physician’s quick self-round.</p></div></div>
+ <div class="pagehead compact"><div><span class="eyebrow">DAILY CHECK-IN</span><h2>My Daily Health Round</h2><p>“Your future health is built by what you repeatedly do today.”</p></div></div>
+ <div class="motivation">🌱 Small disciplines repeated daily become long-term health. Record honestly, improve gently, stay consistent.</div>
  <div class="card">
   <div class="formgrid four">
    <label>Date<input id="tdDate" type="date"></label>
@@ -98,9 +100,13 @@
    <label>BP systolic<input id="tdSBP" type="number"></label>
    <label>BP diastolic<input id="tdDBP" type="number"></label>
    <label>Fasting/Random glucose<input id="tdSugar" type="number"></label>
-   <label>Sleep hours<input id="tdSleep" type="number" step=".1"></label>
+   <label>Sleep start<input id="tdSleepStart" type="time"></label>
+   <label>Wake-up time<input id="tdSleepEnd" type="time"></label>
+   <label>Sleep duration<input id="tdSleep" type="number" step=".1" readonly placeholder="Auto"></label>
+   <label>Sleep quality 0–10<input id="tdSleepQuality" type="number" min="0" max="10"></label>
    <label>Water L<input id="tdWater" type="number" step=".1"></label>
    <label>Exercise min<input id="tdExercise" type="number"></label>
+   <label>Walking steps<input id="tdSteps" type="number"></label>
    <label>Energy 0–10<input id="tdEnergy" type="number" min="0" max="10"></label>
    <label>Mental peace 0–10<input id="tdPeace" type="number" min="0" max="10"></label>
    <label>Stress 0–10<input id="tdStress" type="number" min="0" max="10"></label>
@@ -108,11 +114,30 @@
    <label>Bowel<select id="tdBowel"><option>Normal</option><option>Constipation</option><option>Loose</option><option>Irregular</option><option>Piles symptoms</option></select></label>
    <label>Pain 0–10<input id="tdPain" type="number" min="0" max="10"></label>
    <label>Mala Jap min<input id="tdJap" type="number"></label>
+   <label>Puja/Path min<input id="tdPuja" type="number"></label>
+   <label>Meditation/Dhyana min<input id="tdMeditation" type="number"></label>
+   <label>Mauna min<input id="tdMauna" type="number"></label>
    <label>Study/learning min<input id="tdStudy" type="number"></label>
+   <label>Screen time hours<input id="tdScreen" type="number" step=".1"></label>
   </div>
   <label>Food / important events<textarea id="tdNote" placeholder="Meals, fasting, travel, stressor, unusual symptoms, important observation..."></textarea></label>
-  <button class="primary" onclick="saveToday()">Save Today & Recalculate</button>
+
+  <div class="attachment-box">
+    <div><b>Daily attachment</b><small>Photo, prescription, report, food image, exercise proof or note</small></div>
+    <div class="attach-actions">
+      <label class="filebtn">📎 Gallery / PDF<input type="file" id="tdFile" accept="image/*,.pdf"></label>
+      <label class="filebtn">📷 Camera<input type="file" id="tdCamera" accept="image/*" capture="environment"></label>
+    </div>
+    <div id="tdFileName" class="file-name"></div>
+  </div>
+  <input type="hidden" id="tdEditIndex" value="">
+  <div class="buttons"><button class="primary" onclick="saveToday()">Save Today & Recalculate</button><button class="ghost" onclick="resetTodayForm()">Clear</button></div>
  </div>
+ <article class="card">
+   <div class="cardtitle"><h3>Daily Auto Summary</h3><button class="link" onclick="generateDailySummary()">Refresh summary ✦</button></div>
+   <div id="dailyAutoSummary" class="summary-box">Add today’s data to generate your daily summary.</div>
+ </article>
+ <article class="card"><div class="cardtitle"><h3>Recent Daily Records</h3><span class="pill teal">Editable</span></div><div id="dailyTable"></div></article>
 </section>
 
 <section id="modern" class="view">
@@ -120,14 +145,17 @@
  <div id="systemGrid" class="grid3"></div>
 </section>
 
+
 <section id="ayurveda" class="view">
- <div class="pagehead compact"><div><span class="eyebrow">AYURVEDA CORE</span><h2>Rogi–Roga assessment</h2><p>Ashtavidha + Dashavidha + Dosha/Dhatu/Mala/Agni/Srotas context.</p></div></div>
+ <div class="pagehead compact"><div><span class="eyebrow">AYURVEDA CORE</span><h2>Rogi–Roga Assessment</h2><p>“स्वस्थस्य स्वास्थ्य रक्षणं” begins with observing your own constitution, agni, bala and changing dosha state.</p></div></div>
+ <div class="motivation">🪷 Observe patterns, not isolated symptoms. Prakriti is your baseline; Vikriti is what is changing now.</div>
+
  <div class="grid2">
   <article class="card">
    <h3>Constitution & Current State</h3>
    <div class="formgrid two">
-    <label>Prakriti<select id="prakriti"><option>Vata</option><option>Pitta</option><option>Kapha</option><option>Vata-Pitta</option><option>Pitta-Kapha</option><option>Vata-Kapha</option><option>Sama</option></select></label>
-    <label>Vikriti<input id="vikriti" placeholder="e.g. Vata-Pitta vriddhi"></label>
+    <label>Prakriti<select id="prakriti"><option>Vata</option><option>Pitta</option><option>Kapha</option><option>Vata-Pitta</option><option>Pitta-Kapha</option><option>Vata-Kapha</option><option>Tridoshaja / Sama</option></select></label>
+    <label>Vikriti<select id="vikriti"><option>None / Sama</option><option>Vata vriddhi</option><option>Pitta vriddhi</option><option>Kapha vriddhi</option><option>Vata-Pitta</option><option>Pitta-Kapha</option><option>Vata-Kapha</option><option>Tridoshaja</option></select></label>
     <label>Agni<select id="agni"><option>Sama</option><option>Vishama</option><option>Tikshna</option><option>Manda</option></select></label>
     <label>Koshta<select id="koshta"><option>Mridu</option><option>Madhyama</option><option>Krura</option></select></label>
     <label>Ama<select id="ama"><option>Absent</option><option>Mild</option><option>Moderate</option><option>Marked</option></select></label>
@@ -150,14 +178,14 @@
  <article class="card">
   <div class="cardtitle"><h3>Ashtavidha Pariksha</h3><span class="pill amber">8-fold</span></div>
   <div class="formgrid four">
-   <label>Nadi<input id="aNadi" placeholder="Vataja/Pittaja/Kaphaja/Mixed"></label>
-   <label>Mutra<input id="aMutra"></label>
-   <label>Mala<input id="aMala"></label>
-   <label>Jihva<input id="aJihva"></label>
-   <label>Shabda<input id="aShabda"></label>
-   <label>Sparsha<input id="aSparsha"></label>
-   <label>Drik<input id="aDrik"></label>
-   <label>Akriti<input id="aAkriti"></label>
+   <label>Nadi<select id="aNadi"><option>Vataja</option><option>Pittaja</option><option>Kaphaja</option><option>Vata-Pitta</option><option>Pitta-Kapha</option><option>Vata-Kapha</option><option>Sannipata / Tridoshaja</option><option>Sama / balanced</option></select></label>
+   <label>Mutra<select id="aMutra"><option>Normal</option><option>Alpa</option><option>Atipravritti</option><option>Peeta</option><option>Avila</option><option>Daha yukta</option><option>Other</option></select></label>
+   <label>Mala<select id="aMala"><option>Normal</option><option>Grathita / hard</option><option>Drava / loose</option><option>Picchila</option><option>Ama yukta</option><option>Atipravritti</option><option>Alpa</option><option>Other</option></select></label>
+   <label>Jihva<select id="aJihva"><option>Nirama / clean</option><option>Sama / coated</option><option>Ruksha</option><option>Peeta</option><option>Shweta lep</option><option>Other</option></select></label>
+   <label>Shabda<select id="aShabda"><option>Normal</option><option>Manda</option><option>Uchcha</option><option>Ruksha</option><option>Swara bheda</option><option>Other</option></select></label>
+   <label>Sparsha<select id="aSparsha"><option>Normal</option><option>Sheeta</option><option>Ushna</option><option>Ruksha</option><option>Snigdha</option><option>Other</option></select></label>
+   <label>Drik<select id="aDrik"><option>Normal</option><option>Rakta</option><option>Peeta</option><option>Shushka</option><option>Prasanna</option><option>Other</option></select></label>
+   <label>Akriti<select id="aAkriti"><option>Madhyama</option><option>Krisha</option><option>Sthula</option><option>Samhanana uttama</option><option>Samhanana madhyama</option><option>Samhanana avara</option></select></label>
   </div>
   <button class="primary" onclick="saveAshtavidha()">Save Ashtavidha</button>
  </article>
@@ -165,18 +193,35 @@
  <article class="card">
   <div class="cardtitle"><h3>Dashavidha Pariksha</h3><span class="pill amber">10-fold</span></div>
   <div class="formgrid five">
-   <label>Prakriti<input id="dPrakriti"></label>
-   <label>Vikriti<input id="dVikriti"></label>
-   <label>Sara<input id="dSara"></label>
-   <label>Samhanana<input id="dSamhanana"></label>
-   <label>Pramana<input id="dPramana"></label>
-   <label>Satmya<input id="dSatmya"></label>
-   <label>Satva<input id="dSatva"></label>
-   <label>Ahara Shakti<input id="dAhara"></label>
-   <label>Vyayama Shakti<input id="dVyayama"></label>
-   <label>Vaya<input id="dVaya"></label>
+   <label>Prakriti<select id="dPrakriti"><option>Vata</option><option>Pitta</option><option>Kapha</option><option>Vata-Pitta</option><option>Pitta-Kapha</option><option>Vata-Kapha</option><option>Tridoshaja / Sama</option></select></label>
+   <label>Vikriti<select id="dVikriti"><option>None / Sama</option><option>Vata</option><option>Pitta</option><option>Kapha</option><option>Vata-Pitta</option><option>Pitta-Kapha</option><option>Vata-Kapha</option><option>Tridoshaja</option></select></label>
+   <label>Sara<select id="dSara"><option>Pravara</option><option>Madhyama</option><option>Avara</option><option>Mixed / not assessed</option></select></label>
+   <label>Samhanana<select id="dSamhanana"><option>Pravara</option><option>Madhyama</option><option>Avara</option></select></label>
+   <label>Pramana<select id="dPramana"><option>Sama / appropriate</option><option>Heena</option><option>Adhika</option><option>Not assessed</option></select></label>
+   <label>Satmya<select id="dSatmya"><option>Sarvarasa satmya</option><option>Madhyama</option><option>Avara / limited</option><option>Not assessed</option></select></label>
+   <label>Satva<select id="dSatva"><option>Pravara</option><option>Madhyama</option><option>Avara</option></select></label>
+   <label>Ahara Shakti<select id="dAhara"><option>Pravara</option><option>Madhyama</option><option>Avara</option></select></label>
+   <label>Vyayama Shakti<select id="dVyayama"><option>Pravara</option><option>Madhyama</option><option>Avara</option></select></label>
+   <label>Vaya<select id="dVaya"><option>Bala</option><option>Madhyama</option><option>Vriddha</option></select></label>
   </div>
   <button class="primary" onclick="saveDashavidha()">Save Dashavidha</button>
+ </article>
+
+ <article class="card">
+  <div class="cardtitle"><h3>Ayurveda Attachment</h3><span class="pill teal">Photo / PDF</span></div>
+  <div class="attachment-box">
+    <div><b>Attach tongue photo, Nadi note, Ayurveda prescription or assessment PDF</b><small>Camera is useful for tongue/skin/physical documentation.</small></div>
+    <div class="attach-actions">
+      <label class="filebtn">📎 File / PDF<input type="file" id="ayuFile" accept="image/*,.pdf"></label>
+      <label class="filebtn">📷 Camera<input type="file" id="ayuCamera" accept="image/*" capture="environment"></label>
+    </div>
+    <div id="ayuFileName" class="file-name"></div>
+  </div>
+ </article>
+
+ <article class="card">
+   <div class="cardtitle"><h3>Ayurveda Auto Summary</h3><button class="link" onclick="generateAyurvedaSummary()">Refresh summary ✦</button></div>
+   <div id="ayuAutoSummary" class="summary-box">Save Ayurveda data to generate a concise integrated summary.</div>
  </article>
 </section>
 
@@ -217,7 +262,13 @@
     <label>System<select id="labSystem"><option>General</option><option>Hematology</option><option>Metabolic</option><option>Diabetes</option><option>Liver</option><option>Kidney</option><option>Thyroid</option><option>Cardiovascular</option><option>Bone</option><option>Reproductive</option><option>GI</option></select></label>
    </div>
    <label>Interpretation / note<textarea id="labNote"></textarea></label>
-   <button class="primary" onclick="addLab()">Add Lab</button>
+   <div class="attachment-box">
+     <div><b>Lab attachment</b><small>Attach report photo or PDF.</small></div>
+     <div class="attach-actions"><label class="filebtn">📎 File / PDF<input type="file" id="labFile" accept="image/*,.pdf"></label><label class="filebtn">📷 Camera<input type="file" id="labCamera" accept="image/*" capture="environment"></label></div>
+     <div id="labFileName" class="file-name"></div>
+   </div>
+   <input id="labEditIndex" type="hidden">
+   <div class="buttons"><button class="primary" onclick="addLab()">Save Lab</button><button class="ghost" onclick="resetLabForm()">Clear</button></div>
   </article>
   <article class="card">
    <h3>Add Imaging / Procedure Report</h3>
@@ -228,9 +279,19 @@
    </div>
    <label>Findings<textarea id="imgFinding"></textarea></label>
    <label>Impression<textarea id="imgImpression"></textarea></label>
-   <button class="primary" onclick="addImaging()">Add Report</button>
+   <div class="attachment-box">
+     <div><b>Imaging attachment</b><small>Attach X-ray/USG/CT/MRI image, photo or PDF report.</small></div>
+     <div class="attach-actions"><label class="filebtn">📎 File / PDF<input type="file" id="imgFile" accept="image/*,.pdf"></label><label class="filebtn">📷 Camera<input type="file" id="imgCamera" accept="image/*" capture="environment"></label></div>
+     <div id="imgFileName" class="file-name"></div>
+   </div>
+   <input id="imgEditIndex" type="hidden">
+   <div class="buttons"><button class="primary" onclick="addImaging()">Save Report</button><button class="ghost" onclick="resetImagingForm()">Clear</button></div>
   </article>
  </div>
+ <article class="card">
+  <div class="cardtitle"><h3>Investigation Auto Summary</h3><button class="link" onclick="generateInvestigationSummary()">Refresh summary ✦</button></div>
+  <div id="investigationAutoSummary" class="summary-box">Add labs or reports to create a one-place summary.</div>
+ </article>
  <article class="card"><div class="cardtitle"><h3>Investigation History</h3><input class="search" id="invSearch" placeholder="Search uric acid, MRI, liver..." oninput="renderInvestigations()"></div><div id="invTable"></div></article>
 </section>
 
@@ -245,7 +306,9 @@
    <label>Benefit<select id="medBenefit"><option>Not assessed</option><option>Improved</option><option>Stable</option><option>No benefit</option><option>Worsened</option></select></label>
    <label>Adverse effect<input id="medAE"></label>
   </div>
-  <button class="primary" onclick="addMedicine()">Save Medicine</button>
+  <div class="attachment-box"><div><b>Medicine attachment</b><small>Prescription / medicine photo / bill / instructions</small></div><div class="attach-actions"><label class="filebtn">📎 File / PDF<input type="file" id="medFile" accept="image/*,.pdf"></label><label class="filebtn">📷 Camera<input type="file" id="medCamera" accept="image/*" capture="environment"></label></div><div id="medFileName" class="file-name"></div></div>
+  <input id="medEditIndex" type="hidden">
+  <div class="buttons"><button class="primary" onclick="addMedicine()">Save Medicine</button><button class="ghost" onclick="resetMedForm()">Clear</button></div>
  </article>
  <article class="card"><div id="medTable"></div></article>
 </section>
@@ -265,14 +328,43 @@
    <label>Adverse effect<input id="txAE"></label>
   </div>
   <label>Details / protocol / recovery<textarea id="txNote"></textarea></label>
-  <button class="primary" onclick="addTherapy()">Save Intervention</button>
+  <div class="attachment-box"><div><b>Therapy attachment</b><small>Before/after photo, procedure note, prescription or PDF</small></div><div class="attach-actions"><label class="filebtn">📎 File / PDF<input type="file" id="txFile" accept="image/*,.pdf"></label><label class="filebtn">📷 Camera<input type="file" id="txCamera" accept="image/*" capture="environment"></label></div><div id="txFileName" class="file-name"></div></div>
+  <input id="txEditIndex" type="hidden">
+  <div class="buttons"><button class="primary" onclick="addTherapy()">Save Intervention</button><button class="ghost" onclick="resetTxForm()">Clear</button></div>
  </article>
  <article class="card"><div id="txTable"></div></article>
 </section>
 
+
 <section id="lifestyle" class="view">
- <div class="pagehead compact"><div><span class="eyebrow">LIFESTYLE MEDICINE × DINACHARYA</span><h2>Daily inputs that shape long-term health</h2></div></div>
+ <div class="pagehead compact"><div><span class="eyebrow">LIFESTYLE MEDICINE × DINACHARYA</span><h2>Habit Builder for Future Health</h2><p>“We become what we repeatedly practice.”</p></div></div>
+ <div class="motivation">🏃 Exercise protects function. 😴 Sleep repairs. 🥗 Food becomes tissue. 🧘 Sadhana trains attention. 📚 Study keeps the mind alive. Consistency matters more than perfection.</div>
+
+ <article class="card">
+  <div class="formgrid four">
+    <label>Date<input id="hbDate" type="date"></label>
+    <label>Habit<select id="hbHabit">
+      <option>Sleep routine</option><option>Wake-up routine</option><option>Exercise</option><option>Walking</option><option>Strength training</option><option>Yoga</option><option>Pranayama</option><option>Meditation / Dhyana</option><option>Mala Jap</option><option>Puja / Path</option><option>Mauna</option><option>Study / Learning</option><option>Water intake</option><option>Healthy meals</option><option>Digital detox</option><option>Fasting / Upavasa</option><option>Abhyanga</option><option>Other</option>
+    </select></label>
+    <label>Start time<input id="hbStart" type="time"></label>
+    <label>End time<input id="hbEnd" type="time"></label>
+    <label>Duration min<input id="hbDuration" type="number"></label>
+    <label>Target min<input id="hbTarget" type="number"></label>
+    <label>Quality / satisfaction 0–10<input id="hbQuality" type="number" min="0" max="10"></label>
+    <label>Status<select id="hbStatus"><option>Done</option><option>Partial</option><option>Missed</option><option>Rest day</option></select></label>
+  </div>
+  <label>Reflection / barrier<textarea id="hbNote" placeholder="What helped? What prevented consistency? What will I change tomorrow?"></textarea></label>
+  <input id="hbEditIndex" type="hidden">
+  <div class="buttons"><button class="primary" onclick="saveHabit()">Save Habit</button><button class="ghost" onclick="resetHabitForm()">Clear</button></div>
+ </article>
+
  <div class="grid3" id="habitCards"></div>
+
+ <article class="card">
+   <div class="cardtitle"><h3>Habit Auto Summary</h3><button class="link" onclick="generateHabitSummary()">Refresh summary ✦</button></div>
+   <div id="habitAutoSummary" class="summary-box">Track habits to see adherence and self-coaching suggestions.</div>
+ </article>
+ <article class="card"><div class="cardtitle"><h3>Habit History</h3><span class="pill teal">Edit / Delete</span></div><div id="habitTable"></div></article>
 </section>
 
 <section id="mind" class="view">
@@ -345,6 +437,7 @@
  </article>
 </section>
 </main>
+<button class="copilot-fab" onclick="showView('ai')" title="Open AI Health Copilot">✦ AI Copilot</button>
 </div>
 <footer>RAJ HEALTH 360 V2 Pro • Personal integrated health tracker • Local-first prototype</footer>
 <script src="app.js"></script>
