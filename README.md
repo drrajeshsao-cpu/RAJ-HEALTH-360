@@ -281,3 +281,14 @@ Future rule: every release should update this visible version/build label before
 - Improved touch targets, typography, spacing, cards, responsive grids and high-resolution desktop layout.
 - Existing Family Health Hub, Firestore sync, SLAIE, patient reports and local-first storage remain intact.
 - Version V7.4 • Build 2026-08-12.
+
+
+## V7.4.1 Mobile Layout Fix
+- Fixes partial-width dashboard/cards on phones.
+- Eliminates unintended horizontal overflow.
+- Reflows header into compact two-row mobile layout.
+- Hides redundant desktop tab strip on phones; hamburger + bottom navigation remain.
+- Makes hero, quick actions, alerts, forms and cards use full available mobile width.
+- Improves very-small-phone handling and table horizontal scrolling.
+- Keeps Firebase cloud sync, login, Family Health Hub and SLAIE unchanged.
+- Version V7.4.1 • Build 2026-08-12.

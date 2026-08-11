@@ -1,4 +1,4 @@
-const APP_VERSION="V7.4";
+const APP_VERSION="V7.4.1";
 const APP_BUILD_DATE="2026-08-12";
 
 const KEY="raj_health_360_v2";
@@ -2432,3 +2432,15 @@ document.addEventListener("click",e=>{
  if(window.innerWidth<=900 && e.target.closest(".nav"))closeMobileNav();
 });
 window.addEventListener("resize",()=>{if(window.innerWidth>900)closeMobileNav()});
+
+(function(){
+  const originalShowView=window.showView;
+  if(typeof originalShowView==="function"){
+    window.showView=function(id){
+      const result=originalShowView(id);
+      if(window.innerWidth<=900)document.body.classList.remove("nav-open");
+      setTimeout(()=>window.scrollTo({top:0,behavior:"smooth"}),20);
+      return result;
+    };
+  }
+})();
