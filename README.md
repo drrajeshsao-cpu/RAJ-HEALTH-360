@@ -238,3 +238,12 @@ Future rule: every release should update this visible version/build label before
 - Auto-sync, realtime sync and manual push/pull controls.
 - Header cloud status.
 - Security rules and CLOUD_SETUP.md included.
+
+
+## V7.1 Realtime Merge Fix
+- Fixes the V7.0 issue where another device's Firestore update was received but local profile fields incorrectly won during merge.
+- Latest cloud snapshot now wins for matching profile/settings fields and matching array records.
+- Local-only array records are preserved.
+- Added Verify Realtime button.
+- Updated stale V2/local-only UI text.
+- Version V7.1 • Build 2026-08-12.

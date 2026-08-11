@@ -12,7 +12,7 @@
 <header class="top">
   <div class="brand">
     <div class="logo">R360</div>
-    <div><h1>RAJ HEALTH 360</h1><div class="version-badge">Version V7.0 • Build 2026-08-12</div><p>Modern Medicine × Ayurveda × Lifestyle × Mind × Spiritual Health</p></div>
+    <div><h1>RAJ HEALTH 360</h1><div class="version-badge">Version V7.1 • Build 2026-08-12</div><p>Modern Medicine × Ayurveda × Lifestyle × Mind × Spiritual Health</p></div>
   </div>
   <div class="top-actions">
     <button class="cloud-pill" id="cloudHeaderStatus" onclick="showView('settings')" title="Cloud sync status">☁ Local only</button>
@@ -859,7 +859,7 @@
       <label class="toggle-row"><input id="cloudAutoSync" type="checkbox" checked onchange="saveCloudPreferences()"> Auto-sync changes</label>
       <label class="toggle-row"><input id="cloudRealtime" type="checkbox" checked onchange="saveCloudPreferences()"> Realtime updates from other devices</label>
       <label class="toggle-row"><input id="cloudUploadFiles" type="checkbox" checked onchange="saveCloudPreferences()"> Upload original PDFs/images</label>
-      <div class="buttons"><button class="primary" onclick="syncAllToCloud()">↑ Local → Cloud</button><button class="ghost" onclick="pullAllFromCloud()">↓ Cloud → Device</button><button class="ghost" onclick="cloudBidirectionalSync()">↕ Sync Now</button></div>
+      <div class="buttons"><button class="primary" onclick="syncAllToCloud()">↑ Local → Cloud</button><button class="ghost" onclick="pullAllFromCloud()">↓ Cloud → Device</button><button class="ghost" onclick="cloudBidirectionalSync()">↕ Sync Now</button><button class="ghost" onclick="verifyRealtimeProfileSync()">✓ Verify Realtime</button></div>
       <div id="cloudSyncStatus" class="summary-box">Local data remains safe until cloud setup is completed.</div>
     </article>
   </div>
@@ -880,14 +880,14 @@
  </article>
  <article class="card">
   <h3>Data & Privacy</h3>
-  <p class="muted">V2 stores data in this browser. Use Backup regularly. Cloud sync, authentication, encrypted file storage and real AI API connection should be added in the next deployment phase.</p>
+  <p class="muted">V7.1 uses local-first storage with Firebase Authentication and Firestore cloud synchronization. Keep JSON backups for additional recovery. Original PDF/image cloud upload remains optional.</p>
   <div class="buttons"><button class="ghost" onclick="exportData()">Export JSON</button><label class="filebtn">Import JSON<input type="file" id="importFile" accept=".json" onchange="importData(event)"></label></div>
  </article>
 </section>
 </main>
 <button class="copilot-fab" onclick="showView('ai')" title="Open AI Health Copilot">✦ AI Copilot</button>
 </div>
-<footer>RAJ HEALTH 360 V2 Pro • Personal integrated health tracker • Local-first prototype</footer>
+<footer>RAJ HEALTH 360 V7.1 • Personal integrated health tracker • Cloud-synced local-first</footer>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
@@ -896,5 +896,5 @@
 <script src="https://www.gstatic.com/firebasejs/12.10.0/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/12.10.0/firebase-storage-compat.js"></script>
 <script src="app.js"></script>
-<div id="appVersionText" class="app-version-footer">RAJ HEALTH 360 V7.0 • Build 2026-08-12</div></body>
+<div id="appVersionText" class="app-version-footer">RAJ HEALTH 360 V7.1 • Build 2026-08-12</div></body>
 </html>

@@ -1,4 +1,4 @@
-const APP_VERSION="V7.0";
+const APP_VERSION="V7.1";
 const APP_BUILD_DATE="2026-08-12";
 
 const KEY="raj_health_360_v2";
@@ -79,13 +79,33 @@ async function testCloudConnection(){
 function getCloudDeviceId(){let id=localStorage.getItem("raj_health_360_device_id");if(!id){id="dev_"+Date.now()+"_"+Math.random().toString(36).slice(2,8);localStorage.setItem("raj_health_360_device_id",id)}return id}
 function cloudStatePayload(){const clone=JSON.parse(JSON.stringify(db));clone.labInterpretations=(clone.labInterpretations||[]).slice(0,30);return {schema:1,appVersion:APP_VERSION,updatedAt:Date.now(),deviceId:getCloudDeviceId(),data:clone}}
 function mergeCloudDB(remote){
- if(!remote)return;const out=Object.assign({},db);
+ if(!remote||typeof remote!=="object")return;
+ const out=Object.assign({},db);
  for(const [k,val] of Object.entries(remote)){
-  if(Array.isArray(val)){const local=Array.isArray(out[k])?out[k]:[];const m=new Map();[...val,...local].forEach(item=>{const key=item?.id||item?.archiveId||[item?.date,item?.name,item?.title,item?.panel,JSON.stringify(item).slice(0,60)].join("|");m.set(key,item)});out[k]=Array.from(m.values())}
-  else if(val&&typeof val==="object")out[k]=Object.assign({},val,out[k]||{});
-  else if(out[k]===undefined)out[k]=val;
+  if(Array.isArray(val)){
+   const local=Array.isArray(out[k])?out[k]:[];
+   const m=new Map();
+   // Preserve local-only records first.
+   local.forEach(item=>{
+    const key=item?.id||item?.archiveId||[item?.date,item?.name,item?.title,item?.panel,JSON.stringify(item).slice(0,60)].join("|");
+    m.set(key,item);
+   });
+   // Latest cloud snapshot wins for matching records.
+   val.forEach(item=>{
+    const key=item?.id||item?.archiveId||[item?.date,item?.name,item?.title,item?.panel,JSON.stringify(item).slice(0,60)].join("|");
+    m.set(key,item);
+   });
+   out[k]=Array.from(m.values());
+  }else if(val&&typeof val==="object"){
+   // Local first, remote second => latest cloud fields win.
+   out[k]=Object.assign({},out[k]||{},val);
+  }else{
+   out[k]=val;
+  }
  }
- db=out;try{localStorage.setItem(KEY,JSON.stringify(db))}catch(e){}renderAll()
+ db=out;
+ try{localStorage.setItem(KEY,JSON.stringify(db))}catch(e){console.warn("Remote merge local cache",e)}
+ renderAll();
 }
 async function pushCoreState(){await cloudStore.collection("users").doc(cloudUser.uid).collection("health").doc("core").set(cloudStatePayload(),{merge:true})}
 async function pullCoreState(){const snap=await cloudStore.collection("users").doc(cloudUser.uid).collection("health").doc("core").get();if(snap.exists&&snap.data()?.data){cloudApplyingRemote=true;mergeCloudDB(snap.data().data);cloudApplyingRemote=false;return true}return false}
@@ -113,11 +133,33 @@ async function pullAllFromCloud(){
  setCloudHeader("syncing","☁ Pulling…");try{const core=await pullCoreState(),n=await pullArchivedReportsFromCloud();const s=new Date().toLocaleString();localStorage.setItem("raj_health_360_last_cloud_sync",s);if($("cloudLastSync"))$("cloudLastSync").textContent=s;setCloudHeader("online","☁ Synced");cloudStatus(`✓ Download complete. ${core?"Core merged. ":""}${n} archived report(s) available.`)}catch(e){cloudStatus("Cloud download failed: "+e.message,true)}
 }
 async function cloudBidirectionalSync(){await pullAllFromCloud();if(cloudUser)await syncAllToCloud()}
+
+async function verifyRealtimeProfileSync(){
+ if(!cloudUser){cloudStatus("Sign in first.",true);return}
+ try{
+  const snap=await cloudStore.collection("users").doc(cloudUser.uid).collection("health").doc("core").get();
+  if(!snap.exists||!snap.data()?.data){cloudStatus("No cloud core record found yet.",true);return}
+  const remoteProfile=snap.data().data.profile||{};
+  const localProfile=db.profile||{};
+  if(JSON.stringify(remoteProfile)===JSON.stringify(localProfile)){
+   cloudStatus("✓ Realtime profile verification PASS — this device matches the latest cloud profile.");
+   setCloudHeader("online","☁ Verified");
+  }else{
+   cloudStatus("Profile differs from cloud. Applying latest cloud profile now…");
+   cloudApplyingRemote=true;
+   mergeCloudDB(snap.data().data);
+   cloudApplyingRemote=false;
+   cloudStatus("✓ Latest cloud profile applied. Recheck the changed field.");
+   setCloudHeader("online","☁ Updated");
+  }
+ }catch(e){cloudStatus("Realtime verification failed: "+e.message,true)}
+}
+
 function scheduleCloudSync(){if(cloudApplyingRemote||!cloudPrefs().autoSync||!cloudUser)return;clearTimeout(cloudSyncTimer);cloudSyncTimer=setTimeout(()=>syncAllToCloud(),1800)}
 function stopCloudRealtimeListener(){if(cloudUnsubscribe){try{cloudUnsubscribe()}catch(e){}cloudUnsubscribe=null}}
 function startCloudRealtimeListener(){
  stopCloudRealtimeListener();if(!cloudUser||!cloudStore||!cloudPrefs().realtime)return;
- cloudUnsubscribe=cloudStore.collection("users").doc(cloudUser.uid).collection("health").doc("core").onSnapshot(s=>{if(!s.exists||s.metadata.hasPendingWrites)return;const p=s.data();if(p?.deviceId===getCloudDeviceId())return;if(p?.data){cloudApplyingRemote=true;mergeCloudDB(p.data);cloudApplyingRemote=false;setCloudHeader("online","☁ Updated");cloudStatus("✓ Changes received from another device.")}},e=>cloudStatus("Realtime sync error: "+e.message,true))
+ cloudUnsubscribe=cloudStore.collection("users").doc(cloudUser.uid).collection("health").doc("core").onSnapshot(s=>{if(!s.exists||s.metadata.hasPendingWrites)return;const p=s.data();if(p?.deviceId===getCloudDeviceId())return;if(p?.data){cloudApplyingRemote=true;mergeCloudDB(p.data);cloudApplyingRemote=false;setCloudHeader("online","☁ Updated");cloudStatus("✓ Latest changes received and applied from another device.")}},e=>cloudStatus("Realtime sync error: "+e.message,true))
 }
 
 const labPanels = {
