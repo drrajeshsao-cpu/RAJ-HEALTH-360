@@ -185,3 +185,16 @@ Major parser redesign after direct comparison with the Omega Diagnostics PDF:
 - Added APP_VERSION and APP_BUILD_DATE constants for future deployment checks.
 
 Future rule: every release should update this visible version/build label before publishing.
+
+
+## V6.5 Durable Patient Report Archive
+- Fixes save failures caused by storing growing interpreted-report payloads only in localStorage.
+- Laboratory panels and full-body report bundles are now saved in IndexedDB (`lab_reports`) for durable on-device storage.
+- Original PDF/image remains stored in IndexedDB attachment vault.
+- Adds patient name, Patient ID/UHID, mobile/WhatsApp and age fields.
+- Adds "Save Full Body Report" to archive CBC/LFT/RFT/thyroid/lipid/etc. together for follow-up.
+- Adds searchable Patient Report Archive.
+- Archived records can be reopened, edited, printed, converted to PDF, shared, and shared as WhatsApp text summary.
+- On supported mobile browsers, Share can send the generated PDF through the native share sheet (including WhatsApp if available).
+- Browser WhatsApp deep links cannot reliably attach a generated PDF automatically on desktop; use Share PDF/native share or download PDF then attach it in WhatsApp.
+- Keeps the visible version label: V6.5 • Build 2026-08-11.

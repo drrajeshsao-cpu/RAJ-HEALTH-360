@@ -12,7 +12,7 @@
 <header class="top">
   <div class="brand">
     <div class="logo">R360</div>
-    <div><h1>RAJ HEALTH 360</h1><div class="version-badge">Version V6.4.1 • Build 2026-08-11</div><p>Modern Medicine × Ayurveda × Lifestyle × Mind × Spiritual Health</p></div>
+    <div><h1>RAJ HEALTH 360</h1><div class="version-badge">Version V6.5 • Build 2026-08-11</div><p>Modern Medicine × Ayurveda × Lifestyle × Mind × Spiritual Health</p></div>
   </div>
   <div class="top-actions">
     <button class="ghost" id="themeBtn">◐</button>
@@ -299,6 +299,14 @@
       <span class="pill teal" id="labPanelCount">0 parameters</span>
     </div>
 
+    
+    <div class="patient-report-strip">
+      <label>Patient name<input id="liPatientName" placeholder="Patient name"></label>
+      <label>Patient ID / UHID<input id="liPatientId" placeholder="Patient ID"></label>
+      <label>Mobile / WhatsApp<input id="liPatientMobile" placeholder="10-digit mobile"></label>
+      <label>Age<input id="liPatientAge" type="number" placeholder="Age"></label>
+    </div>
+
     <div class="formgrid four">
       <label>Test date<input id="liDate" type="date"></label>
       <label>Sex for reference<select id="liSex"><option>Male</option><option>Female</option></select></label>
@@ -347,10 +355,15 @@
 
     <label>Overall report remarks<textarea id="liRemarks" placeholder="Symptoms, comparison with previous report, physician note, reasons for change..."></textarea></label>
     <input type="hidden" id="liEditIndex">
-    <div class="buttons">
-      <button class="primary" onclick="saveLabInterpretation()">Save Interpreted Panel</button>
+    <div class="buttons report-actions">
+      <button class="primary" onclick="saveLabInterpretation()">💾 Save Interpreted Panel</button>
+      <button class="primary secondary-primary" onclick="saveFullBodyReportArchive()">💾 Save Full Body Report</button>
       <button class="ghost" onclick="resetLabInterpretation()">Clear</button>
       <button class="ghost" onclick="generateCurrentPanelSummary()">Generate Panel Summary ✦</button>
+      <button class="ghost" onclick="printCurrentPanel()">🖨 Print</button>
+      <button class="ghost" onclick="downloadCurrentPanelPDF()">📄 Create PDF</button>
+      <button class="ghost" onclick="shareCurrentPanel()">↗ Share</button>
+      <button class="ghost" onclick="whatsAppCurrentPanel()">🟢 WhatsApp Summary</button>
     </div>
    </article>
 
@@ -369,6 +382,20 @@
      <button class="ghost" onclick="generateFullBodySummary()">Refresh Full Report Summary ✦</button>
    </div>
    <div id="fullBodySummary" class="summary-box">Analyze a full-body report to create a combined summary.</div>
+ </article>
+
+ 
+ <article class="card report-archive-card">
+   <div class="cardtitle">
+     <div><span class="eyebrow">PATIENT REPORT ARCHIVE</span><h3>Saved full-body reports & follow-up history</h3></div>
+     <input class="search" id="reportArchiveSearch" placeholder="Patient / ID / date / CBC / LFT..." oninput="renderReportArchive()">
+   </div>
+   <div class="archive-filter-row">
+     <button class="ghost" onclick="renderReportArchive()">All</button>
+     <button class="ghost" onclick="filterArchiveByPatient()">Current Patient</button>
+     <span id="archiveSaveStatus" class="file-name"></span>
+   </div>
+   <div id="reportArchiveList"><p class="muted">No archived reports yet.</p></div>
  </article>
 
  <article class="card">
@@ -822,6 +849,7 @@
 <footer>RAJ HEALTH 360 V2 Pro • Personal integrated health tracker • Local-first prototype</footer>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="app.js"></script>
-<div id="appVersionText" class="app-version-footer">RAJ HEALTH 360 V6.4.1 • Build 2026-08-11</div></body>
+<div id="appVersionText" class="app-version-footer">RAJ HEALTH 360 V6.5 • Build 2026-08-11</div></body>
 </html>

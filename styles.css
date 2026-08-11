@@ -167,3 +167,20 @@ footer{text-align:center;color:var(--muted);font-size:11px;padding:24px}
   .app-version-footer{display:none}
   .version-badge{font-size:9px;padding:3px 7px}
 }
+
+.patient-report-strip{display:grid;grid-template-columns:2fr 1fr 1.3fr .7fr;gap:10px;padding:12px;background:var(--surface2);border:1px solid var(--line);border-radius:13px;margin-bottom:12px}
+.report-actions{gap:8px;align-items:center}
+.secondary-primary{background:#155e75}
+.report-archive-card{border-left:5px solid #0f766e}
+.archive-filter-row{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin:10px 0}
+.archive-item{border:1px solid var(--line);border-radius:14px;margin:10px 0;overflow:hidden}
+.archive-head{display:flex;justify-content:space-between;gap:12px;align-items:center;padding:12px 14px;background:var(--surface2)}
+.archive-head b{font-size:14px}.archive-head small{display:block;color:var(--muted);margin-top:3px}
+.archive-body{padding:12px 14px}
+.archive-panel-chip{display:inline-flex;align-items:center;border:1px solid var(--line);border-radius:999px;padding:5px 8px;margin:3px;font-size:10px;font-weight:800}
+.archive-panel-chip.flagged{background:var(--redbg);color:var(--red)}
+.archive-panel-chip.ok{background:#eaf8ef;color:#166534}
+.archive-actions{display:flex;gap:5px;flex-wrap:wrap}
+.archive-status-ok{color:#166534;font-weight:900}.archive-status-error{color:#b91c1c;font-weight:900}
+@media(max-width:800px){.patient-report-strip{grid-template-columns:1fr 1fr}.archive-head{align-items:flex-start;flex-direction:column}}
+@media(max-width:520px){.patient-report-strip{grid-template-columns:1fr}}
