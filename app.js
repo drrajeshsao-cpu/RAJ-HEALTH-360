@@ -1,4 +1,4 @@
-const APP_VERSION="V7.4.2";
+const APP_VERSION="V7.5";
 const APP_BUILD_DATE="2026-08-12";
 
 const KEY="raj_health_360_v2";
@@ -2444,3 +2444,45 @@ window.addEventListener("resize",()=>{if(window.innerWidth>900)closeMobileNav()}
     };
   }
 })();
+
+
+// V7.5 Installable PWA layer. Does not change Firebase/cloud health-data logic.
+let deferredInstallPrompt = null;
+function updateInstallButton(){
+  const btn=document.getElementById('installPwaBtn');
+  if(!btn)return;
+  const standalone=window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone===true;
+  btn.hidden = standalone || !deferredInstallPrompt;
+}
+window.addEventListener('beforeinstallprompt', e=>{
+  e.preventDefault();
+  deferredInstallPrompt=e;
+  updateInstallButton();
+});
+window.addEventListener('appinstalled', ()=>{
+  deferredInstallPrompt=null;
+  updateInstallButton();
+  try{localStorage.setItem('r360_pwa_installed','1')}catch(e){}
+});
+async function installPwaApp(){
+  if(!deferredInstallPrompt){
+    alert('Install option is not ready yet. Refresh once, wait a few seconds, then use Chrome menu → Install app / Add to Home screen.');
+    return;
+  }
+  deferredInstallPrompt.prompt();
+  try{await deferredInstallPrompt.userChoice}catch(e){}
+  deferredInstallPrompt=null;
+  updateInstallButton();
+}
+if('serviceWorker' in navigator){
+  window.addEventListener('load',()=>{
+    navigator.serviceWorker.register('./service-worker.js',{scope:'./'})
+      .then(()=>console.log('RAJ HEALTH 360 service worker ready'))
+      .catch(err=>console.warn('Service worker registration failed',err));
+  });
+}
+window.addEventListener('DOMContentLoaded',()=>{
+  const qp=new URLSearchParams(location.search); const view=qp.get('view');
+  if(view) setTimeout(()=>{try{showView(view)}catch(e){}},250);
+  updateInstallButton();
+});

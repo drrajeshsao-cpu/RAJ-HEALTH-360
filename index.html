@@ -4,6 +4,12 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#0f766e">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="RAJ HEALTH 360">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="icon" type="image/png" sizes="64x64" href="favicon-64.png">
 <title>RAJ HEALTH 360 — Integrated Personal Health Intelligence</title>
 <link rel="manifest" href="manifest.json">
 <link rel="stylesheet" href="styles.css">
@@ -42,9 +48,10 @@
 <header class="top">
   <div class="brand responsive-brand">
     <div class="logo">R360</div>
-    <div><h1>RAJ HEALTH 360</h1><div class="version-badge">Version V7.4.2 • Build 2026-08-12</div><p>Modern Medicine × Ayurveda × Lifestyle × Mind × Spiritual Health</p></div>
+    <div><h1>RAJ HEALTH 360</h1><div class="version-badge">Version V7.5 • Build 2026-08-12</div><p>Modern Medicine × Ayurveda × Lifestyle × Mind × Spiritual Health</p></div>
   </div>
   <div class="top-actions responsive-top-actions">
+    <button class="install-pwa-btn" id="installPwaBtn" onclick="installPwaApp()" hidden>⬇ Install App</button>
     <button class="member-pill" id="activeMemberPill" onclick="showView('family')" title="Active family health record">👤 Active: Self</button>
     <button class="login-header-btn" onclick="openAppLogin()" title="Secure sign in">🔐 Login</button>
     <button class="cloud-pill" id="cloudHeaderStatus" onclick="showView('settings')" title="Cloud sync status">☁ Local only</button>
@@ -1028,7 +1035,7 @@
 <script src="https://www.gstatic.com/firebasejs/12.10.0/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/12.10.0/firebase-storage-compat.js"></script>
 <script src="app.js"></script>
-<div id="appVersionText" class="app-version-footer">RAJ HEALTH 360 V7.4.2 • Build 2026-08-12</div>
+<div id="appVersionText" class="app-version-footer">RAJ HEALTH 360 V7.5 • Build 2026-08-12</div>
 <nav class="mobile-bottom-nav" aria-label="Quick navigation">
   <button onclick="showView('dashboard')"><span>⌂</span><small>Home</small></button>
   <button onclick="showView('family')"><span>👨‍👩‍👧</span><small>Family</small></button>

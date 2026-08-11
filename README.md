@@ -300,3 +300,12 @@ Future rule: every release should update this visible version/build label before
 - Converts top mobile navigation row into a contained horizontal ribbon.
 - Locks dashboard, cards and hero to stable mobile width.
 - Reduces mobile layout jumpiness and improves perceived stability.
+
+
+## V7.5 Installable PWA
+- Adds 192px and 512px branded app icons plus maskable icons and Apple touch icon.
+- Adds service worker with same-origin app-shell caching and offline navigation fallback.
+- Adds a complete web app manifest with standalone display, scope, app id and shortcuts.
+- Adds an Install App button driven by Chrome's `beforeinstallprompt` event when available.
+- Does not change Firebase Authentication, Firestore sync, Family Health Hub, SLAIE or health-data storage logic.
+- Version V7.5 • Build 2026-08-12.

@@ -1,9 +1,73 @@
 {
-  "name": "RAJ HEALTH 360 V7.4.2 Stable Mobile",
-  "short_name": "RAJ HEALTH 360",
-  "start_url": "./index.html",
+  "id": "./",
+  "name": "RAJ HEALTH 360",
+  "short_name": "R360",
+  "description": "Personal and family integrated health tracker combining modern medicine, Ayurveda, lifestyle, mind and spiritual health.",
+  "start_url": "./?source=pwa",
+  "scope": "./",
   "display": "standalone",
+  "display_override": [
+    "standalone",
+    "minimal-ui"
+  ],
   "background_color": "#f4f7f5",
   "theme_color": "#0f766e",
-  "description": "Personal integrated modern medicine, Ayurveda, lifestyle, mental, social and spiritual health tracker."
+  "orientation": "any",
+  "categories": [
+    "medical",
+    "health",
+    "lifestyle"
+  ],
+  "icons": [
+    {
+      "src": "icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icon-maskable-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "icon-maskable-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Family Health Hub",
+      "short_name": "Family",
+      "url": "./?view=family",
+      "icons": [
+        {
+          "src": "icon-192.png",
+          "sizes": "192x192",
+          "type": "image/png"
+        }
+      ]
+    },
+    {
+      "name": "Lab AutoRead",
+      "short_name": "Labs",
+      "url": "./?view=labcentre",
+      "icons": [
+        {
+          "src": "icon-192.png",
+          "sizes": "192x192",
+          "type": "image/png"
+        }
+      ]
+    }
+  ]
 }

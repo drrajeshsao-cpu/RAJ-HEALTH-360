@@ -871,3 +871,7 @@ img,svg,canvas,video{max-width:100%;height:auto}
     margin-top:6px!important;
   }
 }
+
+.install-pwa-btn{border:1px solid #a7d9cf;background:linear-gradient(135deg,#0f766e,#14b8a6);color:#fff;padding:8px 12px;border-radius:999px;font-weight:900;font-size:11px;cursor:pointer;box-shadow:0 6px 16px rgba(15,118,110,.18)}
+.install-pwa-btn[hidden]{display:none!important}
+@media(max-width:768px){.install-pwa-btn{flex:0 0 auto!important;min-height:40px!important;font-size:11px!important;padding:9px 12px!important}}
