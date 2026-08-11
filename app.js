@@ -1,4 +1,4 @@
-const APP_VERSION="V7.3";
+const APP_VERSION="V7.4";
 const APP_BUILD_DATE="2026-08-12";
 
 const KEY="raj_health_360_v2";
@@ -2398,3 +2398,37 @@ function clearProfileFieldSafely(fieldId){
  db.profile.__clearedFields[key]=Date.now();
  persist();
 }
+
+function toggleMobileNav(){document.body.classList.toggle("nav-open")}
+function closeMobileNav(){document.body.classList.remove("nav-open")}
+function openAppLogin(){
+ const sh=$("appLoginShell");if(!sh)return;
+ if($("loginShellEmail")&&$("cloudEmail"))$("loginShellEmail").value=v("cloudEmail");
+ sh.classList.add("open");sh.setAttribute("aria-hidden","false");
+}
+function closeAppLogin(){
+ const sh=$("appLoginShell");if(!sh)return;
+ sh.classList.remove("open");sh.setAttribute("aria-hidden","true");
+}
+async function safeShellSignIn(){
+ const email=v("loginShellEmail").trim(),password=v("loginShellPassword");
+ if($("cloudEmail"))$("cloudEmail").value=email;
+ if($("cloudPassword"))$("cloudPassword").value=password;
+ const st=$("loginShellStatus");
+ try{
+  if(st)st.textContent="Signing in…";
+  await cloudSignIn();
+  if(cloudUser){if(st)st.textContent="✓ Signed in securely. Cloud sync is ready.";setTimeout(closeAppLogin,700)}
+  else if(st)st.textContent="Sign-in did not complete. Check email/password.";
+ }catch(e){if(st)st.textContent="Sign-in failed: "+e.message}
+}
+async function safeShellForgot(){
+ const email=v("loginShellEmail").trim();
+ if($("cloudEmail"))$("cloudEmail").value=email;
+ if(!email){if($("loginShellStatus"))$("loginShellStatus").textContent="Enter your email first.";return}
+ await cloudForgotPassword();
+}
+document.addEventListener("click",e=>{
+ if(window.innerWidth<=900 && e.target.closest(".nav"))closeMobileNav();
+});
+window.addEventListener("resize",()=>{if(window.innerWidth>900)closeMobileNav()});

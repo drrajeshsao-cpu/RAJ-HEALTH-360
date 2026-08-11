@@ -9,13 +9,44 @@
 <link rel="stylesheet" href="styles.css">
 </head>
 <body>
+
+<div id="appLoginShell" class="app-login-shell" aria-hidden="true">
+  <div class="login-backdrop" onclick="closeAppLogin()"></div>
+  <div class="login-panel">
+    <button class="login-close" onclick="closeAppLogin()" aria-label="Close">×</button>
+    <div class="login-identity">
+      <div class="login-mark">R360</div>
+      <div>
+        <span class="eyebrow">PERSONAL • FAMILY • INTEGRATED HEALTH</span>
+        <h2>RAJ HEALTH 360</h2>
+        <p>Modern Medicine × Ayurveda × Lifestyle × Mind × Spiritual Health</p>
+      </div>
+    </div>
+    <div class="login-card">
+      <h3>Secure Cloud Sign In</h3>
+      <p class="muted">Uses the same Firebase account and cloud configuration already working in the app. No separate login system is created.</p>
+      <label>Email<input id="loginShellEmail" type="email" placeholder="your@email.com"></label>
+      <label>Password<input id="loginShellPassword" type="password" placeholder="Password"></label>
+      <div class="buttons">
+        <button class="primary" onclick="safeShellSignIn()">Sign In</button>
+        <button class="ghost" onclick="safeShellForgot()">Forgot Password</button>
+      </div>
+      <div id="loginShellStatus" class="summary-box">Cloud sign-in is optional for local use; required for multi-device sync.</div>
+    </div>
+    <div class="login-trust-row">
+      <span>☁ Realtime Sync</span><span>🩺 Family Records</span><span>🧪 SLAIE Lab Engine</span><span>🔒 Local-first</span>
+    </div>
+  </div>
+</div>
+
 <header class="top">
   <div class="brand">
     <div class="logo">R360</div>
-    <div><h1>RAJ HEALTH 360</h1><div class="version-badge">Version V7.3 • Build 2026-08-12</div><p>Modern Medicine × Ayurveda × Lifestyle × Mind × Spiritual Health</p></div>
+    <div><h1>RAJ HEALTH 360</h1><div class="version-badge">Version V7.4 • Build 2026-08-12</div><p>Modern Medicine × Ayurveda × Lifestyle × Mind × Spiritual Health</p></div>
   </div>
   <div class="top-actions">
     <button class="member-pill" id="activeMemberPill" onclick="showView('family')" title="Active family health record">👤 Active: Self</button>
+    <button class="login-header-btn" onclick="openAppLogin()" title="Secure sign in">🔐 Login</button>
     <button class="cloud-pill" id="cloudHeaderStatus" onclick="showView('settings')" title="Cloud sync status">☁ Local only</button>
     <button class="ghost" id="themeBtn">◐</button>
     <button class="ghost" id="backupBtn">Backup</button>
@@ -130,7 +161,17 @@
     <div class="score-ring"><strong id="score">--</strong><span>Health Readiness</span></div>
   </div>
 
-  <div id="activeRecordContext" class="alertbar family-context-bar"></div>
+  
+<div class="dashboard-quick-actions">
+  <button onclick="showView('today')"><span>✓</span><b>Today</b><small>Daily check-in</small></button>
+  <button onclick="showView('family')"><span>👨‍👩‍👧‍👦</span><b>Family</b><small>Switch member</small></button>
+  <button onclick="showView('labcentre')"><span>🧪</span><b>SLAIE Labs</b><small>AutoRead reports</small></button>
+  <button onclick="showView('medicines')"><span>Rx</span><b>Medicines</b><small>Current therapy</small></button>
+  <button onclick="showView('vault')"><span>▣</span><b>Health Vault</b><small>Reports & files</small></button>
+  <button onclick="showView('ai')"><span>✦</span><b>AI Review</b><small>Integrated insight</small></button>
+</div>
+
+<div id="activeRecordContext" class="alertbar family-context-bar"></div>
   <div class="alertbar" id="safetyBar">Add vitals and today’s check-in to activate personalized monitoring.</div>
 
   <article class="attention-panel card">
@@ -987,5 +1028,14 @@
 <script src="https://www.gstatic.com/firebasejs/12.10.0/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/12.10.0/firebase-storage-compat.js"></script>
 <script src="app.js"></script>
-<div id="appVersionText" class="app-version-footer">RAJ HEALTH 360 V7.3 • Build 2026-08-12</div></body>
+<div id="appVersionText" class="app-version-footer">RAJ HEALTH 360 V7.4 • Build 2026-08-12</div>
+<nav class="mobile-bottom-nav" aria-label="Quick navigation">
+  <button onclick="showView('dashboard')"><span>⌂</span><small>Home</small></button>
+  <button onclick="showView('family')"><span>👨‍👩‍👧</span><small>Family</small></button>
+  <button onclick="showView('labcentre')"><span>🧪</span><small>Labs</small></button>
+  <button onclick="showView('today')"><span>✓</span><small>Today</small></button>
+  <button onclick="showView('settings')"><span>⚙</span><small>Settings</small></button>
+</nav>
+
+</body>
 </html>
