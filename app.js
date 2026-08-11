@@ -96,6 +96,52 @@ const labPanels = {
    {id:"antiTPO",name:"Anti-TPO Antibody",unit:"IU/mL",all:[0,34],meaning:"Autoimmune thyroid marker; positivity is interpreted with thyroid function and clinical picture."}
   ]
  },
+
+ "INFLAMMATION":{
+  title:"Inflammation / Infection Markers",system:"General / Inflammation",
+  params:[
+   {id:"esr",name:"ESR",unit:"mm/hr",male:[0,15],female:[0,20],meaning:"Nonspecific inflammation marker; age, anemia and other factors affect ESR."},
+   {id:"crp",name:"C-Reactive Protein (CRP)",unit:"mg/L",all:[0,5],meaning:"Acute-phase inflammatory marker; assay and clinical context matter."},
+   {id:"hscrp",name:"hs-CRP",unit:"mg/L",all:[0,3],meaning:"High-sensitivity CRP may be used for selected cardiovascular-risk contexts; acute inflammation can invalidate risk interpretation."},
+   {id:"procalc",name:"Procalcitonin",unit:"ng/mL",all:[0,0.1],meaning:"Used in selected bacterial-infection/sepsis contexts; thresholds are assay and scenario specific."}
+  ]
+ },
+ "ELECTROLYTES":{
+  title:"Electrolytes & Metabolic Panel",system:"Metabolic / Renal",
+  params:[
+   {id:"sodium",name:"Sodium",unit:"mmol/L",all:[135,145],meaning:"Major extracellular electrolyte; interpret with volume status and medicines."},
+   {id:"potassium",name:"Potassium",unit:"mmol/L",all:[3.5,5.0],meaning:"Important for cardiac and neuromuscular function."},
+   {id:"chloride",name:"Chloride",unit:"mmol/L",all:[98,107],meaning:"Electrolyte interpreted with sodium and acid-base status."},
+   {id:"bicarb",name:"Bicarbonate / Total CO2",unit:"mmol/L",all:[22,29],meaning:"Helps assess acid-base balance."},
+   {id:"magnesium",name:"Magnesium",unit:"mg/dL",all:[1.7,2.2],meaning:"Relevant to neuromuscular and cardiac function; ranges vary."}
+  ]
+ },
+ "COAG":{
+  title:"Coagulation Profile",system:"Hematology / Coagulation",
+  params:[
+   {id:"pt",name:"Prothrombin Time (PT)",unit:"sec",all:[11,13.5],meaning:"Extrinsic/common coagulation pathway; lab reagent affects range."},
+   {id:"inr",name:"INR",unit:"",all:[0.8,1.2],meaning:"Standardized PT ratio; therapeutic targets differ when anticoagulation is prescribed."},
+   {id:"aptt",name:"aPTT",unit:"sec",all:[25,35],meaning:"Intrinsic/common pathway; reagent and anticoagulant use affect interpretation."},
+   {id:"fibrinogen",name:"Fibrinogen",unit:"mg/dL",all:[200,400],meaning:"Coagulation and acute-phase protein."},
+   {id:"ddimer",name:"D-dimer",unit:"",meaning:"Assay-specific marker used in selected thromboembolism pathways; enter the laboratory range manually."}
+  ]
+ },
+ "CARDIAC":{
+  title:"Cardiac Biomarkers",system:"Cardiovascular",
+  params:[
+   {id:"troponin",name:"High-sensitivity Troponin",unit:"",meaning:"Cardiac injury biomarker with assay-specific 99th-percentile cutoffs; enter the printed lab range."},
+   {id:"ckmb",name:"CK-MB",unit:"ng/mL",all:[0,5],meaning:"Cardiac/muscle injury marker; troponin is generally more cardiac-specific."},
+   {id:"bnp",name:"BNP",unit:"pg/mL",all:[0,100],meaning:"Natriuretic peptide used in heart-failure evaluation; age, kidney function and obesity affect values."},
+   {id:"ntprobnp",name:"NT-proBNP",unit:"pg/mL",meaning:"Natriuretic peptide with age/context-specific interpretation; enter the lab range."}
+  ]
+ },
+ "PANCREAS":{
+  title:"Pancreatic Enzymes",system:"Gastrointestinal / Pancreas",
+  params:[
+   {id:"amylase",name:"Amylase",unit:"U/L",all:[30,110],meaning:"Pancreatic/salivary enzyme; interpretation depends on symptoms and timing."},
+   {id:"lipase",name:"Lipase",unit:"U/L",all:[0,60],meaning:"More pancreas-focused enzyme; diagnostic significance depends on magnitude and clinical presentation."}
+  ]
+ },
  "BONE":{
   title:"Bone & Mineral Panel",system:"Bone Health",
   params:[
@@ -164,9 +210,12 @@ function statusClass(s){
  return "status-na";
 }
 function selectLabPanel(key){
+ if(!labPanels[key]){console.error("Unknown lab panel",key);return}
  currentLabPanel=key;
  document.querySelectorAll(".lab-panel-btn").forEach(b=>b.classList.toggle("active",b.dataset.panel===key));
+ document.querySelectorAll("#labPanelStaticGrid button").forEach(b=>b.classList.toggle("active",b.getAttribute("onclick")?.includes(`'${key}'`)));
  renderLabParameters();
+ if($("labCentreStatus"))$("labCentreStatus").textContent=`${labPanels[key].title} loaded — ${labPanels[key].params.length} parameters ready.`;
 }
 function renderLabPanelButtons(){
  if(!$("labPanelButtons"))return;
@@ -174,26 +223,17 @@ function renderLabPanelButtons(){
 }
 function renderLabParameters(existing=null){
  if(!$("labParameterTable"))return;
- const panel=labPanels[currentLabPanel],sex=v("liSex")||db.profile.sex||"Male",q=(v("liSearch")||"").toLowerCase();
- $("labPanelTitle").textContent=panel.title;$("labPanelSystem").textContent=panel.system;$("labPanelCount").textContent=`${panel.params.length} parameters`;
+ const panel=labPanels[currentLabPanel]||labPanels.CBC;
+ if(!panel||!Array.isArray(panel.params)){if($("labCentreStatus"))$("labCentreStatus").textContent="Panel configuration error.";return}
+ const sex=v("liSex")||db.profile?.sex||"Male",q=(v("liSearch")||"").toLowerCase();
+ if($("labPanelTitle"))$("labPanelTitle").textContent=panel.title;if($("labPanelSystem"))$("labPanelSystem").textContent=panel.system;if($("labPanelCount"))$("labPanelCount").textContent=`${panel.params.length} parameters`;
  const previous=existing||{};
- let rows=panel.params.filter(p=>(p.name+" "+p.meaning).toLowerCase().includes(q)).map(p=>{
-   const old=previous[p.id]||{};
-   const ref=old.ref||refRangeFor(p,sex);
-   const val=old.value??"";
-   const stat=old.status||autoStatus(val,p,sex);
-   return `<tr>
-    <td><div class="param-name">${p.name}</div><div class="param-meaning">${p.meaning}</div></td>
-    <td>${p.unit||""}</td>
-    <td><input class="range-input" id="ref_${p.id}" value="${ref}"></td>
-    <td><input class="result-input" id="val_${p.id}" value="${val}" oninput="updateParamStatus('${p.id}')"></td>
-    <td><select class="status-select ${statusClass(stat)}" id="status_${p.id}" onchange="this.className='status-select '+statusClass(this.value)">
-      ${["Not assessed","Normal","Borderline low","Low","Borderline high","High","Abnormal"].map(s=>`<option ${s===stat?"selected":""}>${s}</option>`).join("")}
-    </select></td>
-    <td><input id="remark_${p.id}" value="${old.remark||""}" placeholder="Remark"></td>
-   </tr>`;
+ let visible=panel.params.filter(p=>(p.name+" "+p.meaning).toLowerCase().includes(q));
+ let rows=visible.map(p=>{
+   const old=previous[p.id]||{},ref=old.ref||refRangeFor(p,sex),val=old.value??"",stat=old.status||autoStatus(val,p,sex);
+   return `<tr><td><div class="param-name">${p.name}</div><div class="param-meaning">${p.meaning}</div></td><td>${p.unit||""}</td><td><input class="range-input" id="ref_${p.id}" value="${ref}"></td><td><input class="result-input" id="val_${p.id}" value="${val}" oninput="updateParamStatus('${p.id}')"></td><td><select class="status-select ${statusClass(stat)}" id="status_${p.id}" onchange="this.className='status-select '+statusClass(this.value)">${["Not assessed","Normal","Borderline low","Low","Borderline high","High","Abnormal"].map(s=>`<option ${s===stat?"selected":""}>${s}</option>`).join("")}</select></td><td><input id="remark_${p.id}" value="${old.remark||""}" placeholder="Remark"></td></tr>`;
  }).join("");
- $("labParameterTable").innerHTML=`<div class="lab-param-table"><table><thead><tr><th>Parameter & meaning</th><th>Unit</th><th>Reference range</th><th>Your value</th><th>Status</th><th>Remark</th></tr></thead><tbody>${rows}</tbody></table></div>`;
+ $("labParameterTable").innerHTML=`<div class="lab-param-table"><table><thead><tr><th>Parameter & meaning</th><th>Unit</th><th>Reference range</th><th>Your value</th><th>Status</th><th>Remark</th></tr></thead><tbody>${rows||`<tr><td colspan="6">No parameter matches search.</td></tr>`}</tbody></table></div>`;
 }
 function updateParamStatus(id){
  const p=labPanels[currentLabPanel].params.find(x=>x.id===id);if(!p)return;
@@ -212,9 +252,16 @@ function collectCurrentPanelValues(){
  return out;
 }
 function saveLabInterpretation(){
- const obj={panel:currentLabPanel,title:labPanels[currentLabPanel].title,system:labPanels[currentLabPanel].system,date:v("liDate"),sex:v("liSex"),facility:v("liFacility"),context:v("liContext"),remarks:v("liRemarks"),attachment:pendingFiles.li||null,values:collectCurrentPanelValues()};
- const idx=v("liEditIndex");if(idx!=="")db.labInterpretations[+idx]=obj;else db.labInterpretations.unshift(obj);
- resetLabInterpretation();persist()
+ try{
+   const vals=collectCurrentPanelValues();
+   if(!Object.keys(vals).length){alert("No parameters are loaded. Please select a test panel first.");return}
+   const obj={panel:currentLabPanel,title:labPanels[currentLabPanel].title,system:labPanels[currentLabPanel].system,date:v("liDate")||today(),sex:v("liSex")||"Male",facility:v("liFacility"),context:v("liContext"),remarks:v("liRemarks"),attachment:pendingFiles.li||null,values:vals};
+   const idx=v("liEditIndex");if(idx!=="")db.labInterpretations[+idx]=obj;else db.labInterpretations.unshift(obj);
+   localStorage.setItem(KEY,JSON.stringify(db));
+   if($("liSaveStatus")){$("liSaveStatus").textContent=`Saved: ${obj.title} • ${obj.date}${obj.attachment?.name?` • attachment ${obj.attachment.name}`:""}`;$("liSaveStatus").className="file-name save-ok"}
+   renderSavedLabPanels();renderTimeline();generateCurrentPanelSummary();
+   $("liEditIndex").value="";
+ }catch(e){console.error("Panel save failed",e);if($("liSaveStatus")){$("liSaveStatus").textContent="Save failed: "+e.message;$("liSaveStatus").className="file-name save-error"}alert("Unable to save this panel. Please refresh and try again.")}
 }
 function editLabInterpretation(i){
  const x=db.labInterpretations[i];showView("labcentre");currentLabPanel=x.panel||"CBC";renderLabPanelButtons();
@@ -302,7 +349,7 @@ function renderSavedLabPanels(){
    return `<div class="saved-panel">
     <div class="saved-panel-head"><div><b>${x.title}</b><small style="display:block;color:var(--muted)">${x.date||""} • ${x.sex||""} • ${x.facility||""}</small></div>
     <div><span class="pill ${abn.length?"red":"green"}">${abn.length} flagged</span> <button class="action-btn edit-btn" onclick="editLabInterpretation(${i})">Edit</button><button class="action-btn delete-btn" onclick="deleteLabInterpretation(${i})">Delete</button></div></div>
-    <div class="saved-panel-body">${chips||'<span class="muted">No numeric results entered.</span>'}${x.attachment?.name?`<p><b>Attachment:</b> ${x.attachment.name}</p>`:""}${x.remarks?`<p><b>Remarks:</b> ${x.remarks}</p>`:""}</div>
+    <div class="saved-panel-body">${chips||'<span class="muted">No numeric results entered.</span>'}${x.attachment?.name?`<p><b>Attachment:</b> ${x.attachment.name} ${x.attachment.id?`<button class="local-file-action" onclick="openLocalAttachment('${x.attachment.id}')">Open</button><button class="local-file-action" onclick="downloadLocalAttachment('${x.attachment.id}')">Download</button>`:""}</p>`:""}${x.remarks?`<p><b>Remarks:</b> ${x.remarks}</p>`:""}</div>
    </div>`;
  }).join("");
 }
@@ -375,6 +422,21 @@ $("autoRitu").onchange=()=>{db.ritu.auto=$("autoRitu").checked;applyAutoRitu();p
 
 function saveProfile(){db.profile={name:v("pName"),dob:v("pDob"),sex:v("pSex"),height:n("pHeight"),blood:v("pBlood"),allergy:v("pAllergy"),conditions:v("pConditions"),emergency:v("pEmergency"),goals:v("pGoals")};persist()}
 let pendingFiles={};
+
+const FILE_DB_NAME="raj_health_360_files";
+const FILE_STORE="attachments";
+function openFileDB(){
+ return new Promise((resolve,reject)=>{const req=indexedDB.open(FILE_DB_NAME,1);req.onupgradeneeded=()=>{const dbi=req.result;if(!dbi.objectStoreNames.contains(FILE_STORE))dbi.createObjectStore(FILE_STORE,{keyPath:"id"})};req.onsuccess=()=>resolve(req.result);req.onerror=()=>reject(req.error)});
+}
+async function saveBlobToLocalVault(file){
+ const id=`att_${Date.now()}_${Math.random().toString(36).slice(2)}`;const dbi=await openFileDB();
+ await new Promise((resolve,reject)=>{const tx=dbi.transaction(FILE_STORE,"readwrite");tx.objectStore(FILE_STORE).put({id,name:file.name,type:file.type,size:file.size,blob:file,created:new Date().toISOString()});tx.oncomplete=resolve;tx.onerror=()=>reject(tx.error)});
+ dbi.close();return {id,name:file.name,type:file.type,size:file.size};
+}
+async function getLocalAttachment(id){const dbi=await openFileDB();const rec=await new Promise((resolve,reject)=>{const r=dbi.transaction(FILE_STORE,"readonly").objectStore(FILE_STORE).get(id);r.onsuccess=()=>resolve(r.result);r.onerror=()=>reject(r.error)});dbi.close();return rec}
+async function openLocalAttachment(id){try{const rec=await getLocalAttachment(id);if(!rec){alert("Attachment not found on this device.");return}const url=URL.createObjectURL(rec.blob);window.open(url,"_blank");setTimeout(()=>URL.revokeObjectURL(url),60000)}catch(e){console.error(e);alert("Unable to open attachment.")}}
+async function downloadLocalAttachment(id){try{const rec=await getLocalAttachment(id);if(!rec){alert("Attachment not found on this device.");return}const url=URL.createObjectURL(rec.blob),a=document.createElement("a");a.href=url;a.download=rec.name||"attachment";a.click();setTimeout(()=>URL.revokeObjectURL(url),1000)}catch(e){console.error(e);alert("Unable to download attachment.")}}
+
 function calcSleepDuration(){
  const s=v("tdSleepStart"),e=v("tdSleepEnd"); if(!s||!e)return;
  let [sh,sm]=s.split(":").map(Number),[eh,em]=e.split(":").map(Number);
@@ -383,11 +445,14 @@ function calcSleepDuration(){
 }
 ["tdSleepStart","tdSleepEnd"].forEach(id=>$(id).addEventListener("change",calcSleepDuration));
 
-function fileMetaFromInput(id,key){
+async function fileMetaFromInput(id,key){
  const f=$(id)?.files?.[0]; if(!f)return;
- pendingFiles[key]={name:f.name,type:f.type,size:f.size};
  const label={td:"tdFileName",ayu:"ayuFileName",lab:"labFileName",img:"imgFileName",med:"medFileName",tx:"txFileName",vl:"vlFileName",li:"liFileName"}[key];
- if($(label))$(label).textContent=`Selected: ${f.name} (${Math.round(f.size/1024)} KB)`;
+ try{
+   if(label&&$(label))$(label).textContent=`Saving ${f.name} locally...`;
+   const meta=await saveBlobToLocalVault(f);pendingFiles[key]=meta;
+   if(label&&$(label)){$(label).textContent=`Saved locally: ${f.name} (${Math.round(f.size/1024)} KB)`;$(label).classList.add("save-ok")}
+ }catch(e){console.error("Attachment save failed",e);pendingFiles[key]={name:f.name,type:f.type,size:f.size};if(label&&$(label)){$(label).textContent=`File selected, but local file storage failed: ${f.name}`;$(label).classList.add("save-error")}}
 }
 [["tdFile","td"],["tdCamera","td"],["ayuFile","ayu"],["ayuCamera","ayu"],["labFile","lab"],["labCamera","lab"],["imgFile","img"],["imgCamera","img"],["medFile","med"],["medCamera","med"],["txFile","tx"],["txCamera","tx"],["vlFile","vl"],["vlCamera","vl"],["liFile","li"],["liCamera","li"]].forEach(([id,key])=>{if($(id))$(id).addEventListener("change",()=>fileMetaFromInput(id,key))});
 
@@ -778,8 +843,14 @@ function renderTables(){
  if($("dailyTable"))$("dailyTable").innerHTML=table(db.daily.map((x,i)=>({...x,sl:`${x.sleepStart||"-"}→${x.sleepEnd||"-"} (${x.sleep||"-"}h)`,att:x.attachment?.name||"",act:`<button class="action-btn edit-btn" onclick="editToday(${i})">Edit</button><button class="action-btn delete-btn" onclick="deleteToday(${i})">Delete</button>`})),[["Date","date"],["Sleep","sl"],["BP",x=>`${x.sbp||"-"}/${x.dbp||"-"}`],["Exercise",x=>`${x.exercise||0} min`],["Peace",x=>`${x.peace||0}/10`],["Attachment","att"],["Action","act"]]);
  if($("habitTable"))$("habitTable").innerHTML=table(db.habits.map((x,i)=>({...x,when:`${x.start||"-"}→${x.end||"-"}`,act:`<button class="action-btn edit-btn" onclick="editHabit(${i})">Edit</button><button class="action-btn delete-btn" onclick="deleteHabit(${i})">Delete</button>`})),[["Date","date"],["Habit","habit"],["Time","when"],["Duration",x=>`${x.duration||0} min`],["Status","status"],["Quality",x=>`${x.quality||0}/10`],["Action","act"]]);
 }
-function renderAll(){applyAutoRitu();renderForms();renderDashboard();renderRitu();renderInvestigations();renderTables();renderSleep();renderPhysician();renderExperiments();renderPreventive();renderVault();renderLabPanelButtons();renderLabParameters();renderSavedLabPanels();renderTimeline();generateDailySummary();generateAyurvedaSummary();generateInvestigationSummary();generateHabitSummary()}
+function safeRun(name,fn){try{fn()}catch(e){console.error(`RAJ HEALTH 360: ${name} failed`,e);if(name.includes("Lab")&&$("labCentreStatus"))$("labCentreStatus").textContent=`Diagnostic module recovered from an error: ${e.message}`}}
+function renderAll(){
+ safeRun("Ritu auto",applyAutoRitu);safeRun("Forms",renderForms);safeRun("Dashboard",renderDashboard);safeRun("Ritu",renderRitu);safeRun("Investigations",renderInvestigations);safeRun("Tables",renderTables);safeRun("Sleep",renderSleep);safeRun("Physician",renderPhysician);safeRun("Experiments",renderExperiments);safeRun("Preventive",renderPreventive);safeRun("Vault",renderVault);
+ safeRun("Lab panel buttons",renderLabPanelButtons);safeRun("Lab parameters",()=>renderLabParameters());safeRun("Saved Lab panels",renderSavedLabPanels);
+ safeRun("Timeline",renderTimeline);safeRun("Daily summary",generateDailySummary);safeRun("Ayurveda summary",generateAyurvedaSummary);safeRun("Investigation summary",generateInvestigationSummary);safeRun("Habit summary",generateHabitSummary);
+}
 if($("hbDate"))$("hbDate").value=today(); if($("slDate"))$("slDate").value=today(); if($("phDate"))$("phDate").value=today(); if($("exStart"))$("exStart").value=today(); if($("pvDue"))$("pvDue").value=today(); if($("vlDate"))$("vlDate").value=today(); if($("liDate"))$("liDate").value=today();
 renderAll();
+setTimeout(()=>{safeRun("Lab independent buttons",renderLabPanelButtons);safeRun("Lab independent parameters",()=>renderLabParameters());safeRun("Lab independent saved panels",renderSavedLabPanels)},0);
 
 if($("liSex"))$("liSex").addEventListener("change",()=>renderLabParameters());

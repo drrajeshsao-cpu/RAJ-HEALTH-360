@@ -90,3 +90,11 @@ footer{text-align:center;color:var(--muted);font-size:11px;padding:24px}
 .param-chip.ok{background:#eaf8ef;color:#166534;border-color:#bde6c8}
 @media(max-width:900px){.lab-layout{grid-template-columns:1fr}.lab-sidebar{position:static;max-height:none}.lab-panel-buttons{grid-template-columns:repeat(2,1fr)}}
 @media(max-width:700px){.diagnostic-launch{align-items:flex-start;flex-direction:column}.lab-panel-buttons{grid-template-columns:1fr}.lab-toolbar{align-items:stretch;flex-direction:column}}
+
+.lab-panel-static-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:8px;margin-top:12px}
+.lab-panel-static-grid button{border:1px solid var(--line);background:var(--surface2);color:var(--ink);border-radius:11px;padding:10px 8px;font-weight:850;cursor:pointer;font-size:11px}
+.lab-panel-static-grid button:hover,.lab-panel-static-grid button.active{background:var(--mint);color:var(--brand2);border-color:#7fc9bb}
+.local-file-action{border:1px solid var(--line);background:var(--surface2);color:var(--brand2);border-radius:8px;padding:5px 8px;font-size:10px;font-weight:800;cursor:pointer;margin:2px}
+.save-ok{color:#166534!important}.save-error{color:#b91c1c!important}
+@media(max-width:1100px){.lab-panel-static-grid{grid-template-columns:repeat(4,1fr)}}
+@media(max-width:700px){.lab-panel-static-grid{grid-template-columns:repeat(2,1fr)}}

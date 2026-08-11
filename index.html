@@ -229,9 +229,30 @@
   </div>
  </div>
 
+ <div id="labCentreStatus" class="alertbar">All diagnostic modules ready.</div>
+
  <div class="alertbar warn">
   Reference intervals shown here are typical adult examples, not universal laboratory cut-offs. The lab report’s own range, age, sex, pregnancy status, medicines, hydration, altitude, acute illness and assay method can change interpretation.
  </div>
+
+ <article class="card"><div class="cardtitle"><h3>Available Investigation Panels</h3><span class="pill teal">14 panels</span></div>
+<div class="lab-panel-static-grid" id="labPanelStaticGrid">
+ <button onclick="selectLabPanel('CBC')">CBC</button>
+ <button onclick="selectLabPanel('INFLAMMATION')">ESR / CRP</button>
+ <button onclick="selectLabPanel('IRON')">Iron / B12 / Folate</button>
+ <button onclick="selectLabPanel('LFT')">LFT</button>
+ <button onclick="selectLabPanel('RFT')">RFT / KFT</button>
+ <button onclick="selectLabPanel('URINE')">Urine Routine</button>
+ <button onclick="selectLabPanel('DIABETES')">Diabetes</button>
+ <button onclick="selectLabPanel('LIPID')">Lipid Profile</button>
+ <button onclick="selectLabPanel('THYROID')">Thyroid</button>
+ <button onclick="selectLabPanel('ELECTROLYTES')">Electrolytes</button>
+ <button onclick="selectLabPanel('BONE')">Bone / Minerals</button>
+ <button onclick="selectLabPanel('COAG')">Coagulation</button>
+ <button onclick="selectLabPanel('CARDIAC')">Cardiac Markers</button>
+ <button onclick="selectLabPanel('PANCREAS')">Pancreatic</button>
+</div>
+</article>
 
  <div class="lab-layout">
   <aside class="card lab-sidebar">
@@ -254,12 +275,12 @@
     </div>
 
     <div class="attachment-box">
-      <div><b>Attach original report</b><small>PDF, image or direct camera capture.</small></div>
+      <div><b>Attach & save original report</b><small>PDF, image or direct camera capture. The actual file is stored locally on this device.</small></div>
       <div class="attach-actions">
         <label class="filebtn">📎 File / PDF<input type="file" id="liFile" accept="image/*,.pdf"></label>
         <label class="filebtn">📷 Camera<input type="file" id="liCamera" accept="image/*" capture="environment"></label>
       </div>
-      <div id="liFileName" class="file-name"></div>
+      <div id="liFileName" class="file-name"></div><div id="liSaveStatus" class="file-name"></div>
     </div>
 
     <div class="lab-toolbar">

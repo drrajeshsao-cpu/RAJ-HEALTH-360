@@ -92,3 +92,12 @@ No login/authentication code was added or modified.
 - Pattern summaries for CBC/LFT/RFT/thyroid/diabetes/lipids
 
 Important: built-in reference intervals are examples. The laboratory's own reference interval and clinical context should override defaults.
+
+
+## V5.1 Fixed Complete Diagnostics
+- Fixed blank panel list / 0-parameter failure with independent diagnostic initialization and safe module rendering.
+- 14 visible panel buttons: CBC, ESR/CRP, Iron/B12/Folate, LFT, RFT/KFT, Urine, Diabetes, Lipid, Thyroid, Electrolytes, Bone/Minerals, Coagulation, Cardiac Markers, Pancreatic Enzymes.
+- Save Interpreted Panel now gives visible success/error feedback and does not depend on a full-app rerender.
+- Actual selected PDF/image is stored locally in IndexedDB and can be opened/downloaded from a saved diagnostic panel.
+- Built-in ranges remain editable and laboratory-specific ranges should take precedence.
+- No login/authentication code changed.
