@@ -175,3 +175,13 @@ Major parser redesign after direct comparison with the Omega Diagnostics PDF:
 - Smart-imported values preferentially use the report/Omega lab reference range; complex sex-specific ranges use the Omega template.
 - Image OCR remains a lower-confidence fallback and requires review.
 - Interpretation language is intentionally cautious and pattern-based; imported data must be verified before diagnosis or treatment decisions.
+
+
+## V6.4.1 Version Visibility
+- Added a clearly visible version badge near the RAJ HEALTH 360 header.
+- Current visible release: V6.4.1
+- Build date: 2026-08-11
+- Added a small desktop build label for easy GitHub Pages verification.
+- Added APP_VERSION and APP_BUILD_DATE constants for future deployment checks.
+
+Future rule: every release should update this visible version/build label before publishing.

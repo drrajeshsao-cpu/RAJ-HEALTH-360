@@ -126,3 +126,44 @@ footer{text-align:center;color:var(--muted);font-size:11px;padding:24px}
 .audit-row-source{font-size:10px;color:var(--muted);max-width:420px;line-height:1.35}
 .verify-select{min-width:140px}
 .import-warning{background:#fff7ed;border:1px solid #fed7aa;border-radius:10px;padding:9px 11px;font-size:11px;color:#9a3412;margin-top:8px}
+
+.version-badge{
+  display:inline-flex;
+  align-items:center;
+  gap:6px;
+  margin-top:4px;
+  padding:4px 8px;
+  border-radius:999px;
+  border:1px solid var(--line);
+  background:var(--surface2);
+  color:var(--brand2);
+  font-size:10px;
+  font-weight:900;
+  letter-spacing:.25px;
+  white-space:nowrap;
+}
+.version-badge-fixed{
+  position:fixed;
+  top:8px;
+  right:90px;
+  z-index:9999;
+}
+.app-version-footer{
+  position:fixed;
+  right:12px;
+  bottom:6px;
+  z-index:20;
+  font-size:9px;
+  font-weight:800;
+  color:var(--muted);
+  background:rgba(255,255,255,.82);
+  border:1px solid var(--line);
+  border-radius:999px;
+  padding:3px 7px;
+  backdrop-filter:blur(4px);
+  pointer-events:none;
+}
+@media(max-width:700px){
+  .app-version-footer{display:none}
+  .version-badge{font-size:9px;padding:3px 7px}
+}

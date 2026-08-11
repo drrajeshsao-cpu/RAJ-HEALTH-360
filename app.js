@@ -1,3 +1,5 @@
+const APP_VERSION="V6.4.1";
+const APP_BUILD_DATE="2026-08-11";
 
 const KEY="raj_health_360_v2";
 const defaultDB={
