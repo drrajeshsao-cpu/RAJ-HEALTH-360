@@ -247,3 +247,12 @@ Future rule: every release should update this visible version/build label before
 - Added Verify Realtime button.
 - Updated stale V2/local-only UI text.
 - Version V7.1 • Build 2026-08-12.
+
+
+## V7.2 Safe Field Merge
+- Prevents blank fields from one device from erasing populated profile/settings fields on another device.
+- Non-empty remote values still sync in realtime.
+- Nested objects use the same non-destructive merge behavior.
+- Local-only array records remain preserved.
+- Adds support for explicit deletion markers so intentional clears can be synchronized safely in future UI.
+- Version V7.2 • Build 2026-08-12.

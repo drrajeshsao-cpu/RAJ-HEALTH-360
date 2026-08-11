@@ -1,4 +1,4 @@
-const APP_VERSION="V7.1";
+const APP_VERSION="V7.2";
 const APP_BUILD_DATE="2026-08-12";
 
 const KEY="raj_health_360_v2";
@@ -78,6 +78,33 @@ async function testCloudConnection(){
 }
 function getCloudDeviceId(){let id=localStorage.getItem("raj_health_360_device_id");if(!id){id="dev_"+Date.now()+"_"+Math.random().toString(36).slice(2,8);localStorage.setItem("raj_health_360_device_id",id)}return id}
 function cloudStatePayload(){const clone=JSON.parse(JSON.stringify(db));clone.labInterpretations=(clone.labInterpretations||[]).slice(0,30);return {schema:1,appVersion:APP_VERSION,updatedAt:Date.now(),deviceId:getCloudDeviceId(),data:clone}}
+
+function isMeaningfulCloudValue(v){
+ if(v===null||v===undefined)return false;
+ if(typeof v==="string")return v.trim()!=="";
+ if(Array.isArray(v))return v.length>0;
+ return true;
+}
+function safeMergeObject(localObj,remoteObj){
+ const out=Object.assign({},localObj||{});
+ const remoteClears=remoteObj?.__clearedFields||{};
+ for(const [k,v] of Object.entries(remoteObj||{})){
+   if(k==="__clearedFields"){out[k]=Object.assign({},out[k]||{},v||{});continue}
+   if(remoteClears[k]){
+     const localClear=out.__clearedFields?.[k]||0;
+     if(remoteClears[k]>=localClear){out[k]="";continue}
+   }
+   if(v&&typeof v==="object"&&!Array.isArray(v)){
+     out[k]=safeMergeObject(out[k]||{},v);
+   }else if(isMeaningfulCloudValue(v)){
+     out[k]=v;
+   }else if(out[k]===undefined){
+     out[k]=v;
+   }
+ }
+ return out;
+}
+
 function mergeCloudDB(remote){
  if(!remote||typeof remote!=="object")return;
  const out=Object.assign({},db);
@@ -98,7 +125,7 @@ function mergeCloudDB(remote){
    out[k]=Array.from(m.values());
   }else if(val&&typeof val==="object"){
    // Local first, remote second => latest cloud fields win.
-   out[k]=Object.assign({},out[k]||{},val);
+   out[k]=safeMergeObject(out[k]||{},val);
   }else{
    out[k]=val;
   }
@@ -149,7 +176,7 @@ async function verifyRealtimeProfileSync(){
    cloudApplyingRemote=true;
    mergeCloudDB(snap.data().data);
    cloudApplyingRemote=false;
-   cloudStatus("✓ Latest cloud profile applied. Recheck the changed field.");
+   cloudStatus("✓ Latest safe cloud profile applied. Blank remote fields were prevented from erasing populated local values.");
    setCloudHeader("online","☁ Updated");
   }
  }catch(e){cloudStatus("Realtime verification failed: "+e.message,true)}
@@ -2188,3 +2215,16 @@ if($("cloudLastSync"))$("cloudLastSync").textContent=localStorage.getItem("raj_h
 setTimeout(()=>initializeCloud(),500);
 window.addEventListener("online",()=>{if(cloudUser&&cloudPrefs().autoSync)cloudBidirectionalSync()});
 window.addEventListener("offline",()=>setCloudHeader("","☁ Offline • local safe"));
+
+function clearProfileFieldSafely(fieldId){
+ const map={pEmergency:"emergency",pAllergy:"allergy",pConditions:"conditions",pGoals:"goals"};
+ const key=map[fieldId];
+ if(!key||!db.profile)return;
+ if(!confirm("Clear this field on this device and synchronize the deletion to cloud?"))return;
+ db.profile[key]="";
+ const el=$(fieldId);if(el)el.value="";
+ // Explicit deletion marker allows intentional clears.
+ db.profile.__clearedFields=db.profile.__clearedFields||{};
+ db.profile.__clearedFields[key]=Date.now();
+ persist();
+}
