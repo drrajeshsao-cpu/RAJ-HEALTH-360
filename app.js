@@ -1,9 +1,10 @@
-const APP_VERSION="V7.2";
+const APP_VERSION="V7.3";
 const APP_BUILD_DATE="2026-08-12";
 
 const KEY="raj_health_360_v2";
 const defaultDB={
  profile:{name:"",dob:"",sex:"Male",height:"",blood:"",allergy:"",conditions:"",emergency:"",goals:""},
+ familyMembers:[],memberRecords:{},activeMemberId:"self",
  reportArchiveIndex:[],
  daily:[],labs:[],imaging:[],medicines:[],therapies:[],mind:[],habits:[],sleep:[],physician:[],experiments:[],preventive:[],vault:[],labInterpretations:[],
  ayurveda:{prakriti:"Vata-Pitta",vikriti:"",agni:"Sama",koshta:"Madhyama",ama:"Absent",bala:"Madhyama",ashtavidha:{},dashavidha:{},dosha:{vata:5,pitta:5,kapha:5,note:""}},
@@ -15,7 +16,166 @@ const $=id=>document.getElementById(id);
 const v=id=>$(id)?.value??"";
 const n=id=>Number(v(id))||0;
 const today=()=>new Date().toISOString().slice(0,10);
-function persist(){localStorage.setItem(KEY,JSON.stringify(db));renderAll();scheduleCloudSync()}
+
+const FAMILY_RECORD_KEYS=[
+ "profile","reportArchiveIndex","daily","labs","imaging","medicines","therapies","mind","habits","sleep","physician","experiments","preventive","vault","labInterpretations",
+ "ayurveda","ritu","shatkriya"
+];
+
+function cloneData(x){return JSON.parse(JSON.stringify(x))}
+function emptyMemberRecord(meta={}){
+ return {
+  profile:{
+   name:meta.name||"",dob:meta.dob||"",sex:meta.sex||"Male",height:"",blood:meta.blood||"",
+   allergy:"",conditions:"",emergency:meta.mobile||"",goals:""
+  },
+  reportArchiveIndex:[],daily:[],labs:[],imaging:[],medicines:[],therapies:[],mind:[],habits:[],sleep:[],physician:[],experiments:[],preventive:[],vault:[],labInterpretations:[],
+  ayurveda:{prakriti:"",vikriti:"",agni:"",koshta:"",ama:"",bala:"",ashtavidha:{},dashavidha:{},dosha:{vata:5,pitta:5,kapha:5,note:""}},
+  ritu:{auto:true,ritu:"Varsha",desha:"Sadharana"},shatkriya:{stage:"Sanchaya",note:""}
+ };
+}
+function captureCurrentMemberRecord(){
+ const out={};
+ FAMILY_RECORD_KEYS.forEach(k=>out[k]=cloneData(db[k]));
+ return out;
+}
+function applyMemberRecord(rec){
+ const safe=rec||emptyMemberRecord();
+ FAMILY_RECORD_KEYS.forEach(k=>{
+   db[k]=cloneData(safe[k]!==undefined?safe[k]:emptyMemberRecord()[k]);
+ });
+}
+function syncActiveMemberRecord(){
+ if(!db.memberRecords)db.memberRecords={};
+ if(!db.activeMemberId)db.activeMemberId="self";
+ db.memberRecords[db.activeMemberId]=captureCurrentMemberRecord();
+ const m=(db.familyMembers||[]).find(x=>x.id===db.activeMemberId);
+ if(m)m.updatedAt=new Date().toISOString();
+}
+function initializeFamilyHub(){
+ db.familyMembers=Array.isArray(db.familyMembers)?db.familyMembers:[];
+ db.memberRecords=db.memberRecords&&typeof db.memberRecords==="object"?db.memberRecords:{};
+ db.activeMemberId=db.activeMemberId||"self";
+ if(!db.familyMembers.some(x=>x.id==="self")){
+   db.familyMembers.unshift({
+    id:"self",name:db.profile?.name||"DR RAJESH SAO",relation:"Self",dob:db.profile?.dob||"",sex:db.profile?.sex||"Male",
+    blood:db.profile?.blood||"",mobile:"",note:"Primary RAJ HEALTH 360 record",createdAt:new Date().toISOString(),updatedAt:new Date().toISOString()
+   });
+ }
+ if(!db.memberRecords.self)db.memberRecords.self=captureCurrentMemberRecord();
+ if(!db.memberRecords[db.activeMemberId])db.activeMemberId="self";
+ // Keep current screen data as the active member record if already present; otherwise load selected record.
+ if(db.activeMemberId!=="self" && db.memberRecords[db.activeMemberId])applyMemberRecord(db.memberRecords[db.activeMemberId]);
+}
+function getActiveMember(){
+ return (db.familyMembers||[]).find(x=>x.id===db.activeMemberId)||db.familyMembers?.[0]||{id:"self",name:"Self",relation:"Self"};
+}
+function familyAge(dob){
+ if(!dob)return "";
+ const d=new Date(dob);if(isNaN(d))return "";
+ const t=new Date();let a=t.getFullYear()-d.getFullYear();const m=t.getMonth()-d.getMonth();if(m<0||(m===0&&t.getDate()<d.getDate()))a--;
+ return a>=0?a:"";
+}
+function addFamilyMember(){
+ const name=v("fmName").trim();
+ if(!name){alert("Enter family member name.");return}
+ if((db.familyMembers||[]).length>=20){alert("Family Health Hub currently supports up to 20 members.");return}
+ syncActiveMemberRecord();
+ const id="fm_"+Date.now()+"_"+Math.random().toString(36).slice(2,6);
+ const meta={id,name,relation:v("fmRelation")||"Other",dob:v("fmDob"),sex:v("fmSex")||"Male",blood:v("fmBlood"),mobile:v("fmMobile"),note:v("fmNote"),createdAt:new Date().toISOString(),updatedAt:new Date().toISOString()};
+ db.familyMembers.push(meta);
+ db.memberRecords[id]=emptyMemberRecord(meta);
+ ["fmName","fmDob","fmBlood","fmMobile","fmNote"].forEach(x=>{if($(x))$(x).value=""});
+ switchFamilyMember(id);
+}
+function switchFamilyMember(id){
+ if(!id||id===db.activeMemberId){showView("dashboard");return}
+ syncActiveMemberRecord();
+ if(!db.memberRecords[id]){
+  const meta=(db.familyMembers||[]).find(x=>x.id===id)||{};
+  db.memberRecords[id]=emptyMemberRecord(meta);
+ }
+ db.activeMemberId=id;
+ applyMemberRecord(db.memberRecords[id]);
+ localStorage.setItem(KEY,JSON.stringify(db));
+ renderAll();
+ scheduleCloudSync();
+ showView("dashboard");
+}
+function deleteFamilyMember(id){
+ if(id==="self"){alert("Primary Self record cannot be deleted.");return}
+ const m=(db.familyMembers||[]).find(x=>x.id===id);
+ if(!m)return;
+ if(!confirm(`Delete ${m.name}'s family health record from this app? Take a JSON backup first if you may need it later.`))return;
+ if(db.activeMemberId===id){
+  db.activeMemberId="self";
+  applyMemberRecord(db.memberRecords.self||emptyMemberRecord());
+ }
+ db.familyMembers=db.familyMembers.filter(x=>x.id!==id);
+ delete db.memberRecords[id];
+ persist();
+}
+function editFamilyMemberMeta(id){
+ const m=(db.familyMembers||[]).find(x=>x.id===id);if(!m)return;
+ const name=prompt("Member name",m.name);if(name===null)return;
+ const relation=prompt("Relation",m.relation);if(relation===null)return;
+ m.name=name.trim()||m.name;m.relation=relation.trim()||m.relation;m.updatedAt=new Date().toISOString();
+ if(db.memberRecords[id]?.profile)m.name&&(db.memberRecords[id].profile.name=m.name);
+ if(db.activeMemberId===id&&db.profile)m.name&&(db.profile.name=m.name);
+ persist();
+}
+function renderFamilyHub(){
+ if(!$("familyMemberGrid"))return;
+ const q=(v("familySearch")||"").toLowerCase();
+ const members=(db.familyMembers||[]).filter(m=>`${m.name} ${m.relation}`.toLowerCase().includes(q));
+ $("familyCount").textContent=(db.familyMembers||[]).length;
+ const active=getActiveMember();
+ $("familyActiveName").textContent=active.name||"Self";
+ if($("activeRecordContext"))$("activeRecordContext").innerHTML=`Active health record: <b>${active.name||"Self"}</b> • ${active.relation||"Family"} — all new entries are saved to this member.`;
+ $("familyActiveTitle").textContent=(active.name||"Self")+" — Health Record";
+ $("familyActiveRelation").textContent=active.relation||"";
+ const ar=db.memberRecords?.[active.id]||captureCurrentMemberRecord();
+ const meds=(ar.medicines||[]).length,reports=(ar.labInterpretations||[]).length,imgs=(ar.imaging||[]).length;
+ $("familyActiveSummary").innerHTML=`<b>${active.name||"Self"}</b> • ${active.relation||""}${active.dob?` • Age ${familyAge(active.dob)}`:""}<br>${meds} medicine record(s) • ${reports} interpreted lab panel(s) • ${imgs} imaging record(s).`;
+ $("familyMemberGrid").innerHTML=members.map(m=>{
+  const r=db.memberRecords?.[m.id]||emptyMemberRecord(m);
+  const age=familyAge(m.dob);
+  return `<div class="family-member-card ${m.id===db.activeMemberId?"active":""}">
+    <span class="rel">${m.relation||"Family"}</span><h4>${m.name||"Unnamed"}</h4>
+    <div class="meta">${m.dob?`DOB ${m.dob}${age!==""?` • Age ${age}`:""}`:"DOB not entered"}${m.blood?` • ${m.blood}`:""}</div>
+    <div class="stats">
+      <div><b>${(r.medicines||[]).length}</b><span>MEDS</span></div>
+      <div><b>${(r.labInterpretations||[]).length}</b><span>LABS</span></div>
+      <div><b>${(r.imaging||[]).length}</b><span>IMAGING</span></div>
+    </div>
+    <div class="buttons">
+      <button class="${m.id===db.activeMemberId?"primary":"ghost"}" onclick="switchFamilyMember('${m.id}')">${m.id===db.activeMemberId?"Active":"Open Record"}</button>
+      <button class="ghost" onclick="editFamilyMemberMeta('${m.id}')">Edit</button>
+      ${m.id!=="self"?`<button class="ghost" onclick="deleteFamilyMember('${m.id}')">Delete</button>`:""}
+    </div>
+  </div>`;
+ }).join("")||'<p class="muted">No matching family member.</p>';
+ const pill=$("activeMemberPill");
+ if(pill)pill.textContent=`👤 Active: ${active.name||"Self"}`;
+}
+function useActiveMemberInLab(){
+ const m=getActiveMember(),p=db.profile||{};
+ if($("liPatientName"))$("liPatientName").value=p.name||m.name||"";
+ if($("liPatientId"))$("liPatientId").value=m.id||"";
+ if($("liPatientMobile"))$("liPatientMobile").value=m.mobile||p.emergency||"";
+ if($("liPatientAge"))$("liPatientAge").value=familyAge(p.dob||m.dob)||"";
+ if($("liSex"))$("liSex").value=p.sex||m.sex||"Male";
+ if($("liFacility")&&!v("liFacility"))$("liFacility").value="";
+}
+
+function persist(){
+ syncActiveMemberRecord();
+ localStorage.setItem(KEY,JSON.stringify(db));
+ renderAll();
+ scheduleCloudSync();
+}
+initializeFamilyHub();
+
 function showView(id){
  document.querySelectorAll(".view").forEach(x=>x.classList.remove("active"));$(id).classList.add("active");
  document.querySelectorAll(".nav").forEach(x=>x.classList.toggle("active",x.dataset.view===id));
@@ -77,7 +237,7 @@ async function testCloudConnection(){
  try{const ref=cloudStore.collection("users").doc(cloudUser.uid).collection("health").doc("_test");await ref.set({t:firebase.firestore.FieldValue.serverTimestamp()});await ref.get();await ref.delete();if($("cloudDataHealth"))$("cloudDataHealth").textContent="Connected";cloudStatus("✓ Cloud connection test passed.")}catch(e){cloudStatus("Cloud test failed: "+e.message,true)}
 }
 function getCloudDeviceId(){let id=localStorage.getItem("raj_health_360_device_id");if(!id){id="dev_"+Date.now()+"_"+Math.random().toString(36).slice(2,8);localStorage.setItem("raj_health_360_device_id",id)}return id}
-function cloudStatePayload(){const clone=JSON.parse(JSON.stringify(db));clone.labInterpretations=(clone.labInterpretations||[]).slice(0,30);return {schema:1,appVersion:APP_VERSION,updatedAt:Date.now(),deviceId:getCloudDeviceId(),data:clone}}
+function cloudStatePayload(){syncActiveMemberRecord();const clone=JSON.parse(JSON.stringify(db));clone.labInterpretations=(clone.labInterpretations||[]).slice(0,30);return {schema:1,appVersion:APP_VERSION,updatedAt:Date.now(),deviceId:getCloudDeviceId(),data:clone}}
 
 function isMeaningfulCloudValue(v){
  if(v===null||v===undefined)return false;
@@ -131,6 +291,9 @@ function mergeCloudDB(remote){
   }
  }
  db=out;
+ if(db.memberRecords&&db.activeMemberId&&db.memberRecords[db.activeMemberId]){
+   applyMemberRecord(db.memberRecords[db.activeMemberId]);
+ }
  try{localStorage.setItem(KEY,JSON.stringify(db))}catch(e){console.warn("Remote merge local cache",e)}
  renderAll();
 }
@@ -1549,7 +1712,12 @@ $("autoRitu").onchange=()=>{db.ritu.auto=$("autoRitu").checked;applyAutoRitu();p
 
 ["vataScore","pittaScore","kaphaScore"].forEach(id=>$(id).oninput=()=>$(id.replace("Score","Out")).textContent=$(id).value);
 
-function saveProfile(){db.profile={name:v("pName"),dob:v("pDob"),sex:v("pSex"),height:n("pHeight"),blood:v("pBlood"),allergy:v("pAllergy"),conditions:v("pConditions"),emergency:v("pEmergency"),goals:v("pGoals")};persist()}
+function saveProfile(){
+ db.profile={name:v("pName"),dob:v("pDob"),sex:v("pSex"),height:n("pHeight"),blood:v("pBlood"),allergy:v("pAllergy"),conditions:v("pConditions"),emergency:v("pEmergency"),goals:v("pGoals")};
+ const m=getActiveMember();
+ if(m){m.name=db.profile.name||m.name;m.dob=db.profile.dob||m.dob;m.sex=db.profile.sex||m.sex;m.blood=db.profile.blood||m.blood;m.updatedAt=new Date().toISOString()}
+ persist()
+}
 let pendingFiles={};
 let lastLabUploadFile=null;
 let activeImportedAttachmentName="";
@@ -1745,7 +1913,8 @@ function currentPatientInfo(){
  const sex=v("liSex")||"";
  const source=patientId||mobile||name||`unassigned_${v("liDate")||today()}`;
  const key=source.toLowerCase().replace(/[^a-z0-9]+/g,"_").replace(/^_+|_+$/g,"");
- return {name,patientId,mobile,age,sex,key};
+ const active=getActiveMember();
+ return {name,patientId,mobile,age,sex,key,memberId:active?.id||"",relation:active?.relation||""};
 }
 function validatePatientForArchive(){
  const p=currentPatientInfo();
@@ -2196,6 +2365,7 @@ function renderTables(){
 }
 function safeRun(name,fn){try{fn()}catch(e){console.error(`RAJ HEALTH 360: ${name} failed`,e);if(name.includes("Lab")&&$("labCentreStatus"))$("labCentreStatus").textContent=`Diagnostic module recovered from an error: ${e.message}`}}
 function renderAll(){
+ safeRun("Family Hub",renderFamilyHub);
  safeRun("Ritu auto",applyAutoRitu);safeRun("Forms",renderForms);safeRun("Dashboard",renderDashboard);safeRun("Ritu",renderRitu);safeRun("Investigations",renderInvestigations);safeRun("Tables",renderTables);safeRun("Sleep",renderSleep);safeRun("Physician",renderPhysician);safeRun("Experiments",renderExperiments);safeRun("Preventive",renderPreventive);safeRun("Vault",renderVault);
  safeRun("Lab panel buttons",renderLabPanelButtons);safeRun("Lab parameters",()=>renderLabParameters());safeRun("Saved Lab panels",renderSavedLabPanels);
  safeRun("Timeline",renderTimeline);safeRun("Daily summary",generateDailySummary);safeRun("Ayurveda summary",generateAyurvedaSummary);safeRun("Investigation summary",generateInvestigationSummary);safeRun("Habit summary",generateHabitSummary);

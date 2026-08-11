@@ -12,9 +12,10 @@
 <header class="top">
   <div class="brand">
     <div class="logo">R360</div>
-    <div><h1>RAJ HEALTH 360</h1><div class="version-badge">Version V7.2 • Build 2026-08-12</div><p>Modern Medicine × Ayurveda × Lifestyle × Mind × Spiritual Health</p></div>
+    <div><h1>RAJ HEALTH 360</h1><div class="version-badge">Version V7.3 • Build 2026-08-12</div><p>Modern Medicine × Ayurveda × Lifestyle × Mind × Spiritual Health</p></div>
   </div>
   <div class="top-actions">
+    <button class="member-pill" id="activeMemberPill" onclick="showView('family')" title="Active family health record">👤 Active: Self</button>
     <button class="cloud-pill" id="cloudHeaderStatus" onclick="showView('settings')" title="Cloud sync status">☁ Local only</button>
     <button class="ghost" id="themeBtn">◐</button>
     <button class="ghost" id="backupBtn">Backup</button>
@@ -29,6 +30,7 @@
   </div>
   <nav id="nav">
     <button class="nav active" data-view="dashboard">⌂ Dashboard</button>
+    <button class="nav" data-view="family">👨‍👩‍👧‍👦 Family Health Hub</button>
     <button class="nav" data-view="today">✓ Today</button>
     <button class="nav" data-view="sleepcentre">☾ Sleep Centre</button>
     <button class="nav" data-view="modern">✚ Modern Health</button>
@@ -52,12 +54,83 @@
 </aside>
 
 <main class="main">
+
+<section id="family" class="view">
+  <div class="pagehead">
+    <div>
+      <span class="eyebrow">FAMILY HEALTH HUB</span>
+      <h2>One health workspace for your family</h2>
+      <p>Maintain separate longitudinal health records for family members while using the same Modern Medicine, Ayurveda, lifestyle, medicines, investigations, imaging, Health Vault and lab interpretation tools.</p>
+    </div>
+    <div class="score-ring family-count-ring"><strong id="familyCount">1</strong><span>Members</span></div>
+  </div>
+
+  <div class="alertbar">
+    Active member: <b id="familyActiveName">Self</b> • All data you enter in the app is saved inside the currently active member's record.
+  </div>
+
+  <div class="grid2 family-top-grid">
+    <article class="card">
+      <div class="cardtitle">
+        <div><span class="eyebrow">ACTIVE RECORD</span><h3 id="familyActiveTitle">My Health Record</h3></div>
+        <span class="pill teal" id="familyActiveRelation">Self</span>
+      </div>
+      <div id="familyActiveSummary" class="summary-box">Select a family member to view their record summary.</div>
+      <div class="buttons">
+        <button class="primary" onclick="showView('dashboard')">Open Active Dashboard</button>
+        <button class="ghost" onclick="showView('labcentre');setTimeout(useActiveMemberInLab,50)">Open Lab AutoRead</button>
+        <button class="ghost" onclick="showView('vault')">Open Health Vault</button>
+      </div>
+    </article>
+
+    <article class="card">
+      <div class="cardtitle"><div><span class="eyebrow">ADD FAMILY MEMBER</span><h3>Create a separate longitudinal record</h3></div><span class="pill amber">Up to 20</span></div>
+      <div class="formgrid two">
+        <label>Name<input id="fmName" placeholder="Family member name"></label>
+        <label>Relation<select id="fmRelation">
+          <option>Spouse</option><option>Father</option><option>Mother</option><option>Son</option><option>Daughter</option>
+          <option>Brother</option><option>Sister</option><option>Grandfather</option><option>Grandmother</option><option>Other</option>
+        </select></label>
+        <label>DOB<input id="fmDob" type="date"></label>
+        <label>Sex<select id="fmSex"><option>Male</option><option>Female</option><option>Other</option></select></label>
+        <label>Blood group<input id="fmBlood" placeholder="e.g. O POSITIVE"></label>
+        <label>Mobile<input id="fmMobile" placeholder="Optional"></label>
+      </div>
+      <label>Baseline / important note<textarea id="fmNote" placeholder="Healthy baseline, chronic conditions, allergies, preventive priorities, etc."></textarea></label>
+      <div class="buttons"><button class="primary" onclick="addFamilyMember()">+ Add Family Member</button></div>
+    </article>
+  </div>
+
+  <article class="card">
+    <div class="cardtitle">
+      <div><span class="eyebrow">MEMBER SELECTOR</span><h3>Family Records</h3></div>
+      <input id="familySearch" class="search" placeholder="Search family member..." oninput="renderFamilyHub()">
+    </div>
+    <div id="familyMemberGrid" class="family-member-grid"></div>
+  </article>
+
+  <article class="card">
+    <div class="cardtitle"><div><span class="eyebrow">HOW IT WORKS</span><h3>Each member gets the full RAJ HEALTH 360 record</h3></div></div>
+    <div class="family-feature-grid">
+      <div><b>Profile & baseline</b><span>DOB, blood group, allergies, conditions, goals.</span></div>
+      <div><b>Medicines</b><span>Modern, Ayurveda, routine/supplements, start-stop, outcome.</span></div>
+      <div><b>Investigations</b><span>Blood tests, imaging, ECG, USG, CT, MRI and attachments.</span></div>
+      <div><b>SLAIE Lab Engine</b><span>PDF/image AutoRead → map → verify → interpret → archive.</span></div>
+      <div><b>Ayurveda</b><span>Prakriti/Vikriti, Ashtavidha, Dashavidha, Ritu, Shatkriyakala.</span></div>
+      <div><b>Lifestyle & mind</b><span>Sleep, exercise, nutrition, sadhana, mental/social/spiritual health.</span></div>
+      <div><b>Preventive calendar</b><span>Personalized screening and follow-up reminders.</span></div>
+      <div><b>Cloud sync</b><span>Family records synchronize with the same private signed-in account.</span></div>
+    </div>
+  </article>
+</section>
+
 <section id="dashboard" class="view active">
   <div class="pagehead">
     <div><span class="eyebrow">PERSONAL HEALTH COMMAND CENTER</span><h2>See the whole you, not isolated numbers.</h2><p>Track clinical data, Ayurvedic state, behaviour, recovery, interventions and long-term outcomes in one timeline.</p></div>
     <div class="score-ring"><strong id="score">--</strong><span>Health Readiness</span></div>
   </div>
 
+  <div id="activeRecordContext" class="alertbar family-context-bar"></div>
   <div class="alertbar" id="safetyBar">Add vitals and today’s check-in to activate personalized monitoring.</div>
 
   <article class="attention-panel card">
@@ -231,6 +304,24 @@
  </div>
 
  <div id="labCentreStatus" class="alertbar">All diagnostic modules ready.</div>
+
+ <article class="card lab-engine-brand-card">
+   <div class="cardtitle">
+     <div>
+       <span class="eyebrow">REUSABLE PATHOLOGY ENGINE</span>
+       <h3>SAO Lab AutoRead & Interpretation Engine (SLAIE)</h3>
+     </div>
+     <span class="pill teal">SLAIE Core v1.0</span>
+   </div>
+   <div class="lab-engine-flow">
+     <span>PDF / Image</span><b>→</b><span>AutoRead</span><b>→</b><span>Exact-row mapping</span><b>→</b><span>Verify / Correct</span><b>→</b><span>Interpret</span><b>→</b><span>Archive</span>
+   </div>
+   <p class="muted"><b>Omega Exact-Row Template v1.0</b> is the finalized current laboratory profile. SLAIE is the reusable engine name for future RAJ/SKA/clinic apps so this corrected workflow can be reused instead of rebuilt.</p>
+   <div class="buttons">
+     <button class="ghost" onclick="useActiveMemberInLab()">👤 Use Active Family Member</button>
+   </div>
+ </article>
+
 
  <div class="alertbar warn">
   Reference intervals shown here are typical adult examples, not universal laboratory cut-offs. The lab report’s own range, age, sex, pregnancy status, medicines, hydration, altitude, acute illness and assay method can change interpretation.
@@ -880,7 +971,7 @@
  </article>
  <article class="card">
   <h3>Data & Privacy</h3>
-  <p class="muted">V7.2 uses local-first storage with Firebase Authentication, Firestore sync and safe non-destructive field merging. Keep JSON backups for additional recovery. Original PDF/image cloud upload remains optional.</p>
+  <p class="muted">V7.3 uses local-first storage with Firebase cloud sync, safe field merging and a multi-member Family Health Hub. Keep JSON backups for additional recovery. Original PDF/image cloud upload remains optional.</p>
   <div class="buttons"><button class="ghost" onclick="exportData()">Export JSON</button><label class="filebtn">Import JSON<input type="file" id="importFile" accept=".json" onchange="importData(event)"></label></div>
  </article>
 </section>
@@ -896,5 +987,5 @@
 <script src="https://www.gstatic.com/firebasejs/12.10.0/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/12.10.0/firebase-storage-compat.js"></script>
 <script src="app.js"></script>
-<div id="appVersionText" class="app-version-footer">RAJ HEALTH 360 V7.2 • Build 2026-08-12</div></body>
+<div id="appVersionText" class="app-version-footer">RAJ HEALTH 360 V7.3 • Build 2026-08-12</div></body>
 </html>

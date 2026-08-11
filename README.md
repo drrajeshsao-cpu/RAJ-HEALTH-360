@@ -256,3 +256,18 @@ Future rule: every release should update this visible version/build label before
 - Local-only array records remain preserved.
 - Adds support for explicit deletion markers so intentional clears can be synchronized safely in future UI.
 - Version V7.2 • Build 2026-08-12.
+
+
+## V7.3 Family Health Hub
+- Adds separate longitudinal health records for up to 20 family members.
+- Existing current record is migrated as the protected `Self` member.
+- Switching active member changes the entire app context: profile, vitals, medicines, labs, imaging, Ayurveda, habits, preventive care, Health Vault and timelines.
+- Family records are included in the existing Firebase cloud-synced database structure.
+- Active-member indicator is visible in the app header and Dashboard.
+- Lab Interpreter can auto-fill the currently active family member into the report patient fields.
+
+## Reusable pathology module naming
+- **SAO Lab AutoRead & Interpretation Engine (SLAIE)**
+- **SLAIE Core v1.0**
+- Current finalized lab-specific profile: **Omega Exact-Row Template v1.0**
+- Reuse this module in future apps instead of rebuilding the PDF/image AutoRead → mapping → verification → interpretation → archive workflow.
