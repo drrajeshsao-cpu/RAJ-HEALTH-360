@@ -1,9 +1,9 @@
 {
-  "name": "Raj Personal Health Tracker",
-  "short_name": "Raj Health",
+  "name": "RAJ HEALTH 360 \u2014 Integrated Personal Health Intelligence",
+  "short_name": "RAJ HEALTH 360",
   "start_url": "./index.html",
   "display": "standalone",
-  "background_color": "#fffaf0",
-  "theme_color": "#f4b400",
-  "description": "Personal integrated health, Ayurveda and lifestyle tracker"
+  "background_color": "#f4f7f5",
+  "theme_color": "#0f766e",
+  "description": "Personal integrated modern medicine, Ayurveda, lifestyle, mental, social and spiritual health tracker."
 }

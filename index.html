@@ -1,244 +1,352 @@
-<!DOCTYPE html>
-<html lang="hi">
+<!doctype html>
+<html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="theme-color" content="#f4b400" />
-  <title>Raj Personal Health Tracker</title>
-  <link rel="manifest" href="manifest.json">
-  <link rel="stylesheet" href="styles.css" />
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0f766e">
+<title>RAJ HEALTH 360 — Integrated Personal Health Intelligence</title>
+<link rel="manifest" href="manifest.json">
+<link rel="stylesheet" href="styles.css">
 </head>
 <body>
-  <header class="topbar">
-    <div>
-      <h1>Raj Personal Health Tracker</h1>
-      <p>Modern Medicine • Ayurveda • Lifestyle • Mind • Spiritual Wellness</p>
-    </div>
-    <button id="exportBtn" class="secondary">Backup JSON</button>
-  </header>
+<header class="top">
+  <div class="brand">
+    <div class="logo">R360</div>
+    <div><h1>RAJ HEALTH 360</h1><p>Modern Medicine × Ayurveda × Lifestyle × Mind × Spiritual Health</p></div>
+  </div>
+  <div class="top-actions">
+    <button class="ghost" id="themeBtn">◐</button>
+    <button class="ghost" id="backupBtn">Backup</button>
+  </div>
+</header>
 
-  <nav class="tabs" id="tabs">
-    <button class="tab active" data-tab="dashboard">Dashboard</button>
-    <button class="tab" data-tab="profile">Profile</button>
-    <button class="tab" data-tab="vitals">Vitals</button>
-    <button class="tab" data-tab="labs">Labs</button>
-    <button class="tab" data-tab="imaging">Imaging</button>
-    <button class="tab" data-tab="medicines">Medicines</button>
-    <button class="tab" data-tab="ayurveda">Ayurveda</button>
-    <button class="tab" data-tab="lifestyle">Lifestyle</button>
-    <button class="tab" data-tab="mind">Mind & Spiritual</button>
-    <button class="tab" data-tab="systems">Body Systems</button>
-    <button class="tab" data-tab="timeline">Timeline</button>
-    <button class="tab" data-tab="ai">AI Review</button>
+<div class="shell">
+<aside class="side">
+  <div class="profile-mini">
+    <div class="avatar">RS</div>
+    <div><strong id="miniName">My Health</strong><span>Personal longitudinal record</span></div>
+  </div>
+  <nav id="nav">
+    <button class="nav active" data-view="dashboard">⌂ Dashboard</button>
+    <button class="nav" data-view="today">✓ Today</button>
+    <button class="nav" data-view="modern">✚ Modern Health</button>
+    <button class="nav" data-view="ayurveda">ॐ Ayurveda</button>
+    <button class="nav" data-view="ritu">☀ Ritu Intelligence</button>
+    <button class="nav" data-view="shatkriya">⟲ Shatkriyakala</button>
+    <button class="nav" data-view="investigations">⌁ Investigations</button>
+    <button class="nav" data-view="medicines">Rx Medicines</button>
+    <button class="nav" data-view="therapies">♨ Panchakarma & Therapies</button>
+    <button class="nav" data-view="lifestyle">⌁ Lifestyle</button>
+    <button class="nav" data-view="mind">☯ Mind • Social • Spiritual</button>
+    <button class="nav" data-view="timeline">↗ Timeline & Outcomes</button>
+    <button class="nav" data-view="ai">✦ AI Health Review</button>
+    <button class="nav" data-view="settings">⚙ Profile & Settings</button>
   </nav>
+</aside>
 
-  <main>
-    <section id="dashboard" class="panel active">
-      <div class="hero card">
-        <div>
-          <h2>My Health Command Center</h2>
-          <p>अपने शरीर, मन, दिनचर्या, दवाइयों और जांचों का एक longitudinal record.</p>
-        </div>
-        <div class="score">
-          <span id="healthScore">--</span>
-          <small>Wellness Score</small>
-        </div>
-      </div>
-      <div class="grid4">
-        <div class="card metric"><span>Weight</span><strong id="dWeight">--</strong><small>kg</small></div>
-        <div class="card metric"><span>BMI</span><strong id="dBMI">--</strong><small>kg/m²</small></div>
-        <div class="card metric"><span>BP</span><strong id="dBP">--</strong><small>mmHg</small></div>
-        <div class="card metric"><span>Sugar</span><strong id="dSugar">--</strong><small>mg/dL</small></div>
-      </div>
-      <div class="grid2">
-        <div class="card">
-          <h3>Recent Alerts / Attention</h3>
-          <ul id="alerts"><li>No data yet.</li></ul>
-        </div>
-        <div class="card">
-          <h3>Today’s Routine Snapshot</h3>
-          <ul id="routineSnap"><li>Add lifestyle data.</li></ul>
-        </div>
-      </div>
-    </section>
+<main class="main">
+<section id="dashboard" class="view active">
+  <div class="pagehead">
+    <div><span class="eyebrow">PERSONAL HEALTH COMMAND CENTER</span><h2>See the whole you, not isolated numbers.</h2><p>Track clinical data, Ayurvedic state, behaviour, recovery, interventions and long-term outcomes in one timeline.</p></div>
+    <div class="score-ring"><strong id="score">--</strong><span>Health Readiness</span></div>
+  </div>
 
-    <section id="profile" class="panel">
-      <div class="card formcard">
-        <h2>Personal Profile</h2>
-        <div class="formgrid">
-          <label>Name<input id="name" /></label>
-          <label>DOB<input id="dob" type="date" /></label>
-          <label>Blood Group<input id="bloodGroup" /></label>
-          <label>Height (cm)<input id="height" type="number" step="0.1" /></label>
-          <label>Known Allergies<input id="allergies" /></label>
-          <label>Emergency Contact<input id="emergency" /></label>
-        </div>
-        <button onclick="saveProfile()">Save Profile</button>
-      </div>
-    </section>
+  <div class="alertbar" id="safetyBar">Add vitals and today’s check-in to activate personalized monitoring.</div>
 
-    <section id="vitals" class="panel">
-      <div class="card formcard">
-        <h2>Vitals & Anthropometry</h2>
-        <div class="formgrid">
-          <label>Date<input id="vDate" type="date" /></label>
-          <label>Weight kg<input id="weight" type="number" step="0.1" /></label>
-          <label>Waist cm<input id="waist" type="number" step="0.1" /></label>
-          <label>BP Systolic<input id="sbp" type="number" /></label>
-          <label>BP Diastolic<input id="dbp" type="number" /></label>
-          <label>Pulse/min<input id="pulse" type="number" /></label>
-          <label>SpO₂ %<input id="spo2" type="number" /></label>
-          <label>Temperature °F<input id="temp" type="number" step="0.1" /></label>
-          <label>Fasting Sugar mg/dL<input id="sugar" type="number" /></label>
-        </div>
-        <button onclick="addVital()">Add Entry</button>
-      </div>
-      <div class="card"><h3>Recent Vitals</h3><div id="vitalTable"></div></div>
-    </section>
+  <div class="metrics six">
+    <article class="metric"><span>Weight</span><b id="mWeight">--</b><small>kg</small></article>
+    <article class="metric"><span>BMI</span><b id="mBMI">--</b><small>kg/m²</small></article>
+    <article class="metric"><span>BP</span><b id="mBP">--</b><small>mmHg</small></article>
+    <article class="metric"><span>Glucose</span><b id="mSugar">--</b><small>mg/dL</small></article>
+    <article class="metric"><span>Sleep</span><b id="mSleep">--</b><small>hours</small></article>
+    <article class="metric"><span>Peace</span><b id="mPeace">--</b><small>/10</small></article>
+  </div>
 
-    <section id="labs" class="panel">
-      <div class="card formcard">
-        <h2>Laboratory Investigations</h2>
-        <div class="formgrid">
-          <label>Date<input id="labDate" type="date" /></label>
-          <label>Test<input id="labTest" placeholder="Uric Acid / HbA1c / TSH / Hb..." /></label>
-          <label>Value<input id="labValue" /></label>
-          <label>Unit<input id="labUnit" /></label>
-          <label>Reference Range<input id="labRange" /></label>
-          <label>System
-            <select id="labSystem">
-              <option>General</option><option>Hematology</option><option>Metabolic</option>
-              <option>Liver</option><option>Kidney</option><option>Thyroid</option>
-              <option>Cardiovascular</option><option>Diabetes</option><option>Bone</option>
-              <option>Reproductive</option><option>Gastrointestinal</option>
-            </select>
-          </label>
-        </div>
-        <label>Interpretation / Notes<textarea id="labNotes"></textarea></label>
-        <button onclick="addLab()">Add Lab</button>
-      </div>
-      <div class="card"><h3>Lab History</h3><div id="labTable"></div></div>
-    </section>
+  <div class="grid3">
+    <article class="card">
+      <div class="cardtitle"><h3>Clinical Attention</h3><span class="pill red">Safety first</span></div>
+      <ul id="clinicalAlerts" class="clean"></ul>
+    </article>
+    <article class="card">
+      <div class="cardtitle"><h3>Ayurveda Snapshot</h3><span class="pill amber" id="rituBadge">Ritu</span></div>
+      <div id="ayuSnapshot" class="stack"></div>
+    </article>
+    <article class="card">
+      <div class="cardtitle"><h3>Today’s Balance</h3><span class="pill green">Daily</span></div>
+      <div id="balanceBars"></div>
+    </article>
+  </div>
 
-    <section id="imaging" class="panel">
-      <div class="card formcard">
-        <h2>Imaging & Reports</h2>
-        <div class="formgrid">
-          <label>Date<input id="imgDate" type="date" /></label>
-          <label>Type<select id="imgType"><option>X-Ray</option><option>Ultrasound</option><option>CT</option><option>MRI</option><option>DEXA</option><option>ECG</option><option>Other</option></select></label>
-          <label>Body Part<input id="bodyPart" placeholder="Lumbar spine / Abdomen / Knee..." /></label>
-          <label>System<input id="imgSystem" placeholder="Musculoskeletal / GI / Neuro..." /></label>
-        </div>
-        <label>Key Findings<textarea id="imgFindings"></textarea></label>
-        <label>Impression<textarea id="imgImpression"></textarea></label>
-        <button onclick="addImaging()">Add Imaging Record</button>
-      </div>
-      <div class="card"><h3>Imaging Timeline</h3><div id="imagingTable"></div></div>
-    </section>
+  <div class="grid2">
+    <article class="card">
+      <div class="cardtitle"><h3>Trend Watch</h3><button class="link" onclick="showView('timeline')">Open timeline →</button></div>
+      <div id="trendWatch" class="timeline-mini"></div>
+    </article>
+    <article class="card">
+      <div class="cardtitle"><h3>AI Next Best Actions</h3><span class="pill teal">Rules + context</span></div>
+      <ol id="nextActions" class="actions"></ol>
+    </article>
+  </div>
+</section>
 
-    <section id="medicines" class="panel">
-      <div class="card formcard">
-        <h2>Medicine Tracker</h2>
-        <div class="formgrid">
-          <label>Medicine<input id="medName" /></label>
-          <label>System<select id="medPathy"><option>Allopathic</option><option>Ayurvedic</option><option>Supplement</option><option>Other</option></select></label>
-          <label>Dose<input id="medDose" /></label>
-          <label>Frequency<input id="medFreq" /></label>
-          <label>Start Date<input id="medStart" type="date" /></label>
-          <label>Stop Date<input id="medStop" type="date" /></label>
-          <label>Purpose<input id="medPurpose" placeholder="BP / Uric acid / Digestion..." /></label>
-          <label>Effect<input id="medEffect" placeholder="Better / No change / Side effect..." /></label>
-        </div>
-        <button onclick="addMedicine()">Save Medicine</button>
-      </div>
-      <div class="card"><h3>Medication History</h3><div id="medTable"></div></div>
-    </section>
+<section id="today" class="view">
+ <div class="pagehead compact"><div><span class="eyebrow">DAILY CHECK-IN</span><h2>60-second health round</h2><p>Designed like a physician’s quick self-round.</p></div></div>
+ <div class="card">
+  <div class="formgrid four">
+   <label>Date<input id="tdDate" type="date"></label>
+   <label>Weight kg<input id="tdWeight" type="number" step=".1"></label>
+   <label>BP systolic<input id="tdSBP" type="number"></label>
+   <label>BP diastolic<input id="tdDBP" type="number"></label>
+   <label>Fasting/Random glucose<input id="tdSugar" type="number"></label>
+   <label>Sleep hours<input id="tdSleep" type="number" step=".1"></label>
+   <label>Water L<input id="tdWater" type="number" step=".1"></label>
+   <label>Exercise min<input id="tdExercise" type="number"></label>
+   <label>Energy 0–10<input id="tdEnergy" type="number" min="0" max="10"></label>
+   <label>Mental peace 0–10<input id="tdPeace" type="number" min="0" max="10"></label>
+   <label>Stress 0–10<input id="tdStress" type="number" min="0" max="10"></label>
+   <label>Digestion 0–10<input id="tdDigestion" type="number" min="0" max="10"></label>
+   <label>Bowel<select id="tdBowel"><option>Normal</option><option>Constipation</option><option>Loose</option><option>Irregular</option><option>Piles symptoms</option></select></label>
+   <label>Pain 0–10<input id="tdPain" type="number" min="0" max="10"></label>
+   <label>Mala Jap min<input id="tdJap" type="number"></label>
+   <label>Study/learning min<input id="tdStudy" type="number"></label>
+  </div>
+  <label>Food / important events<textarea id="tdNote" placeholder="Meals, fasting, travel, stressor, unusual symptoms, important observation..."></textarea></label>
+  <button class="primary" onclick="saveToday()">Save Today & Recalculate</button>
+ </div>
+</section>
 
-    <section id="ayurveda" class="panel">
-      <div class="card formcard">
-        <h2>Ayurveda Assessment</h2>
-        <div class="formgrid">
-          <label>Prakriti<select id="prakriti"><option>Vata</option><option>Pitta</option><option>Kapha</option><option>Vata-Pitta</option><option>Pitta-Kapha</option><option>Vata-Kapha</option><option>Sama</option></select></label>
-          <label>Vikriti<input id="vikriti" placeholder="Current dosha imbalance" /></label>
-          <label>Agni<select id="agni"><option>Sama</option><option>Vishama</option><option>Tikshna</option><option>Manda</option></select></label>
-          <label>Koshta<select id="koshta"><option>Mridu</option><option>Madhyama</option><option>Krura</option></select></label>
-          <label>Nadi<input id="nadi" placeholder="Vataja / Pittaja / Kaphaja / mixed" /></label>
-          <label>Mala<input id="mala" /></label>
-          <label>Mutra<input id="mutra" /></label>
-          <label>Jihva<input id="jihva" /></label>
-          <label>Nidra<input id="nidraAy" /></label>
-          <label>Bala<input id="bala" /></label>
-        </div>
-        <label>Dashavidha / Rogi Bala Notes<textarea id="dashavidha"></textarea></label>
-        <button onclick="saveAyurveda()">Save Ayurveda Assessment</button>
-      </div>
-    </section>
+<section id="modern" class="view">
+ <div class="pagehead compact"><div><span class="eyebrow">MODERN MEDICINE</span><h2>Whole-body clinical monitoring</h2><p>System-based symptoms, diagnoses, screening and risk factors.</p></div></div>
+ <div id="systemGrid" class="grid3"></div>
+</section>
 
-    <section id="lifestyle" class="panel">
-      <div class="card formcard">
-        <h2>Dinacharya • Diet • Activity</h2>
-        <div class="formgrid">
-          <label>Date<input id="lifeDate" type="date" /></label>
-          <label>Sleep hours<input id="sleep" type="number" step="0.1" /></label>
-          <label>Water L<input id="water" type="number" step="0.1" /></label>
-          <label>Exercise min<input id="exercise" type="number" /></label>
-          <label>Walking steps<input id="steps" type="number" /></label>
-          <label>Study min<input id="study" type="number" /></label>
-          <label>Screen time hours<input id="screen" type="number" step="0.1" /></label>
-          <label>Fasting<select id="fasting"><option>No</option><option>Yes</option></select></label>
-        </div>
-        <label>Food summary<textarea id="food"></textarea></label>
-        <label>Bowel / Digestion / IBS / Piles Notes<textarea id="gut"></textarea></label>
-        <button onclick="addLifestyle()">Save Lifestyle</button>
-      </div>
-    </section>
+<section id="ayurveda" class="view">
+ <div class="pagehead compact"><div><span class="eyebrow">AYURVEDA CORE</span><h2>Rogi–Roga assessment</h2><p>Ashtavidha + Dashavidha + Dosha/Dhatu/Mala/Agni/Srotas context.</p></div></div>
+ <div class="grid2">
+  <article class="card">
+   <h3>Constitution & Current State</h3>
+   <div class="formgrid two">
+    <label>Prakriti<select id="prakriti"><option>Vata</option><option>Pitta</option><option>Kapha</option><option>Vata-Pitta</option><option>Pitta-Kapha</option><option>Vata-Kapha</option><option>Sama</option></select></label>
+    <label>Vikriti<input id="vikriti" placeholder="e.g. Vata-Pitta vriddhi"></label>
+    <label>Agni<select id="agni"><option>Sama</option><option>Vishama</option><option>Tikshna</option><option>Manda</option></select></label>
+    <label>Koshta<select id="koshta"><option>Mridu</option><option>Madhyama</option><option>Krura</option></select></label>
+    <label>Ama<select id="ama"><option>Absent</option><option>Mild</option><option>Moderate</option><option>Marked</option></select></label>
+    <label>Bala<select id="bala"><option>Pravara</option><option>Madhyama</option><option>Avara</option></select></label>
+   </div>
+   <button class="primary" onclick="saveAyurveda()">Save Ayurveda Core</button>
+  </article>
+  <article class="card">
+   <h3>Dosha State Today</h3>
+   <div class="dosha">
+    <label>Vata <input id="vataScore" type="range" min="0" max="10" value="5"><output id="vataOut">5</output></label>
+    <label>Pitta <input id="pittaScore" type="range" min="0" max="10" value="5"><output id="pittaOut">5</output></label>
+    <label>Kapha <input id="kaphaScore" type="range" min="0" max="10" value="5"><output id="kaphaOut">5</output></label>
+   </div>
+   <label>Clinical reasoning note<textarea id="doshaNote" placeholder="Hetu, lakshana, samprapti clues, dhatu/srotas involvement..."></textarea></label>
+   <button class="primary" onclick="saveDosha()">Save Dosha State</button>
+  </article>
+ </div>
 
-    <section id="mind" class="panel">
-      <div class="card formcard">
-        <h2>Mental, Emotional & Spiritual Wellness</h2>
-        <div class="formgrid">
-          <label>Date<input id="mindDate" type="date" /></label>
-          <label>Mental peace (0-10)<input id="peace" type="number" min="0" max="10" /></label>
-          <label>Stress (0-10)<input id="stress" type="number" min="0" max="10" /></label>
-          <label>Energy (0-10)<input id="energy" type="number" min="0" max="10" /></label>
-          <label>Mala Jap min<input id="jap" type="number" /></label>
-          <label>Puja/Path min<input id="puja" type="number" /></label>
-          <label>Mauna min<input id="mauna" type="number" /></label>
-          <label>Ekant min<input id="ekant" type="number" /></label>
-        </div>
-        <label>Today reflection<textarea id="reflection" placeholder="दिन कैसा रहा? मन की स्थिति? क्या सीखा?"></textarea></label>
-        <button onclick="addMind()">Save Mind & Spiritual Entry</button>
-      </div>
-    </section>
+ <article class="card">
+  <div class="cardtitle"><h3>Ashtavidha Pariksha</h3><span class="pill amber">8-fold</span></div>
+  <div class="formgrid four">
+   <label>Nadi<input id="aNadi" placeholder="Vataja/Pittaja/Kaphaja/Mixed"></label>
+   <label>Mutra<input id="aMutra"></label>
+   <label>Mala<input id="aMala"></label>
+   <label>Jihva<input id="aJihva"></label>
+   <label>Shabda<input id="aShabda"></label>
+   <label>Sparsha<input id="aSparsha"></label>
+   <label>Drik<input id="aDrik"></label>
+   <label>Akriti<input id="aAkriti"></label>
+  </div>
+  <button class="primary" onclick="saveAshtavidha()">Save Ashtavidha</button>
+ </article>
 
-    <section id="systems" class="panel">
-      <div class="card">
-        <h2>Body Systems Review</h2>
-        <p>प्रत्येक system के लिए symptoms, diagnosis, medicines, latest tests और follow-up notes रखें।</p>
-        <div id="systemCards" class="grid3"></div>
-      </div>
-    </section>
+ <article class="card">
+  <div class="cardtitle"><h3>Dashavidha Pariksha</h3><span class="pill amber">10-fold</span></div>
+  <div class="formgrid five">
+   <label>Prakriti<input id="dPrakriti"></label>
+   <label>Vikriti<input id="dVikriti"></label>
+   <label>Sara<input id="dSara"></label>
+   <label>Samhanana<input id="dSamhanana"></label>
+   <label>Pramana<input id="dPramana"></label>
+   <label>Satmya<input id="dSatmya"></label>
+   <label>Satva<input id="dSatva"></label>
+   <label>Ahara Shakti<input id="dAhara"></label>
+   <label>Vyayama Shakti<input id="dVyayama"></label>
+   <label>Vaya<input id="dVaya"></label>
+  </div>
+  <button class="primary" onclick="saveDashavidha()">Save Dashavidha</button>
+ </article>
+</section>
 
-    <section id="timeline" class="panel">
-      <div class="card">
-        <h2>Longitudinal Health Timeline</h2>
-        <div id="timelineList"></div>
-      </div>
-    </section>
+<section id="ritu" class="view">
+ <div class="pagehead compact"><div><span class="eyebrow">RITU × DESHA × KALA</span><h2>Seasonal intelligence switch</h2><p>Use auto mode or override manually when local climate differs from the calendar.</p></div></div>
+ <div class="grid2">
+  <article class="card">
+   <div class="switchrow"><div><h3>Ritu Mode</h3><p class="muted">Auto estimates season from month; manual override is always available.</p></div><label class="switch"><input id="autoRitu" type="checkbox" checked><span></span></label></div>
+   <div class="formgrid two">
+    <label>Ritu<select id="rituSelect"><option>Shishira</option><option>Vasanta</option><option>Grishma</option><option>Varsha</option><option>Sharad</option><option>Hemanta</option></select></label>
+    <label>Desha<select id="desha"><option>Jangala</option><option>Anupa</option><option>Sadharana</option></select></label>
+   </div>
+   <button class="primary" onclick="saveRitu()">Apply Ritu Context</button>
+  </article>
+  <article class="card" id="rituCard"></article>
+ </div>
+ <div class="grid3" id="rituSuggestions"></div>
+</section>
 
-    <section id="ai" class="panel">
-      <div class="card">
-        <h2>AI Health Review (Prototype)</h2>
-        <p class="warning">यह module diagnosis या self-prescription का replacement नहीं है। Emergency/red-flag symptoms में प्रत्यक्ष medical evaluation आवश्यक है।</p>
-        <button onclick="generateSummary()">Generate My Health Summary</button>
-        <pre id="aiSummary">Add data first, then generate summary.</pre>
-      </div>
-    </section>
-  </main>
+<section id="shatkriya" class="view">
+ <div class="pagehead compact"><div><span class="eyebrow">PREVENTIVE DISEASE-PROGRESSION MAP</span><h2>Shatkriyakala tracker</h2><p>Use as an Ayurvedic conceptual staging record, not as a substitute for biomedical diagnosis.</p></div></div>
+ <div id="stages" class="stagegrid"></div>
+ <article class="card">
+  <label>Current reasoning / evidence<textarea id="stageNote" placeholder="Dosha change, symptoms, nidana exposure, modern findings, lab/imaging correlation..."></textarea></label>
+  <button class="primary" onclick="saveStageNote()">Save Stage Note</button>
+ </article>
+</section>
 
-  <footer>
-    <small>Personal health tracking tool • Data is stored locally in this browser in V1.</small>
-  </footer>
-  <script src="app.js"></script>
+<section id="investigations" class="view">
+ <div class="pagehead compact"><div><span class="eyebrow">INVESTIGATIONS</span><h2>Labs, imaging & full-body checkups</h2><p>One longitudinal table for values and reports.</p></div></div>
+ <div class="grid2">
+  <article class="card">
+   <h3>Add Laboratory Test</h3>
+   <div class="formgrid two">
+    <label>Date<input id="labDate" type="date"></label><label>Test<input id="labTest" placeholder="Uric acid / HbA1c / LDL / TSH..."></label>
+    <label>Value<input id="labValue"></label><label>Unit<input id="labUnit"></label>
+    <label>Reference range<input id="labRange"></label>
+    <label>System<select id="labSystem"><option>General</option><option>Hematology</option><option>Metabolic</option><option>Diabetes</option><option>Liver</option><option>Kidney</option><option>Thyroid</option><option>Cardiovascular</option><option>Bone</option><option>Reproductive</option><option>GI</option></select></label>
+   </div>
+   <label>Interpretation / note<textarea id="labNote"></textarea></label>
+   <button class="primary" onclick="addLab()">Add Lab</button>
+  </article>
+  <article class="card">
+   <h3>Add Imaging / Procedure Report</h3>
+   <div class="formgrid two">
+    <label>Date<input id="imgDate" type="date"></label>
+    <label>Type<select id="imgType"><option>X-Ray</option><option>USG</option><option>CT</option><option>MRI</option><option>DEXA</option><option>ECG</option><option>Echo</option><option>Endoscopy</option><option>Other</option></select></label>
+    <label>Body part / system<input id="imgBody"></label><label>Facility<input id="imgFacility"></label>
+   </div>
+   <label>Findings<textarea id="imgFinding"></textarea></label>
+   <label>Impression<textarea id="imgImpression"></textarea></label>
+   <button class="primary" onclick="addImaging()">Add Report</button>
+  </article>
+ </div>
+ <article class="card"><div class="cardtitle"><h3>Investigation History</h3><input class="search" id="invSearch" placeholder="Search uric acid, MRI, liver..." oninput="renderInvestigations()"></div><div id="invTable"></div></article>
+</section>
+
+<section id="medicines" class="view">
+ <div class="pagehead compact"><div><span class="eyebrow">MEDICATION INTELLIGENCE</span><h2>What I took, why, for how long, and what changed</h2></div></div>
+ <article class="card">
+  <div class="formgrid four">
+   <label>Medicine<input id="medName"></label><label>Type<select id="medType"><option>Allopathic</option><option>Ayurvedic</option><option>Supplement</option><option>Other</option></select></label>
+   <label>Dose<input id="medDose"></label><label>Frequency<input id="medFreq"></label>
+   <label>Start<input id="medStart" type="date"></label><label>Stop<input id="medStop" type="date"></label>
+   <label>Target system<input id="medTarget" placeholder="BP / Gut / Hair / Spine..."></label><label>Purpose<input id="medPurpose"></label>
+   <label>Benefit<select id="medBenefit"><option>Not assessed</option><option>Improved</option><option>Stable</option><option>No benefit</option><option>Worsened</option></select></label>
+   <label>Adverse effect<input id="medAE"></label>
+  </div>
+  <button class="primary" onclick="addMedicine()">Save Medicine</button>
+ </article>
+ <article class="card"><div id="medTable"></div></article>
+</section>
+
+<section id="therapies" class="view">
+ <div class="pagehead compact"><div><span class="eyebrow">INTERVENTION OUTCOMES</span><h2>Panchakarma, procedures, fasting & blood donation</h2><p>Track exposure → indication → supervision → outcome → adverse effects.</p></div></div>
+ <div class="alertbar warn">Vamana, Virechana, Basti, Nasya and other intensive procedures should only be planned after individualized assessment, contraindication screening and appropriate supervision. This tracker records and reviews them; it does not autonomously prescribe them.</div>
+ <article class="card">
+  <div class="formgrid four">
+   <label>Intervention<select id="txName"><option>Abhyanga</option><option>Snehana</option><option>Swedana</option><option>Shirodhara</option><option>Nasya</option><option>Basti</option><option>Vamana</option><option>Virechana</option><option>Raktamokshana</option><option>Fasting / Upavasa</option><option>Blood Donation</option><option>Yoga program</option><option>Exercise program</option><option>Other</option></select></label>
+   <label>Date<input id="txDate" type="date"></label>
+   <label>Reason / indication<input id="txReason"></label>
+   <label>Supervision<select id="txSupervision"><option>Self-care / non-invasive</option><option>Ayurveda physician supervised</option><option>Medical facility supervised</option><option>Not applicable</option></select></label>
+   <label>Before score 0–10<input id="txBefore" type="number" min="0" max="10"></label>
+   <label>After score 0–10<input id="txAfter" type="number" min="0" max="10"></label>
+   <label>Outcome<select id="txOutcome"><option>Improved</option><option>Stable</option><option>No change</option><option>Worsened</option><option>Not assessed</option></select></label>
+   <label>Adverse effect<input id="txAE"></label>
+  </div>
+  <label>Details / protocol / recovery<textarea id="txNote"></textarea></label>
+  <button class="primary" onclick="addTherapy()">Save Intervention</button>
+ </article>
+ <article class="card"><div id="txTable"></div></article>
+</section>
+
+<section id="lifestyle" class="view">
+ <div class="pagehead compact"><div><span class="eyebrow">LIFESTYLE MEDICINE × DINACHARYA</span><h2>Daily inputs that shape long-term health</h2></div></div>
+ <div class="grid3" id="habitCards"></div>
+</section>
+
+<section id="mind" class="view">
+ <div class="pagehead compact"><div><span class="eyebrow">WHOLE-PERSON WELLBEING</span><h2>Physical • Mental • Social • Spiritual</h2></div></div>
+ <article class="card">
+  <div class="formgrid four">
+   <label>Date<input id="msDate" type="date"></label>
+   <label>Peace 0–10<input id="msPeace" type="number" min="0" max="10"></label>
+   <label>Stress 0–10<input id="msStress" type="number" min="0" max="10"></label>
+   <label>Meaning/purpose 0–10<input id="msPurpose" type="number" min="0" max="10"></label>
+   <label>Social connection 0–10<input id="msSocial" type="number" min="0" max="10"></label>
+   <label>Loneliness 0–10<input id="msLonely" type="number" min="0" max="10"></label>
+   <label>Mala jap min<input id="msJap" type="number"></label>
+   <label>Puja/path min<input id="msPuja" type="number"></label>
+   <label>Mauna min<input id="msMauna" type="number"></label>
+   <label>Ekant min<input id="msEkant" type="number"></label>
+   <label>Study/learning min<input id="msStudy" type="number"></label>
+   <label>Digital detox min<input id="msDetox" type="number"></label>
+  </div>
+  <label>Reflection<textarea id="msReflection"></textarea></label>
+  <button class="primary" onclick="saveMind()">Save Wellbeing</button>
+ </article>
+</section>
+
+<section id="timeline" class="view">
+ <div class="pagehead compact"><div><span class="eyebrow">LONGITUDINAL OUTCOMES</span><h2>What changed, when, and after what?</h2><p>Designed to connect labs, medicines, procedures and habits across time.</p></div></div>
+ <div class="toolbar"><select id="timelineFilter" onchange="renderTimeline()"><option>All</option><option>Daily</option><option>Lab</option><option>Imaging</option><option>Medicine</option><option>Therapy</option><option>Mind</option></select></div>
+ <div id="timelineList"></div>
+</section>
+
+<section id="ai" class="view">
+ <div class="pagehead compact"><div><span class="eyebrow">AI HEALTH COPILOT</span><h2>Context-aware review, not blind self-prescribing</h2><p>Combines trends, missing follow-ups, lifestyle, Ayurveda context and safety flags.</p></div></div>
+ <div class="grid2">
+  <article class="card">
+   <div class="cardtitle"><h3>AI Review Controls</h3><span class="pill teal">Local prototype</span></div>
+   <label>Focus<select id="aiFocus"><option>Whole health review</option><option>Metabolic health</option><option>Cardiovascular</option><option>Gut & digestion</option><option>Musculoskeletal</option><option>Sleep & recovery</option><option>Mental-spiritual balance</option><option>Ayurveda seasonal review</option></select></label>
+   <label>Question<textarea id="aiQuestion" placeholder="What should I review this month? Why did uric acid change? Which investigation is overdue?"></textarea></label>
+   <button class="primary" onclick="generateAI()">Generate Integrated Review</button>
+  </article>
+  <article class="card">
+   <h3>Safety Guardrails</h3>
+   <ul class="clean">
+    <li>Red flags are escalated above wellness suggestions.</li>
+    <li>Prescription medicines are not autonomously started/stopped.</li>
+    <li>Panchakarma is framed as supervised consideration, not self-ordering.</li>
+    <li>Trend ≠ diagnosis; abnormal or persistent findings need appropriate clinical evaluation.</li>
+   </ul>
+  </article>
+ </div>
+ <article class="card"><pre id="aiOutput">Add data, then generate your integrated review.</pre></article>
+</section>
+
+<section id="settings" class="view">
+ <div class="pagehead compact"><div><span class="eyebrow">PROFILE</span><h2>Your baseline matters</h2></div></div>
+ <article class="card">
+  <div class="formgrid four">
+   <label>Name<input id="pName"></label><label>DOB<input id="pDob" type="date"></label>
+   <label>Sex<select id="pSex"><option>Male</option><option>Female</option><option>Other / not specified</option></select></label>
+   <label>Height cm<input id="pHeight" type="number" step=".1"></label>
+   <label>Blood group<input id="pBlood"></label><label>Allergies<input id="pAllergy"></label>
+   <label>Known conditions<input id="pConditions"></label><label>Emergency contact<input id="pEmergency"></label>
+  </div>
+  <label>Personal health goals<textarea id="pGoals" placeholder="Healthy weight, metabolic fitness, spine health, mental peace, stamina, preventive care..."></textarea></label>
+  <button class="primary" onclick="saveProfile()">Save Profile</button>
+ </article>
+ <article class="card">
+  <h3>Data & Privacy</h3>
+  <p class="muted">V2 stores data in this browser. Use Backup regularly. Cloud sync, authentication, encrypted file storage and real AI API connection should be added in the next deployment phase.</p>
+  <div class="buttons"><button class="ghost" onclick="exportData()">Export JSON</button><label class="filebtn">Import JSON<input type="file" id="importFile" accept=".json" onchange="importData(event)"></label></div>
+ </article>
+</section>
+</main>
+</div>
+<footer>RAJ HEALTH 360 V2 Pro • Personal integrated health tracker • Local-first prototype</footer>
+<script src="app.js"></script>
 </body>
 </html>
