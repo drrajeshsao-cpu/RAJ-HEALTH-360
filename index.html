@@ -254,9 +254,41 @@
 </div>
 </article>
 
- <div class="lab-layout">
+ 
+ <article class="card smart-import-card">
+   <div class="cardtitle">
+     <div><span class="eyebrow">SMART REPORT IMPORT — EXPERIMENTAL</span><h3>Upload one full-body PDF / image and map recognized tests automatically</h3></div>
+     <span class="pill amber">Review before save</span>
+   </div>
+   <p class="muted">Digital PDFs are read as text when possible. Images/scans/screenshots use browser OCR. The app then searches known test aliases and suggests values. Always verify each mapped value, unit and reference range against the original report.</p>
+   <div class="smart-import-actions">
+      <label class="filebtn">📄 Full Report PDF / Image<input type="file" id="smartReportFile" accept="image/*,.pdf"></label>
+      <button class="primary" onclick="runSmartImport()">Read & Auto-map Report ✦</button>
+      <button class="ghost" onclick="clearSmartImport()">Clear Import</button>
+   </div>
+   <div id="smartImportProgress" class="import-progress">No report selected.</div>
+   <div class="grid2">
+     <div>
+       <h4>Recognized text preview</h4>
+       <textarea id="smartImportText" class="ocr-preview" placeholder="Extracted report text will appear here. You can also paste report text manually."></textarea>
+     </div>
+     <div>
+       <h4>Auto-mapping preview</h4>
+       <div id="smartImportMatches" class="summary-box">No mapped tests yet.</div>
+     </div>
+   </div>
+   <div class="buttons">
+     <button class="ghost" onclick="mapPastedReportText()">Map pasted/extracted text</button>
+     <button class="primary" onclick="applySmartImportToPanels()">Apply mapped values to panels</button>
+   </div>
+ </article>
+
+<div class="lab-layout">
   <aside class="card lab-sidebar">
    <h3>Test Panels</h3>
+   <label>Group<select id="profileGroupFilter" onchange="renderLabPanelButtons()">
+      <option>All</option><option>Core</option><option>Hormonal</option><option>Autoimmune</option><option>Infectious</option><option>Fertility</option><option>Cardiac</option><option>Coagulation</option><option>Nutrition</option><option>Oncology Tracking</option>
+   </select></label>
    <div id="labPanelButtons" class="lab-panel-buttons"></div>
   </aside>
 
@@ -270,6 +302,7 @@
     <div class="formgrid four">
       <label>Test date<input id="liDate" type="date"></label>
       <label>Sex for reference<select id="liSex"><option>Male</option><option>Female</option></select></label>
+      <label>Reference template<select id="liLabTemplate" onchange="renderLabParameters()"><option value="omega" selected>Omega Diagnostics — sample-derived</option><option value="generic">Generic adult examples</option></select></label>
       <label>Laboratory / facility<input id="liFacility" placeholder="Lab / hospital name"></label>
       <label>Clinical context<input id="liContext" placeholder="Routine / fasting / symptoms / follow-up..."></label>
     </div>
@@ -301,6 +334,7 @@
 
    <article class="card">
     <div class="cardtitle"><h3>Current Panel Auto Interpretation</h3><span class="pill teal">Pattern-based</span></div>
+    <div class="smart-verify-banner">Smart-imported values are assistance only — <b>verify with original report before saving or clinical use.</b></div>
     <div id="currentPanelSummary" class="summary-box">Enter values to generate a concise panel interpretation.</div>
    </article>
   </div>
@@ -755,6 +789,8 @@
 <button class="copilot-fab" onclick="showView('ai')" title="Open AI Health Copilot">✦ AI Copilot</button>
 </div>
 <footer>RAJ HEALTH 360 V2 Pro • Personal integrated health tracker • Local-first prototype</footer>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
 <script src="app.js"></script>
 </body>
 </html>

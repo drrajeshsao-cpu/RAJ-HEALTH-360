@@ -98,3 +98,16 @@ footer{text-align:center;color:var(--muted);font-size:11px;padding:24px}
 .save-ok{color:#166534!important}.save-error{color:#b91c1c!important}
 @media(max-width:1100px){.lab-panel-static-grid{grid-template-columns:repeat(4,1fr)}}
 @media(max-width:700px){.lab-panel-static-grid{grid-template-columns:repeat(2,1fr)}}
+
+.smart-import-card{border-left:5px solid #7c3aed;background:linear-gradient(135deg,#fbf8ff,var(--surface))}
+.smart-import-actions{display:flex;gap:10px;flex-wrap:wrap;margin:12px 0}
+.import-progress{padding:10px 12px;background:var(--surface2);border:1px solid var(--line);border-radius:10px;margin-bottom:12px;color:var(--muted);font-size:12px;font-weight:700}
+.ocr-preview{min-height:220px;font-family:ui-monospace,SFMono-Regular,Consolas,monospace;font-size:11px}
+.match-row{display:grid;grid-template-columns:1.4fr .8fr .6fr .8fr;gap:8px;padding:7px 0;border-bottom:1px dashed var(--line);font-size:11px}
+.match-row b{color:var(--brand)}
+.panel-group-label{font-size:9px;font-weight:900;letter-spacing:1px;color:var(--muted);display:block;margin-top:3px}
+
+.lab-template-note{margin:10px 0 14px;padding:11px 13px;border:1px solid #b7d8ff;background:#f2f8ff;border-radius:10px;color:#23425f;font-size:12px;line-height:1.45}
+.smart-verify-banner{margin-bottom:10px;padding:10px 12px;border:1px solid #f2c46d;background:#fff8e7;border-radius:10px;color:#7a4b00;font-size:12px}
+.imported-badge{display:inline-block;background:#fff3cd;color:#7a4b00;border:1px solid #f1cf78;border-radius:999px;padding:3px 7px;font-size:9px;font-weight:900;margin-left:5px}
+.ref-source{font-size:9px;color:var(--muted);margin-top:3px}

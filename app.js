@@ -25,7 +25,7 @@ $("backupBtn").onclick=exportData;
 
 
 const labPanels = {
- "CBC":{
+ "CBC":{group:"Core",
   title:"Complete Blood Count (CBC)",system:"Hematology",
   params:[
    {id:"hb",name:"Hemoglobin",unit:"g/dL",male:[13,18],female:[12,16],meaning:"Oxygen-carrying protein; low values may indicate anemia, while high values require context such as hydration, altitude or erythrocytosis."},
@@ -43,7 +43,7 @@ const labPanels = {
    {id:"plt",name:"Platelets",unit:"/µL",all:[150000,450000],meaning:"Primary hemostasis; low or high values require clinical and trend review."}
   ]
  },
- "LFT":{
+ "LFT":{group:"Core",
   title:"Liver Function / Liver Blood Tests",system:"Liver & Gallbladder",
   params:[
    {id:"tbili",name:"Total Bilirubin",unit:"mg/dL",all:[0.2,1.2],meaning:"Bilirubin handling/excretion; fractionation helps when elevated."},
@@ -56,7 +56,7 @@ const labPanels = {
    {id:"protein",name:"Total Protein",unit:"g/dL",all:[6.0,8.3],meaning:"Albumin plus globulins; interpret alongside albumin and clinical state."}
   ]
  },
- "RFT":{
+ "RFT":{group:"Core",
   title:"Renal / Kidney Function (RFT-KFT)",system:"Kidney & Uric Acid",
   params:[
    {id:"creat",name:"Serum Creatinine",unit:"mg/dL",male:[0.74,1.35],female:[0.59,1.04],meaning:"Filtration-related marker affected by muscle mass, hydration and medications; eGFR adds context."},
@@ -69,7 +69,7 @@ const labPanels = {
    {id:"uacr",name:"Urine Albumin/Creatinine Ratio",unit:"mg/g",all:[0,30],meaning:"Albuminuria marker; persistent elevation is important for kidney and cardiovascular risk."}
   ]
  },
- "DIABETES":{
+ "DIABETES":{group:"Core",
   title:"Diabetes & Glycemic Panel",system:"Metabolic & Diabetes",
   params:[
    {id:"fpg",name:"Fasting Plasma Glucose",unit:"mg/dL",all:[70,99],meaning:"Fasting glycemia; repeated elevation needs diabetes/prediabetes context."},
@@ -77,7 +77,7 @@ const labPanels = {
    {id:"hba1c",name:"HbA1c",unit:"%",all:[4.0,5.6],meaning:"Approximate longer-term glycemic exposure; affected by selected hematologic conditions."}
   ]
  },
- "LIPID":{
+ "LIPID":{group:"Core",
   title:"Lipid Profile",system:"Cardiovascular",
   params:[
    {id:"tc",name:"Total Cholesterol",unit:"mg/dL",all:[0,199],meaning:"Overall cholesterol; risk interpretation depends more on LDL/non-HDL and total cardiovascular risk."},
@@ -87,7 +87,7 @@ const labPanels = {
    {id:"nonhdl",name:"Non-HDL-C",unit:"mg/dL",all:[0,129],meaning:"Captures cholesterol in atherogenic particles; useful alongside LDL."}
   ]
  },
- "THYROID":{
+ "THYROID":{group:"Hormonal",
   title:"Thyroid Function Tests",system:"Thyroid & Endocrine",
   params:[
    {id:"tsh",name:"TSH",unit:"mIU/L",all:[0.4,4.5],meaning:"Primary screening marker in many settings; interpret with free T4 and clinical context."},
@@ -142,7 +142,7 @@ const labPanels = {
    {id:"lipase",name:"Lipase",unit:"U/L",all:[0,60],meaning:"More pancreas-focused enzyme; diagnostic significance depends on magnitude and clinical presentation."}
   ]
  },
- "BONE":{
+ "BONE":{group:"Nutrition",
   title:"Bone & Mineral Panel",system:"Bone Health",
   params:[
    {id:"calcium",name:"Calcium",unit:"mg/dL",all:[8.6,10.2],meaning:"Interpret with albumin, kidney function, vitamin D and symptoms."},
@@ -151,7 +151,7 @@ const labPanels = {
    {id:"pth",name:"PTH",unit:"pg/mL",all:[15,65],meaning:"Parathyroid hormone; interpret with calcium, phosphorus, vitamin D and kidney function."}
   ]
  },
- "IRON":{
+ "IRON":{group:"Nutrition",
   title:"Iron / Hematinic Panel",system:"Hematology",
   params:[
    {id:"ferritin",name:"Ferritin",unit:"ng/mL",male:[30,400],female:[13,150],meaning:"Iron storage marker; also rises with inflammation."},
@@ -161,7 +161,7 @@ const labPanels = {
    {id:"folate",name:"Folate",unit:"ng/mL",all:[4,20],meaning:"Folate status; interpret with CBC and clinical context."}
   ]
  },
- "URINE":{
+ "URINE":{group:"Core",
   title:"Urine Routine / Urinalysis",system:"Kidney & Urinary",
   params:[
    {id:"sg",name:"Specific Gravity",unit:"",all:[1.005,1.030],meaning:"Urine concentration; reflects hydration and concentrating ability."},
@@ -173,35 +173,222 @@ const labPanels = {
    {id:"pus",name:"Pus cells / WBC",unit:"/HPF",all:[0,5],meaning:"Can suggest urinary inflammation/infection when elevated."}
   ]
  }
+,
+ "ARTHRITIS":{
+  title:"Arthritis / Autoimmune Profile",system:"Musculoskeletal & Autoimmune",group:"Autoimmune",
+  params:[
+   {id:"esr",name:"ESR",unit:"mm/hr",male:[0,15],female:[0,20],meaning:"Nonspecific inflammation marker; rises with many inflammatory, infectious and hematologic states."},
+   {id:"crp",name:"CRP",unit:"mg/L",all:[0,5],meaning:"Acute-phase inflammation marker; trend and clinical context matter."},
+   {id:"rf",name:"Rheumatoid Factor",unit:"IU/mL",all:[0,14],meaning:"May support rheumatoid arthritis in context but is not specific."},
+   {id:"antiCCP",name:"Anti-CCP Antibody",unit:"U/mL",all:[0,20],meaning:"More specific autoimmune marker for rheumatoid arthritis; lab cut-offs vary."},
+   {id:"ana",name:"ANA Screen",unit:"qualitative",textNormal:"Negative",meaning:"Screening autoantibody test; positive results require pattern/titer and clinical correlation."},
+   {id:"hlaB27",name:"HLA-B27",unit:"qualitative",textNormal:"Negative",meaning:"Genetic marker associated with spondyloarthritis; positivity alone does not establish disease."},
+   {id:"uric",name:"Uric Acid",unit:"mg/dL",male:[3.4,7.0],female:[2.4,6.0],meaning:"Useful in gout context but a normal value does not exclude an acute attack."},
+   {id:"c3",name:"Complement C3",unit:"mg/dL",all:[90,180],meaning:"Complement component; low values may be seen in selected immune-complex disorders."},
+   {id:"c4",name:"Complement C4",unit:"mg/dL",all:[10,40],meaning:"Complement component interpreted with C3 and autoimmune context."}
+  ]
+ },
+ "FEVER":{
+  title:"Fever / Infectious Work-up",system:"Infectious Disease",group:"Infectious",
+  params:[
+   {id:"crp",name:"CRP",unit:"mg/L",all:[0,5],meaning:"Inflammatory marker; not organism-specific."},
+   {id:"esr",name:"ESR",unit:"mm/hr",male:[0,15],female:[0,20],meaning:"Nonspecific inflammation marker."},
+   {id:"pct",name:"Procalcitonin",unit:"ng/mL",all:[0,0.1],meaning:"Can support bacterial-infection assessment in selected settings; interpretation is clinical."},
+   {id:"malariaAg",name:"Malaria Rapid Antigen",unit:"qualitative",textNormal:"Negative",meaning:"Rapid malaria test; species/timing and smear confirmation may matter."},
+   {id:"malariaSmear",name:"Peripheral Smear for Malaria",unit:"qualitative",textNormal:"Negative",meaning:"Microscopy can identify parasites and species when performed appropriately."},
+   {id:"dengueNS1",name:"Dengue NS1 Antigen",unit:"qualitative",textNormal:"Negative",meaning:"Useful early in dengue illness; a negative test does not fully exclude dengue."},
+   {id:"dengueIgM",name:"Dengue IgM",unit:"qualitative",textNormal:"Negative",meaning:"Serologic evidence depends on timing from symptom onset."},
+   {id:"dengueIgG",name:"Dengue IgG",unit:"qualitative",textNormal:"Negative",meaning:"May reflect past or current exposure depending on context and paired testing."},
+   {id:"bloodCulture",name:"Blood Culture",unit:"qualitative",textNormal:"No growth",meaning:"Important for suspected bacteremia; collect before antibiotics when clinically appropriate."},
+   {id:"urineCulture",name:"Urine Culture",unit:"qualitative",textNormal:"No significant growth",meaning:"Useful when urinary infection is suspected; colony count and symptoms matter."},
+   {id:"ferritin",name:"Ferritin",unit:"ng/mL",male:[30,400],female:[13,150],meaning:"Iron-storage and acute-phase marker; can be markedly elevated in inflammatory syndromes."}
+  ]
+ },
+ "HORMONE_F":{
+  title:"Female Hormonal / Reproductive Profile",system:"Endocrine & Reproductive",group:"Hormonal",
+  params:[
+   {id:"fsh",name:"FSH",unit:"mIU/mL",all:[2,20],meaning:"Interpret by menstrual-cycle phase, age and ovarian function; lab-specific ranges are preferred."},
+   {id:"lh",name:"LH",unit:"mIU/mL",all:[2,20],meaning:"Cycle-phase dependent; surge timing changes interpretation."},
+   {id:"estradiol",name:"Estradiol (E2)",unit:"pg/mL",all:[20,350],meaning:"Highly cycle-phase dependent; use lab and cycle-day ranges."},
+   {id:"prog",name:"Progesterone",unit:"ng/mL",all:[0.1,25],meaning:"Timing is crucial; luteal-phase testing is used to assess ovulation in context."},
+   {id:"prolactin",name:"Prolactin",unit:"ng/mL",female:[4.8,23.3],male:[4.0,15.2],meaning:"Affected by stress, sleep, pregnancy and medications."},
+   {id:"amh",name:"AMH",unit:"ng/mL",all:[0.5,6.0],meaning:"Ovarian-reserve marker; age and assay matter and it should not be used as a general fertility-screening test in women without infertility."},
+   {id:"testosterone",name:"Total Testosterone",unit:"ng/dL",female:[15,70],male:[300,1000],meaning:"In women, elevated levels may support hyperandrogenism evaluation."},
+   {id:"dheas",name:"DHEA-S",unit:"µg/dL",female:[35,430],male:[80,560],meaning:"Adrenal androgen marker; age-specific ranges vary."},
+   {id:"shbg",name:"SHBG",unit:"nmol/L",female:[18,144],male:[10,57],meaning:"Binding protein affecting free sex-hormone availability."},
+   {id:"tsh",name:"TSH",unit:"mIU/L",all:[0.4,4.5],meaning:"Thyroid dysfunction can affect menstrual and fertility health."}
+  ]
+ },
+ "HORMONE_M":{
+  title:"Male Hormonal / Androgen Profile",system:"Endocrine & Reproductive",group:"Hormonal",
+  params:[
+   {id:"testosterone",name:"Total Testosterone",unit:"ng/dL",male:[300,1000],female:[15,70],meaning:"Interpret preferably with morning sampling and symptoms; assay/lab ranges vary."},
+   {id:"freeT",name:"Free Testosterone",unit:"pg/mL",male:[47,244],female:[0.3,3.8],meaning:"Method-dependent; SHBG and albumin affect interpretation."},
+   {id:"lh",name:"LH",unit:"mIU/mL",male:[1.7,8.6],female:[2,20],meaning:"Helps distinguish primary vs central hypogonadal patterns with testosterone."},
+   {id:"fsh",name:"FSH",unit:"mIU/mL",male:[1.5,12.4],female:[2,20],meaning:"Useful in spermatogenic/testicular function context."},
+   {id:"prolactin",name:"Prolactin",unit:"ng/mL",male:[4.0,15.2],female:[4.8,23.3],meaning:"Elevated prolactin can suppress gonadal function."},
+   {id:"estradiol",name:"Estradiol (E2)",unit:"pg/mL",male:[10,40],female:[20,350],meaning:"Useful in selected gynecomastia/androgen-balance contexts."},
+   {id:"shbg",name:"SHBG",unit:"nmol/L",male:[10,57],female:[18,144],meaning:"Influences calculated free testosterone."},
+   {id:"dheas",name:"DHEA-S",unit:"µg/dL",male:[80,560],female:[35,430],meaning:"Adrenal androgen marker; age-specific ranges vary."}
+  ]
+ },
+ "FERTILITY_F":{
+  title:"Female Infertility Evaluation Profile",system:"Reproductive",group:"Fertility",
+  params:[
+   {id:"amh",name:"AMH",unit:"ng/mL",all:[0.5,6.0],meaning:"Ovarian-reserve marker; age and assay matter."},
+   {id:"fsh",name:"FSH",unit:"mIU/mL",all:[2,20],meaning:"Interpret with cycle day and estradiol."},
+   {id:"lh",name:"LH",unit:"mIU/mL",all:[2,20],meaning:"Cycle-phase dependent and useful in ovulation/PCOS context."},
+   {id:"estradiol",name:"Estradiol",unit:"pg/mL",all:[20,350],meaning:"Cycle-day dependent."},
+   {id:"prog",name:"Progesterone",unit:"ng/mL",all:[0.1,25],meaning:"Timed luteal measurement may help document ovulation."},
+   {id:"prolactin",name:"Prolactin",unit:"ng/mL",female:[4.8,23.3],male:[4.0,15.2],meaning:"Hyperprolactinemia can disturb ovulation."},
+   {id:"tsh",name:"TSH",unit:"mIU/L",all:[0.4,4.5],meaning:"Thyroid disorders can affect fertility and pregnancy."},
+   {id:"hba1c",name:"HbA1c",unit:"%",all:[4.0,5.6],meaning:"Metabolic context, especially in PCOS/obesity."},
+   {id:"betaHCG",name:"β-hCG",unit:"mIU/mL",all:[0,5],meaning:"Pregnancy marker; interpretation depends on timing and serial change."}
+  ]
+ },
+ "FERTILITY_M":{
+  title:"Male Fertility / Semen Profile",system:"Reproductive",group:"Fertility",
+  params:[
+   {id:"volume",name:"Semen Volume",unit:"mL",all:[1.4,10],meaning:"Use the reporting laboratory/WHO manual reference because thresholds depend on current standard."},
+   {id:"concentration",name:"Sperm Concentration",unit:"million/mL",all:[15,300],meaning:"Concentration is one component; total count, motility and morphology also matter."},
+   {id:"totalCount",name:"Total Sperm Count",unit:"million/ejaculate",all:[39,1000],meaning:"Interpret with volume and concentration."},
+   {id:"progMot",name:"Progressive Motility",unit:"%",all:[30,100],meaning:"Use current lab/WHO criteria and abstinence/sample-quality context."},
+   {id:"totalMot",name:"Total Motility",unit:"%",all:[40,100],meaning:"Progressive + non-progressive motility."},
+   {id:"morph",name:"Normal Morphology",unit:"%",all:[4,100],meaning:"Strict morphology is method-dependent."},
+   {id:"vitality",name:"Vitality",unit:"%",all:[54,100],meaning:"Useful when motility is low."},
+   {id:"ph",name:"Semen pH",unit:"",all:[7.2,8.0],meaning:"Abnormal pH can provide accessory-gland clues."}
+  ]
+ },
+ "ADRENAL":{
+  title:"Adrenal / Stress Hormone Profile",system:"Endocrine",group:"Hormonal",
+  params:[
+   {id:"cortisolAM",name:"Morning Cortisol",unit:"µg/dL",all:[5,25],meaning:"Strong diurnal variation; timing is essential."},
+   {id:"acth",name:"ACTH",unit:"pg/mL",all:[7.2,63.3],meaning:"Interpret with cortisol and sampling conditions."},
+   {id:"dheas",name:"DHEA-S",unit:"µg/dL",male:[80,560],female:[35,430],meaning:"Adrenal androgen marker with age-specific ranges."},
+   {id:"aldosterone",name:"Aldosterone",unit:"ng/dL",all:[1,30],meaning:"Posture, sodium intake and medications substantially affect interpretation."},
+   {id:"renin",name:"Renin",unit:"lab-specific",meaning:"Used with aldosterone ratio in selected hypertension/endocrine evaluations."}
+  ]
+ },
+ "CARDIAC":{
+  title:"Cardiac Biomarkers",system:"Cardiovascular",group:"Cardiac",
+  params:[
+   {id:"troponin",name:"High-sensitivity Troponin",unit:"ng/L",all:[0,14],meaning:"Assay-specific 99th percentile is critical; serial change and symptoms drive acute coronary syndrome interpretation."},
+   {id:"ckmb",name:"CK-MB",unit:"ng/mL",all:[0,5],meaning:"Less specific than troponin; interpret with clinical context."},
+   {id:"bnp",name:"BNP",unit:"pg/mL",all:[0,100],meaning:"Supports heart-failure evaluation; age, renal function and rhythm affect values."},
+   {id:"ntprobnp",name:"NT-proBNP",unit:"pg/mL",all:[0,125],meaning:"Age and renal-function dependent; use clinical cut-offs."},
+   {id:"hscrp",name:"hs-CRP",unit:"mg/L",all:[0,3],meaning:"Inflammation marker sometimes used in cardiovascular risk refinement."}
+  ]
+ },
+ "COAG":{
+  title:"Coagulation / Thrombosis Profile",system:"Hematology",group:"Coagulation",
+  params:[
+   {id:"pt",name:"PT",unit:"sec",all:[11,13.5],meaning:"Extrinsic/common coagulation pathway; reagent-dependent."},
+   {id:"inr",name:"INR",unit:"",all:[0.8,1.2],meaning:"Standardized PT; therapeutic targets differ if on warfarin."},
+   {id:"aptt",name:"aPTT",unit:"sec",all:[25,35],meaning:"Intrinsic/common coagulation pathway; lab-specific."},
+   {id:"ddimer",name:"D-dimer",unit:"ng/mL FEU",all:[0,500],meaning:"High sensitivity but low specificity; age-adjusted/clinical pathways may be used."},
+   {id:"fibrinogen",name:"Fibrinogen",unit:"mg/dL",all:[200,400],meaning:"Acute-phase and coagulation protein."}
+  ]
+ },
+ "PANCREAS":{
+  title:"Pancreatic Enzymes",system:"Gastrointestinal",group:"Core",
+  params:[
+   {id:"amylase",name:"Amylase",unit:"U/L",all:[30,110],meaning:"Can rise in pancreatitis and non-pancreatic conditions."},
+   {id:"lipase",name:"Lipase",unit:"U/L",all:[0,60],meaning:"More pancreas-focused; significant elevation with compatible symptoms supports acute pancreatitis."}
+  ]
+ },
+ "MICRONUTRIENT":{
+  title:"Vitamin / Micronutrient Profile",system:"Nutrition",group:"Nutrition",
+  params:[
+   {id:"vitd",name:"25-OH Vitamin D",unit:"ng/mL",all:[30,100],meaning:"Interpret treatment targets by guideline and clinical risk."},
+   {id:"b12",name:"Vitamin B12",unit:"pg/mL",all:[200,900],meaning:"Borderline values may need MMA/homocysteine context."},
+   {id:"folate",name:"Folate",unit:"ng/mL",all:[4,20],meaning:"Interpret with CBC and dietary context."},
+   {id:"ferritin",name:"Ferritin",unit:"ng/mL",male:[30,400],female:[13,150],meaning:"Iron storage plus acute-phase marker."},
+   {id:"magnesium",name:"Magnesium",unit:"mg/dL",all:[1.7,2.2],meaning:"Serum magnesium reflects only a fraction of body stores."},
+   {id:"zinc",name:"Zinc",unit:"µg/dL",all:[60,120],meaning:"Affected by fasting, inflammation and assay conditions."}
+  ]
+ },
+ "TUMOR":{
+  title:"Tumor Marker Tracking (Not General Screening)",system:"Oncology",group:"Oncology Tracking",
+  params:[
+   {id:"psa",name:"PSA",unit:"ng/mL",male:[0,4],meaning:"Prostate marker; age, prostate size, inflammation and shared decision-making matter."},
+   {id:"afp",name:"AFP",unit:"ng/mL",all:[0,10],meaning:"Used in selected liver/germ-cell tumor contexts; not diagnostic alone."},
+   {id:"cea",name:"CEA",unit:"ng/mL",all:[0,5],meaning:"Mainly useful for follow-up in selected cancers, not broad screening."},
+   {id:"ca125",name:"CA-125",unit:"U/mL",all:[0,35],meaning:"Can rise in benign and malignant conditions; not a stand-alone screening test."},
+   {id:"ca199",name:"CA 19-9",unit:"U/mL",all:[0,37],meaning:"Used in selected pancreatic/biliary cancer monitoring; not diagnostic alone."},
+   {id:"ca153",name:"CA 15-3",unit:"U/mL",all:[0,30],meaning:"Used in selected breast-cancer monitoring contexts."}
+  ]
+ },
+ "HEPATITIS":{
+  title:"Viral / Blood-borne Infection Screen",system:"Infectious Disease",group:"Infectious",
+  params:[
+   {id:"hbsag",name:"HBsAg",unit:"qualitative",textNormal:"Negative",meaning:"Marker of current hepatitis B infection; full HBV serology may be needed."},
+   {id:"antihcv",name:"Anti-HCV",unit:"qualitative",textNormal:"Negative",meaning:"Screening antibody; positive results need confirmatory HCV RNA."},
+   {id:"hiv",name:"HIV Ag/Ab",unit:"qualitative",textNormal:"Negative",meaning:"Fourth-generation screening test; reactive results require confirmatory algorithm."}
+  ]
+ }
+
 };
+// --- Omega Diagnostics sample-derived lab template (uploaded 14-page report, Aug 2026) ---
+const omegaLabTemplate = {
+ CBC:{hb:{female:[11.0,16.0],unit:"gm%"},wbc:{all:[4.0,11.0],unit:"10^3/mm^3"},neut:{all:[40,80]},lymph:{all:[20,40]},eos:{all:[1,6]},mono:{all:[2,10]},baso:{all:[0,1]},absNeut:{all:[1.5,7.5],unit:"10^3/mm^3"},absLymph:{all:[1.25,4.0],unit:"10^3/mm^3"},absEos:{all:[0.2,0.5],unit:"10^3/mm^3"},absMono:{all:[0.2,0.8],unit:"10^3/mm^3"},absBaso:{all:[0,0.1],unit:"10^3/mm^3"},rbc:{female:[3.8,4.8],unit:"Million/cumm"},hct:{female:[36,46]},mcv:{all:[81,101]},mch:{all:[26,33]},mchc:{all:[32,36]},rdw:{all:[12,18]},rdwsd:{text:"Printed sample: 37.0–36.0 fL — verify Omega master range",unit:"fL",verify:true},plt:{all:[150,450],unit:"10^3/mm^3"},pct:{all:[0.150,0.400],unit:"%"},mpv:{all:[7.5,11.5],unit:"fL"},pdw:{all:[11,20],unit:"fL"},plcr:{all:[11,45],unit:"%"},plcc:{all:[44,140],unit:"10^3/uL"}},
+ INFLAMMATION:{esr:{female:[1,20],unit:"mm/1st hr"}},
+ DIABETES:{hba1c:{all:[4.0,6.0],unit:"%"},eag:{all:[90,120],unit:"mg/dL"}},
+ LFT:{tbili:{all:[0.1,1.2]},dbili:{all:[0,0.4]},ibili:{all:[0.1,1.0]},alt:{all:[7,55],unit:"IU/L"},ast:{all:[8,48],unit:"IU/L"},astalt:{text:"Printed sample: 0–46 ratio — verify Omega master range",unit:"ratio",verify:true},alp:{male:[80,306],female:[64,306]},ggt:{all:[0,55]},protein:{all:[6.2,8.0],unit:"gm/dL"},albumin:{all:[3.5,5.5],unit:"gm/dL"},globulin:{all:[2.3,3.5],unit:"gm/dL"},agratio:{all:[1.0,2.0],unit:"ratio"}},
+ IRON:{iron:{all:[40,160],unit:"mcg/dL"},tibc:{all:[220,440],unit:"mcg/dL"},uibc:{all:[111,343],unit:"mcg/dL"},tsat:{all:[20,50],unit:"%"},b12:{all:[180,914],unit:"pg/ml"}},
+ BONE:{calcium:{all:[8.6,10.0],unit:"mg/dL"},vitd:{all:[30,100],unit:"ng/ml"}},
+ RFT:{urea:{all:[15,45]},creat:{all:[0.6,1.3]},bun:{all:[7,20]},buncr:{all:[10,20],unit:"ratio"},ureacr:{all:[10,40],unit:"ratio"},uric:{all:[3.4,7.0]},sodium:{all:[135,145]},potassium:{all:[3.5,5.1]},chloride:{all:[96,106]},egfr:{min:90,text:">90 = Normal",unit:"mL/min/1.73m²"}},
+ LIPID:{tc:{all:[0,200]},tg:{all:[0,170]},hdl:{all:[40,70]},ldl:{all:[0,100]},vldl:{all:[6,38]},cholhdl:{all:[3.5,5.0],clinicalNote:"Below this printed interval may still be favorable for cardiovascular risk."},ldlhdl:{all:[2.5,3.5],clinicalNote:"Below this printed interval may still be favorable for cardiovascular risk."}},
+ URINE:{sg:{all:[1.010,1.030],unit:"g/mL"},ph:{all:[4.5,8.0]},protein:{textNormal:"Absent"},glucose:{textNormal:"Absent"},blood:{textNormal:"Absent"},bilirubin:{textNormal:"Absent"},pus:{all:[0,5],unit:"/HPF"},epi:{all:[0,4],unit:"/HPF"},urineRbc:{all:[0,5],unit:"/HPF"},cast:{textNormal:"Absent"},crystal:{textNormal:"Absent"},bacteria:{textNormal:"Absent"}},
+ THYROID:{t3total:{all:[0.800,2.000],unit:"ng/ml"},t4total:{all:[5.100,14.100],unit:"ug/dl"},tsh:{all:[0.270,4.200],unit:"uIU/ml"}}
+};
+function addOmegaDerivedParameters(){
+ const add=(panel,arr)=>{const ids=new Set(labPanels[panel].params.map(x=>x.id));arr.forEach(x=>{if(!ids.has(x.id))labPanels[panel].params.push(x)})};
+ add("CBC",[{id:"baso",name:"Basophils",unit:"%",all:[0,1],meaning:"Basophil proportion; interpret with total WBC and absolute count."},{id:"absNeut",name:"Absolute Neutrophils",unit:"10^3/mm^3",all:[1.5,7.5],meaning:"Absolute neutrophil count is often more useful than percentage alone."},{id:"absLymph",name:"Absolute Lymphocytes",unit:"10^3/mm^3",all:[1.25,4],meaning:"Absolute lymphocyte count."},{id:"absEos",name:"Absolute Eosinophils",unit:"10^3/mm^3",all:[0.2,0.5],meaning:"Absolute eosinophil count."},{id:"absMono",name:"Absolute Monocytes",unit:"10^3/mm^3",all:[0.2,0.8],meaning:"Absolute monocyte count."},{id:"absBaso",name:"Absolute Basophils",unit:"10^3/mm^3",all:[0,0.1],meaning:"Absolute basophil count."},{id:"rdwsd",name:"RDW-SD",unit:"fL",meaning:"Absolute red-cell size-distribution width; verify laboratory range."},{id:"pct",name:"Plateletcrit (PCT)",unit:"%",all:[0.15,0.4],meaning:"Fraction of blood volume occupied by platelets."},{id:"mpv",name:"MPV",unit:"fL",all:[7.5,11.5],meaning:"Mean platelet volume."},{id:"pdw",name:"PDW",unit:"fL",all:[11,20],meaning:"Variation in platelet size."},{id:"plcr",name:"P-LCR",unit:"%",all:[11,45],meaning:"Proportion of larger platelets."},{id:"plcc",name:"P-LCC",unit:"10^3/uL",all:[44,140],meaning:"Absolute large platelet count."}]);
+ add("DIABETES",[{id:"eag",name:"Estimated Average Glucose",unit:"mg/dL",all:[90,120],meaning:"Calculated estimate derived from HbA1c."}]);
+ add("LFT",[{id:"ibili",name:"Indirect Bilirubin",unit:"mg/dL",all:[0.1,1.0],meaning:"Unconjugated bilirubin fraction."},{id:"astalt",name:"SGOT/SGPT Ratio",unit:"ratio",meaning:"AST/ALT relationship; do not interpret in isolation."},{id:"globulin",name:"Globulin",unit:"gm/dL",all:[2.3,3.5],meaning:"Protein fraction affected by immune/inflammatory and hepatic states."},{id:"agratio",name:"A:G Ratio",unit:"ratio",all:[1,2],meaning:"Albumin-to-globulin relationship."}]);
+ add("IRON",[{id:"uibc",name:"Unsaturated Iron Binding Capacity",unit:"mcg/dL",all:[111,343],meaning:"Unused transferrin iron-binding capacity."},{id:"tsat",name:"Transferrin Saturation",unit:"%",all:[20,50],meaning:"Percentage of transferrin binding sites occupied by iron."}]);
+ add("RFT",[{id:"buncr",name:"BUN/Creatinine Ratio",unit:"ratio",all:[10,20],meaning:"Supportive renal/hydration ratio."},{id:"ureacr",name:"Urea/Creatinine Ratio",unit:"ratio",all:[10,40],meaning:"Supportive ratio; interpret with individual values."},{id:"chloride",name:"Chloride",unit:"mmol/L",all:[96,106],meaning:"Electrolyte interpreted with sodium, potassium and acid-base status."}]);
+ add("LIPID",[{id:"vldl",name:"VLDL-C",unit:"mg/dL",all:[6,38],meaning:"VLDL cholesterol estimate."},{id:"cholhdl",name:"Cholesterol/HDL Ratio",unit:"ratio",meaning:"Risk ratio; lower is generally favorable clinically."},{id:"ldlhdl",name:"LDL/HDL Ratio",unit:"ratio",meaning:"Risk ratio; lower is generally favorable clinically."}]);
+ add("URINE",[{id:"color",name:"Color",unit:"",textNormal:"Pale Yellow",meaning:"Urine color."},{id:"appearance",name:"Appearance",unit:"",textNormal:"Clear",meaning:"Urine clarity."},{id:"blood",name:"Blood",unit:"semiquant",textNormal:"Absent",meaning:"Positive dipstick blood requires correlation."},{id:"bilirubin",name:"Bilirubin",unit:"semiquant",textNormal:"Absent",meaning:"Urine bilirubin may reflect conjugated hyperbilirubinemia."},{id:"epi",name:"Epithelial Cells",unit:"/HPF",all:[0,4],meaning:"May reflect contamination or epithelial shedding."},{id:"urineRbc",name:"Urine RBC",unit:"/HPF",all:[0,5],meaning:"Microscopic hematuria needs context."},{id:"cast",name:"Casts",unit:"",textNormal:"Absent",meaning:"Cast type can provide renal localization clues."},{id:"crystal",name:"Crystals",unit:"",textNormal:"Absent",meaning:"Crystals relate to urine chemistry and stone risk."},{id:"bacteria",name:"Bacteria",unit:"",textNormal:"Absent",meaning:"Interpret with microscopy, symptoms and culture."}]);
+ add("THYROID",[{id:"t3total",name:"Total T3",unit:"ng/ml",all:[0.8,2.0],meaning:"Total triiodothyronine; binding proteins influence values."},{id:"t4total",name:"Total T4",unit:"ug/dl",all:[5.1,14.1],meaning:"Total thyroxine; binding proteins influence values."}]);
+}
+addOmegaDerivedParameters();
+function omegaRefFor(panelKey,p,sex){
+ if((v("liLabTemplate")||"omega")!=="omega")return null;
+ const t=omegaLabTemplate[panelKey]?.[p.id]; if(!t)return null;
+ if(t.textNormal)return {text:t.textNormal,range:null,unit:t.unit||p.unit,verify:!!t.verify,note:t.clinicalNote||""};
+ if(t.text)return {text:t.text,range:t.min!==undefined?{min:t.min}:null,unit:t.unit||p.unit,verify:!!t.verify,note:t.clinicalNote||""};
+ const r=(sex==="Female"&&t.female)?t.female:(sex==="Male"&&t.male)?t.male:t.all||null;
+ if(r)return {text:`${r[0]}–${r[1]}`,range:r,unit:t.unit||p.unit,verify:!!t.verify,note:t.clinicalNote||""};
+ if(t.min!==undefined)return {text:`≥${t.min}`,range:{min:t.min},unit:t.unit||p.unit,verify:!!t.verify,note:t.clinicalNote||""};
+ return null;
+}
+
 let currentLabPanel="CBC";
 
 function refRangeFor(p,sex){
+ const omega=omegaRefFor(currentLabPanel,p,sex); if(omega)return omega.text;
  if(p.textNormal)return p.textNormal;
  const r=(sex==="Female"&&p.female)?p.female:(sex==="Male"&&p.male)?p.male:p.all||p.male||p.female;
  return r?`${r[0]}–${r[1]}`:"Lab-specific";
 }
 function numericRangeFor(p,sex){
+ const omega=omegaRefFor(currentLabPanel,p,sex); if(omega)return omega.range;
  return (sex==="Female"&&p.female)?p.female:(sex==="Male"&&p.male)?p.male:p.all||null;
 }
 function autoStatus(value,p,sex){
  if(value===null||value===undefined||String(value).trim()==="")return "Not assessed";
- if(p.textNormal){
-   const x=String(value).trim().toLowerCase();
-   return (x==="negative"||x==="nil"||x==="absent")?"Normal":"Abnormal";
+ const omega=omegaRefFor(currentLabPanel,p,sex);
+ const normalText=(omega&&omega.range===null&&omega.text&&!omega.verify)?omega.text:(p.textNormal||null);
+ if(normalText && !/\d/.test(normalText)){
+   const x=String(value).trim().toLowerCase(),norm=String(normalText).trim().toLowerCase();
+   if(["absent","negative","no growth","no significant growth"].includes(norm))return ["negative","nil","absent","no growth","no significant growth"].includes(x)?"Normal":"Abnormal";
+   return x===norm?"Normal":"Abnormal";
  }
- const num=Number(value); if(Number.isNaN(num))return "Not assessed";
- const r=numericRangeFor(p,sex); if(!r)return "Not assessed";
- const [lo,hi]=r;
- if(num<lo){
-   const delta=(lo-num)/(Math.abs(lo)||1);
-   return delta<=0.10?"Borderline low":"Low";
- }
- if(num>hi){
-   const delta=(num-hi)/(Math.abs(hi)||1);
-   return delta<=0.10?"Borderline high":"High";
- }
- return "Normal";
+ const num=Number(value);if(Number.isNaN(num))return "Not assessed";
+ const r=numericRangeFor(p,sex);if(!r)return "Not assessed";
+ if(!Array.isArray(r)&&r.min!==undefined)return num>=r.min?"Normal":"Low";
+ const [lo,hi]=r;if(num<lo){const d=(lo-num)/(Math.abs(lo)||1);return d<=.10?"Borderline low":"Low";}if(num>hi){const d=(num-hi)/(Math.abs(hi)||1);return d<=.10?"Borderline high":"High";}return "Normal";
 }
 function statusClass(s){
  if(s==="Normal")return "status-normal";
@@ -219,7 +406,9 @@ function selectLabPanel(key){
 }
 function renderLabPanelButtons(){
  if(!$("labPanelButtons"))return;
- $("labPanelButtons").innerHTML=Object.entries(labPanels).map(([k,p])=>`<button class="lab-panel-btn ${k===currentLabPanel?"active":""}" data-panel="${k}" onclick="selectLabPanel('${k}')">${p.title}</button>`).join("");
+ const group=v("profileGroupFilter")||"All";
+ const entries=Object.entries(labPanels).filter(([k,p])=>group==="All"||(p.group||"Core")===group);
+ $("labPanelButtons").innerHTML=entries.map(([k,p])=>`<button class="lab-panel-btn ${k===currentLabPanel?"active":""}" data-panel="${k}" onclick="selectLabPanel('${k}')">${p.title}<span class="panel-group-label">${p.group||"Core"} • ${p.params.length} tests</span></button>`).join("");
 }
 function renderLabParameters(existing=null){
  if(!$("labParameterTable"))return;
@@ -231,7 +420,7 @@ function renderLabParameters(existing=null){
  let visible=panel.params.filter(p=>(p.name+" "+p.meaning).toLowerCase().includes(q));
  let rows=visible.map(p=>{
    const old=previous[p.id]||{},ref=old.ref||refRangeFor(p,sex),val=old.value??"",stat=old.status||autoStatus(val,p,sex);
-   return `<tr><td><div class="param-name">${p.name}</div><div class="param-meaning">${p.meaning}</div></td><td>${p.unit||""}</td><td><input class="range-input" id="ref_${p.id}" value="${ref}"></td><td><input class="result-input" id="val_${p.id}" value="${val}" oninput="updateParamStatus('${p.id}')"></td><td><select class="status-select ${statusClass(stat)}" id="status_${p.id}" onchange="this.className='status-select '+statusClass(this.value)">${["Not assessed","Normal","Borderline low","Low","Borderline high","High","Abnormal"].map(s=>`<option ${s===stat?"selected":""}>${s}</option>`).join("")}</select></td><td><input id="remark_${p.id}" value="${old.remark||""}" placeholder="Remark"></td></tr>`;
+   return `<tr><td><div class="param-name">${p.name}</div><div class="param-meaning">${p.meaning}</div></td><td>${displayUnit}<div class="ref-source">${omega?"Omega template":"Generic"}${omega?.verify?" • VERIFY RANGE":""}</div></td><td><input class="range-input" id="ref_${p.id}" value="${ref}"></td><td><input class="result-input" id="val_${p.id}" value="${val}" oninput="updateParamStatus('${p.id}')"></td><td><select class="status-select ${statusClass(stat)}" id="status_${p.id}" onchange="this.className='status-select '+statusClass(this.value)">${["Not assessed","Normal","Borderline low","Low","Borderline high","High","Abnormal"].map(s=>`<option ${s===stat?"selected":""}>${s}</option>`).join("")}</select></td><td><input id="remark_${p.id}" value="${old.remark||""}" placeholder="Remark"></td></tr>`;
  }).join("");
  $("labParameterTable").innerHTML=`<div class="lab-param-table"><table><thead><tr><th>Parameter & meaning</th><th>Unit</th><th>Reference range</th><th>Your value</th><th>Status</th><th>Remark</th></tr></thead><tbody>${rows||`<tr><td colspan="6">No parameter matches search.</td></tr>`}</tbody></table></div>`;
 }
@@ -247,7 +436,7 @@ function collectCurrentPanelValues(){
  const out={};
  labPanels[currentLabPanel].params.forEach(p=>{
    if(!$("status_"+p.id))return;
-   out[p.id]={name:p.name,unit:p.unit,value:v("val_"+p.id),ref:v("ref_"+p.id),status:v("status_"+p.id),remark:v("remark_"+p.id),meaning:p.meaning};
+   const om=omegaRefFor(currentLabPanel,p,v("liSex")||"Male");out[p.id]={name:p.name,unit:om?.unit||p.unit,value:v("val_"+p.id),ref:v("ref_"+p.id),status:v("status_"+p.id),remark:v("remark_"+p.id),meaning:p.meaning,referenceSource:(v("liLabTemplate")||"omega")==="omega"?"Omega Diagnostics sample-derived":"Generic adult example",imported:(v("remark_"+p.id)||"").includes("Smart-imported")};
  });
  return out;
 }
@@ -265,7 +454,7 @@ function saveLabInterpretation(){
 }
 function editLabInterpretation(i){
  const x=db.labInterpretations[i];showView("labcentre");currentLabPanel=x.panel||"CBC";renderLabPanelButtons();
- $("liDate").value=x.date||today();$("liSex").value=x.sex||"Male";$("liFacility").value=x.facility||"";$("liContext").value=x.context||"";$("liRemarks").value=x.remarks||"";$("liEditIndex").value=i;
+ $("liDate").value=x.date||today();$("liSex").value=x.sex||"Male";if($("liLabTemplate"))$("liLabTemplate").value=x.referenceTemplate||"omega";$("liFacility").value=x.facility||"";$("liContext").value=x.context||"";$("liRemarks").value=x.remarks||"";$("liEditIndex").value=i;
  renderLabParameters(x.values||{});
 }
 function deleteLabInterpretation(i){if(confirm("Delete this interpreted panel?")){db.labInterpretations.splice(i,1);persist()}}
@@ -276,7 +465,7 @@ function resetLabInterpretation(){
 function generateCurrentPanelSummary(){
  if(!$("currentPanelSummary"))return;
  const vals=collectCurrentPanelValues(),panel=labPanels[currentLabPanel],abn=Object.values(vals).filter(x=>!["Normal","Not assessed"].includes(x.status)),normal=Object.values(vals).filter(x=>x.status==="Normal"),na=Object.values(vals).filter(x=>x.status==="Not assessed");
- let lines=[`${panel.title}: ${abn.length} flagged • ${normal.length} within selected range • ${na.length} not assessed.`];
+ let lines=[`${panel.title}: ${abn.length} flagged • ${normal.length} within selected range • ${na.length} not assessed.`, `Reference template: ${(v("liLabTemplate")||"omega")==="omega"?"Omega Diagnostics sample-derived":"Generic adult examples"}.`];
  if(abn.length)lines.push("Flagged parameters:\n• "+abn.map(x=>`${x.name}: ${x.value||"-"} ${x.unit||""} — ${x.status}`).join("\n• "));
  if(currentLabPanel==="CBC")lines.push(cbcPattern(vals));
  if(currentLabPanel==="LFT")lines.push(lftPattern(vals));
@@ -347,11 +536,131 @@ function renderSavedLabPanels(){
    const vals=Object.values(x.values||{}),abn=vals.filter(v=>!["Normal","Not assessed"].includes(v.status));
    const chips=vals.filter(v=>v.value!==""&&v.value!=null).slice(0,18).map(v=>`<span class="param-chip ${["Normal"].includes(v.status)?"ok":"abn"}">${v.name}: ${v.value} ${v.unit||""} (${v.status})</span>`).join("");
    return `<div class="saved-panel">
-    <div class="saved-panel-head"><div><b>${x.title}</b><small style="display:block;color:var(--muted)">${x.date||""} • ${x.sex||""} • ${x.facility||""}</small></div>
+    <div class="saved-panel-head"><div><b>${x.title}</b>${x.smartImported?'<span class="imported-badge">Smart-imported • VERIFY ORIGINAL</span>':''}<small style="display:block;color:var(--muted)">${x.date||""} • ${x.sex||""} • ${x.facility||""} • ${x.referenceTemplate==="omega"?"Omega template":"Generic"}</small></div>
     <div><span class="pill ${abn.length?"red":"green"}">${abn.length} flagged</span> <button class="action-btn edit-btn" onclick="editLabInterpretation(${i})">Edit</button><button class="action-btn delete-btn" onclick="deleteLabInterpretation(${i})">Delete</button></div></div>
     <div class="saved-panel-body">${chips||'<span class="muted">No numeric results entered.</span>'}${x.attachment?.name?`<p><b>Attachment:</b> ${x.attachment.name} ${x.attachment.id?`<button class="local-file-action" onclick="openLocalAttachment('${x.attachment.id}')">Open</button><button class="local-file-action" onclick="downloadLocalAttachment('${x.attachment.id}')">Download</button>`:""}</p>`:""}${x.remarks?`<p><b>Remarks:</b> ${x.remarks}</p>`:""}</div>
    </div>`;
  }).join("");
+}
+
+
+let smartImportMapped={};
+const testAliases={
+ "Hemoglobin":["hemoglobin","haemoglobin","hb"],
+ "RBC count":["rbc count","total rbc","rbc"],
+ "Hematocrit / PCV":["hematocrit","haematocrit","pcv","hct"],
+ "MCV":["mcv"],"MCH":["mch"],"MCHC":["mchc"],"RDW":["rdw","rdw-cv"],
+ "Total WBC":["total wbc","wbc count","tlc","total leukocyte count"],
+ "Neutrophils":["neutrophils","neutrophil"],"Lymphocytes":["lymphocytes","lymphocyte"],
+ "Eosinophils":["eosinophils","eosinophil"],"Monocytes":["monocytes","monocyte"],
+ "Platelets":["platelet count","platelets"],
+ "Total Bilirubin":["total bilirubin","bilirubin total"],
+ "Direct Bilirubin":["direct bilirubin","bilirubin direct"],
+ "AST (SGOT)":["ast","sgot"],"ALT (SGPT)":["alt","sgpt"],"ALP":["alkaline phosphatase","alp"],"GGT":["ggt","gamma gt"],
+ "Albumin":["albumin"],"Total Protein":["total protein"],
+ "Serum Creatinine":["serum creatinine","creatinine"],"eGFR":["egfr","estimated gfr"],
+ "Urea":["urea"],"BUN":["bun","blood urea nitrogen"],"Uric Acid":["uric acid"],
+ "Sodium":["sodium"],"Potassium":["potassium"],"Urine Albumin/Creatinine Ratio":["uacr","albumin creatinine ratio","acr"],
+ "Fasting Plasma Glucose":["fasting plasma glucose","fasting blood sugar","fbs","fasting glucose"],
+ "2-hour Postprandial Glucose":["ppbs","postprandial glucose","post prandial blood sugar"],
+ "HbA1c":["hba1c","glycated hemoglobin","glycosylated hemoglobin"],
+ "Total Cholesterol":["total cholesterol","cholesterol total"],"LDL-C":["ldl","ldl cholesterol"],
+ "HDL-C":["hdl","hdl cholesterol"],"Triglycerides":["triglycerides","tg"],"Non-HDL-C":["non hdl","non-hdl"],
+ "TSH":["tsh","thyroid stimulating hormone"],"Free T4":["free t4","ft4"],"Free T3":["free t3","ft3"],"Anti-TPO Antibody":["anti tpo","anti-tpo","tpo antibody"],
+ "Ferritin":["ferritin"],"Vitamin B12":["vitamin b12","b12"],"Folate":["folate","folic acid"],
+ "25-OH Vitamin D":["25-oh vitamin d","vitamin d","25 hydroxy vitamin d"],"Calcium":["calcium"],"Phosphorus":["phosphorus","phosphate"],
+ "CRP":["crp","c reactive protein"],"ESR":["esr","erythrocyte sedimentation rate"],
+ "Rheumatoid Factor":["rheumatoid factor","ra factor","rf"],"Anti-CCP Antibody":["anti ccp","anti-ccp","ccp antibody"],
+ "FSH":["fsh","follicle stimulating hormone"],"LH":["lh","luteinizing hormone"],"Estradiol (E2)":["estradiol","e2"],
+ "Progesterone":["progesterone"],"Prolactin":["prolactin"],"AMH":["amh","anti mullerian hormone","anti-mullerian hormone"],
+ "Total Testosterone":["total testosterone","testosterone total"],"Free Testosterone":["free testosterone"],
+ "DHEA-S":["dheas","dhea-s"],"SHBG":["shbg","sex hormone binding globulin"],
+ "Morning Cortisol":["cortisol"],"ACTH":["acth"],
+ "High-sensitivity Troponin":["troponin","hs troponin","high sensitivity troponin"],"CK-MB":["ck-mb","ckmb"],
+ "BNP":["bnp"],"NT-proBNP":["nt-probnp","nt probnp"],
+ "PT":["prothrombin time"," pt "],"INR":["inr"],"aPTT":["aptt","a ptt"],"D-dimer":["d-dimer","d dimer"],"Fibrinogen":["fibrinogen"],
+ "Amylase":["amylase"],"Lipase":["lipase"],"PSA":["psa","prostate specific antigen"]
+};
+
+Object.assign(testAliases,{"Basophils":["basophils"],"Absolute Neutrophils":["absolute neutrophils"],"Absolute Lymphocytes":["absolute lymphocytes"],"Absolute Eosinophils":["absolute eosinophils"],"Absolute Monocytes":["absolute monocytes"],"Absolute Basophils":["absolute basophils"],"RDW-SD":["rdw-sd","rdw sd"],"Plateletcrit (PCT)":["plateletcrit","pct"],"MPV":["mpv"],"PDW":["pdw"],"P-LCR":["p-lcr","plcr"],"P-LCC":["p-lcc","plcc"],"Estimated Average Glucose":["estimated average glucose"],"Indirect Bilirubin":["bilirubin indirect","indirect bilirubin"],"SGOT/SGPT Ratio":["sgot/sgpt ratio","ast/alt ratio"],"Globulin":["globulin"],"A:G Ratio":["a : g ratio","a:g ratio","a/g ratio"],"Unsaturated Iron Binding Capacity":["unsaturated iron binding capacity","uibc"],"Transferrin Saturation":["transferrin saturation"],"BUN/Creatinine Ratio":["bun/creatinine ratio","bun/creatnine ratio"],"Urea/Creatinine Ratio":["urea / creatinine","urea/creatinine"],"Chloride":["serum chloride","chloride"],"VLDL-C":["vldl cholesterol","vldl"],"Cholesterol/HDL Ratio":["cholesterol/hdl ratio"],"LDL/HDL Ratio":["ldl/hdl ratio"],"Total T3":["t3"],"Total T4":["t4"],"Urine RBC":["rbc nill","rbc nil","urine rbc"],"Epithelial Cells":["epithelial cell","epithelial cells"],"Casts":["cast"],"Crystals":["crystal"],"Bacteria":["bacteria"]});
+function normalizeReportText(t){return (t||"").replace(/\r/g,"\n").replace(/[ \t]+/g," ").replace(/\n{2,}/g,"\n")}
+function escapeRegex(s){return s.replace(/[.*+?^${}()|[\]\\]/g,"\\$&")}
+function mapReportText(text){
+ smartImportMapped={};const normalized=normalizeReportText(text),lower=normalized.toLowerCase();
+ Object.entries(testAliases).forEach(([canonical,aliases])=>{
+   let best=null;
+   for(const alias of aliases){
+     const re=new RegExp(`(?:^|\\n|\\s)${escapeRegex(alias)}\\s*[:\\-]?\\s*([<>]?\\s*\\d+(?:\\.\\d+)?)`,"i");
+     const m=normalized.match(re);
+     if(m){best=m[1].replace(/\s/g,"");break}
+   }
+   if(best!==null)smartImportMapped[canonical]=best;
+ });
+ renderSmartImportMatches();
+ return smartImportMapped;
+}
+function renderSmartImportMatches(){
+ if(!$("smartImportMatches"))return;
+ const arr=Object.entries(smartImportMapped);
+ $("smartImportMatches").innerHTML=arr.length?arr.map(([k,val])=>`<div class="match-row"><b>${k}</b><span>${val}</span><span>Recognized</span><span>Verify</span></div>`).join(""):"No known tests mapped yet.";
+}
+async function extractPdfText(file){
+ if(!window.pdfjsLib)throw new Error("PDF reader library did not load. Check internet and retry.");
+ pdfjsLib.GlobalWorkerOptions.workerSrc="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
+ const buf=await file.arrayBuffer(),pdf=await pdfjsLib.getDocument({data:buf}).promise;let text="";
+ for(let i=1;i<=pdf.numPages;i++){const page=await pdf.getPage(i),content=await page.getTextContent();text+=content.items.map(x=>x.str).join(" ")+"\\n";}
+ return text;
+}
+async function extractImageText(file){
+ if(!window.Tesseract)throw new Error("OCR library did not load. Check internet and retry.");
+ const result=await Tesseract.recognize(file,"eng",{logger:m=>{if($("smartImportProgress")&&m.status)$("smartImportProgress").textContent=`OCR: ${m.status} ${m.progress?Math.round(m.progress*100)+"%":""}`}});
+ return result.data.text||"";
+}
+async function runSmartImport(){
+ const file=$("smartReportFile")?.files?.[0];
+ if(!file){$("smartImportProgress").textContent="Choose a PDF/image first.";return}
+ $("smartImportProgress").textContent=`Reading ${file.name}...`;
+ try{
+   let text="";
+   if(file.type==="application/pdf"||file.name.toLowerCase().endsWith(".pdf"))text=await extractPdfText(file);
+   else text=await extractImageText(file);
+   $("smartImportText").value=normalizeReportText(text);
+   const mapped=mapReportText(text);
+   $("smartImportProgress").textContent=`Finished. ${Object.keys(mapped).length} known test value(s) recognized. Review before applying.`;
+ }catch(e){$("smartImportProgress").textContent=`Import failed: ${e.message}. You can paste report text manually and use Map pasted text.`}
+}
+function mapPastedReportText(){
+ const text=v("smartImportText");const mapped=mapReportText(text);
+ $("smartImportProgress").textContent=`Mapped ${Object.keys(mapped).length} known test value(s) from text.`;
+}
+function applySmartImportToPanels(){
+ const matches=[];
+ Object.entries(labPanels).forEach(([panelKey,panel])=>{
+   const found={};
+   panel.params.forEach(p=>{
+     const val=smartImportMapped[p.name];
+     if(val!==undefined)found[p.id]=val;
+   });
+   if(Object.keys(found).length)matches.push({panelKey,found});
+ });
+ if(!matches.length){$("smartImportProgress").textContent="No mapped values matched panel slots.";return}
+ // Save as draft panel records so all profiles are available without retyping
+ matches.forEach(({panelKey,found})=>{
+   const panel=labPanels[panelKey],values={};
+   panel.params.forEach(p=>{
+     const val=found[p.id]??"";
+     const oldPanel=currentLabPanel;currentLabPanel=panelKey;const om=omegaRefFor(panelKey,p,v("liSex")||db.profile.sex||"Male");values[p.id]={name:p.name,unit:om?.unit||p.unit,value:val,ref:refRangeFor(p,v("liSex")||db.profile.sex||"Male"),status:autoStatus(val,p,v("liSex")||db.profile.sex||"Male"),remark:val!==""?"Smart-imported; verify with original report.":"",meaning:p.meaning,referenceSource:"Omega Diagnostics sample-derived",imported:val!==""};currentLabPanel=oldPanel;
+   });
+   db.labInterpretations.unshift({panel:panelKey,title:panel.title,system:panel.system,date:v("liDate")||today(),sex:v("liSex")||db.profile.sex||"Male",facility:v("liFacility")||"",context:"Smart imported full report — VERIFY",remarks:"Smart-imported; verify with original report. Auto-mapped from uploaded/pasted report. Verify every value, unit and reference range before clinical use.",referenceTemplate:"omega",smartImported:true,attachment:null,values});
+ });
+ persist();
+ $("smartImportProgress").textContent=`Applied recognized values into ${matches.length} panel draft(s). Open Saved Diagnostic Panels and verify each entry.`;
+}
+function clearSmartImport(){
+ if($("smartReportFile"))$("smartReportFile").value="";
+ if($("smartImportText"))$("smartImportText").value="";
+ smartImportMapped={};renderSmartImportMatches();
+ if($("smartImportProgress"))$("smartImportProgress").textContent="No report selected.";
 }
 
 const systems=[

@@ -101,3 +101,37 @@ Important: built-in reference intervals are examples. The laboratory's own refer
 - Actual selected PDF/image is stored locally in IndexedDB and can be opened/downloaded from a saved diagnostic panel.
 - Built-in ranges remain editable and laboratory-specific ranges should take precedence.
 - No login/authentication code changed.
+
+
+## V6 Smart Lab Library
+New panel families:
+- Arthritis / Autoimmune
+- Fever / Infectious work-up
+- Female hormonal / reproductive
+- Male hormonal / androgen
+- Female infertility evaluation
+- Male fertility / semen profile
+- Adrenal / stress hormones
+- Cardiac biomarkers
+- Coagulation / thrombosis
+- Pancreatic enzymes
+- Vitamin / micronutrient
+- Viral / blood-borne infection screen
+- Tumor-marker tracking (explicitly not general screening)
+
+Smart Report Import:
+- Digital PDF text extraction using pdf.js in the browser
+- Image/screenshot OCR using Tesseract.js in the browser
+- Alias-based test name recognition
+- Auto-map recognized values into matching panels as DRAFTS
+- Mandatory human verification before clinical use
+
+Reference intervals are examples and may vary by lab, assay, age, sex, cycle day, pregnancy, medicines and clinical context. Use the printed laboratory range when available.
+
+
+## V6.1 Omega Diagnostics Lab Template
+- Selectable Omega Diagnostics sample-derived reference template based on the uploaded 14-page report.
+- Patient result values are not installed as defaults; reusable test names, units and printed reference intervals are used.
+- Expanded CBC, LFT, RFT, Iron, Lipid, Urine, Thyroid, Vitamin D/B12 and eAG slots to match the report.
+- Smart-imported values are labelled: `Smart-imported; verify with original report.`
+- RDW-SD and SGOT/SGPT ratio printed ranges that appear internally unusual are flagged VERIFY rather than trusted automatically.
