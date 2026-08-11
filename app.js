@@ -1,4 +1,4 @@
-const APP_VERSION="V6.5";
+const APP_VERSION="V6.6";
 const APP_BUILD_DATE="2026-08-11";
 
 const KEY="raj_health_360_v2";
@@ -544,11 +544,13 @@ async function saveLabInterpretation(){
    if($("archiveSaveStatus")){$("archiveSaveStatus").textContent="Panel archived successfully";$("archiveSaveStatus").className="archive-status-ok"}
    renderSavedLabPanels();await renderReportArchive();generateFullBodySummary();renderTimeline();generateCurrentPanelSummary();
    if($("liEditIndex"))$("liEditIndex").value="";
+   alert("Interpreted panel saved successfully to Patient Report Archive.");
  }catch(e){
    console.error("Panel save failed",e);
    if(status){status.textContent="Save failed: "+(e?.message||e);status.className="file-name save-error"}
    if($("archiveSaveStatus")){$("archiveSaveStatus").textContent="Save failed: "+(e?.message||e);$("archiveSaveStatus").className="archive-status-error"}
-   alert("Unable to save this panel. The app kept your current screen data. Please use Backup JSON now, then retry.");
+   try{emergencySaveCurrentReport("panel-save-failed")}catch(_){}
+   alert("Panel archive save failed, but an Emergency JSON backup has been downloaded so your work is not lost. Close duplicate RAJ HEALTH 360 tabs, reopen this page, and retry.");
  }
 }
 function editLabInterpretation(i){
@@ -564,31 +566,49 @@ function resetLabInterpretation(){
 
 async function saveFullBodyReportArchive(){
  const status=$("archiveSaveStatus");
+ if(status){status.textContent="Saving full-body report…";status.className=""}
  try{
    const patient=currentPatientInfo();
-   let records=(db.labInterpretations||[]).filter(x=>{
-     const sameDate=(x.date===(v("liDate")||today()));
-     const sameAtt=pendingFiles.li?.name ? x.attachment?.name===pendingFiles.li.name : true;
-     return sameDate&&sameAtt;
-   });
-   if(!records.length){
-     // At minimum save current panel first.
-     await saveLabInterpretation();
-     records=(db.labInterpretations||[]).filter(x=>x.date===(v("liDate")||today()));
-   }
+   const date=v("liDate")||today();
+   const attachmentName=pendingFiles.li?.name||activeImportedAttachmentName||"";
    const panels={};
-   records.forEach(x=>{if(x.panel)panels[x.panel]=x});
+
+   // 1) Use imported in-memory panel drafts first
+   (db.labInterpretations||[]).forEach(x=>{
+     const sameDate=x.date===date;
+     const sameAttachment=attachmentName ? x.attachment?.name===attachmentName : true;
+     if(sameDate&&sameAttachment&&x.panel)panels[x.panel]=x;
+   });
+
+   // 2) Always capture the currently visible/edited panel
+   panels[currentLabPanel]={
+     panel:currentLabPanel,title:labPanels[currentLabPanel].title,system:labPanels[currentLabPanel].system,
+     date,sex:v("liSex")||"Male",facility:v("liFacility"),context:v("liContext"),
+     remarks:v("liRemarks"),attachment:pendingFiles.li||panels[currentLabPanel]?.attachment||null,
+     values:collectCurrentPanelValues(),patient,patientKey:patient.key,
+     referenceTemplate:v("liLabTemplate")||"omega",smartImported:true,
+     updated:new Date().toISOString()
+   };
+
+   if(!Object.keys(panels).length)throw new Error("No interpreted panel data is available to archive.");
    const id=makeReportId("fullbody");
    const record={
-     id,type:"fullbody",title:"Full Body Laboratory Report",date:v("liDate")||today(),
+     id,type:"fullbody",title:"Full Body Laboratory Report",date,
      patient,patientKey:patient.key,facility:v("liFacility"),context:v("liContext"),
-     attachment:pendingFiles.li||records.find(x=>x.attachment)?.attachment||null,
+     attachment:pendingFiles.li||Object.values(panels).find(x=>x.attachment)?.attachment||null,
      panels,remarks:v("liRemarks"),created:new Date().toISOString(),updated:new Date().toISOString()
    };
-   await putReportRecord(record);updateLocalReportIndex(record);
-   if(status){status.textContent=`✓ Full-body report archived: ${Object.keys(panels).length} panel(s) • ${record.date}`;status.className="archive-status-ok"}
+   await putReportRecord(record);
+   updateLocalReportIndex(record);
+   if(status){status.textContent=`✓ SAVED: Full-body report • ${Object.keys(panels).length} panel(s) • ${date}`;status.className="archive-status-ok"}
    await renderReportArchive();
- }catch(e){console.error(e);if(status){status.textContent="Full-body save failed: "+e.message;status.className="archive-status-error"}}
+   alert(`Full-body report saved successfully with ${Object.keys(panels).length} panel(s).`);
+ }catch(e){
+   console.error("Full-body save failed",e);
+   if(status){status.textContent="Full-body save failed: "+e.message;status.className="archive-status-error"}
+   try{emergencySaveCurrentReport("fullbody-save-failed")}catch(_){}
+   alert("Full-body archive save failed, but an Emergency JSON backup was downloaded so the interpreted report is not lost. Close duplicate RAJ HEALTH 360 tabs, reload, and retry.");
+ }
 }
 function summarizePanelRecord(x){
  const vals=Object.values(x?.values||{}).filter(v=>v.value!==""&&v.value!=null);
@@ -1339,21 +1359,17 @@ let precisionImportAudit=[];
 const FILE_DB_NAME="raj_health_360_files";
 const FILE_STORE="attachments";
 const REPORT_STORE="lab_reports";
+const REPORT_DB_NAME="RAJ_HEALTH_360_REPORT_ARCHIVE_V1";
 function openFileDB(){
  return new Promise((resolve,reject)=>{
-   const req=indexedDB.open(FILE_DB_NAME,2);
+   const req=indexedDB.open(FILE_DB_NAME,1);
    req.onupgradeneeded=()=>{
      const dbi=req.result;
      if(!dbi.objectStoreNames.contains(FILE_STORE))dbi.createObjectStore(FILE_STORE,{keyPath:"id"});
-     if(!dbi.objectStoreNames.contains(REPORT_STORE)){
-       const store=dbi.createObjectStore(REPORT_STORE,{keyPath:"id"});
-       store.createIndex("patientKey","patientKey",{unique:false});
-       store.createIndex("date","date",{unique:false});
-       store.createIndex("type","type",{unique:false});
-     }
    };
    req.onsuccess=()=>resolve(req.result);
-   req.onerror=()=>reject(req.error);
+   req.onerror=()=>reject(req.error||new Error("Attachment database could not open"));
+   req.onblocked=()=>reject(new Error("Attachment database is blocked. Close other RAJ HEALTH 360 tabs and retry."));
  });
 }
 async function saveBlobToLocalVault(file){
@@ -1363,43 +1379,124 @@ async function saveBlobToLocalVault(file){
 }
 async function getLocalAttachment(id){const dbi=await openFileDB();const rec=await new Promise((resolve,reject)=>{const r=dbi.transaction(FILE_STORE,"readonly").objectStore(FILE_STORE).get(id);r.onsuccess=()=>resolve(r.result);r.onerror=()=>reject(r.error)});dbi.close();return rec}
 
-async function putReportRecord(record){
- const dbi=await openFileDB();
- await new Promise((resolve,reject)=>{
-   const tx=dbi.transaction(REPORT_STORE,"readwrite");
-   tx.objectStore(REPORT_STORE).put(record);
-   tx.oncomplete=()=>resolve();
-   tx.onerror=()=>reject(tx.error||new Error("IndexedDB report save failed"));
-   tx.onabort=()=>reject(tx.error||new Error("IndexedDB report save aborted"));
+function openReportDB(){
+ return new Promise((resolve,reject)=>{
+   const req=indexedDB.open(REPORT_DB_NAME,1);
+   req.onupgradeneeded=()=>{
+     const dbi=req.result;
+     if(!dbi.objectStoreNames.contains(REPORT_STORE)){
+       const store=dbi.createObjectStore(REPORT_STORE,{keyPath:"id"});
+       store.createIndex("patientKey","patientKey",{unique:false});
+       store.createIndex("date","date",{unique:false});
+       store.createIndex("type","type",{unique:false});
+     }
+   };
+   req.onsuccess=()=>{
+     const dbi=req.result;
+     if(!dbi.objectStoreNames.contains(REPORT_STORE)){
+       dbi.close();reject(new Error("Report store was not created. Please close other tabs and retry."));
+       return;
+     }
+     resolve(dbi);
+   };
+   req.onerror=()=>reject(req.error||new Error("Report archive database could not open"));
+   req.onblocked=()=>reject(new Error("Report archive database is blocked by another open RAJ HEALTH 360 tab. Close duplicate tabs and retry."));
  });
- dbi.close();
- return record;
+}
+async function putReportRecord(record){
+ const dbi=await openReportDB();
+ try{
+   await new Promise((resolve,reject)=>{
+     const tx=dbi.transaction(REPORT_STORE,"readwrite");
+     const req=tx.objectStore(REPORT_STORE).put(record);
+     req.onerror=()=>reject(req.error||new Error("Report record could not be written"));
+     tx.oncomplete=()=>resolve();
+     tx.onerror=()=>reject(tx.error||new Error("Report save transaction failed"));
+     tx.onabort=()=>reject(tx.error||new Error("Report save transaction was aborted"));
+   });
+   // verify write immediately
+   const verify=await new Promise((resolve,reject)=>{
+     const tx=dbi.transaction(REPORT_STORE,"readonly");
+     const req=tx.objectStore(REPORT_STORE).get(record.id);
+     req.onsuccess=()=>resolve(req.result);req.onerror=()=>reject(req.error);
+   });
+   if(!verify)throw new Error("Save verification failed: record was not found after write.");
+   return verify;
+ } finally {dbi.close()}
 }
 async function getReportRecord(id){
- const dbi=await openFileDB();
- const rec=await new Promise((resolve,reject)=>{
-   const r=dbi.transaction(REPORT_STORE,"readonly").objectStore(REPORT_STORE).get(id);
-   r.onsuccess=()=>resolve(r.result); r.onerror=()=>reject(r.error);
- });
- dbi.close();return rec;
+ const dbi=await openReportDB();
+ try{
+   return await new Promise((resolve,reject)=>{
+     const r=dbi.transaction(REPORT_STORE,"readonly").objectStore(REPORT_STORE).get(id);
+     r.onsuccess=()=>resolve(r.result);r.onerror=()=>reject(r.error);
+   });
+ } finally {dbi.close()}
 }
 async function getAllReportRecords(){
- const dbi=await openFileDB();
- const rows=await new Promise((resolve,reject)=>{
-   const r=dbi.transaction(REPORT_STORE,"readonly").objectStore(REPORT_STORE).getAll();
-   r.onsuccess=()=>resolve(r.result||[]); r.onerror=()=>reject(r.error);
- });
- dbi.close();return rows;
+ const dbi=await openReportDB();
+ try{
+   return await new Promise((resolve,reject)=>{
+     const r=dbi.transaction(REPORT_STORE,"readonly").objectStore(REPORT_STORE).getAll();
+     r.onsuccess=()=>resolve(r.result||[]);r.onerror=()=>reject(r.error);
+   });
+ } finally {dbi.close()}
 }
 async function deleteReportRecord(id){
- const dbi=await openFileDB();
- await new Promise((resolve,reject)=>{
-   const tx=dbi.transaction(REPORT_STORE,"readwrite");
-   tx.objectStore(REPORT_STORE).delete(id);
-   tx.oncomplete=resolve;tx.onerror=()=>reject(tx.error);
- });
- dbi.close();
+ const dbi=await openReportDB();
+ try{
+   await new Promise((resolve,reject)=>{
+     const tx=dbi.transaction(REPORT_STORE,"readwrite");
+     tx.objectStore(REPORT_STORE).delete(id);
+     tx.oncomplete=resolve;tx.onerror=()=>reject(tx.error);
+   });
+ } finally {dbi.close()}
 }
+async function checkReportStorageHealth(){
+ const el=$("reportStorageHealth");if(el)el.textContent="Testing report archive…";
+ try{
+   const test={id:"__healthcheck__",type:"test",date:today(),patientKey:"test",created:new Date().toISOString()};
+   await putReportRecord(test);
+   await deleteReportRecord(test.id);
+   if(el){el.textContent="✓ Report archive storage is working. Interpreted panels and full-body reports can be saved on this device.";el.className="summary-box archive-status-ok"}
+   return true;
+ }catch(e){
+   console.error("Storage health check failed",e);
+   if(el){el.textContent="✕ Report archive storage is not available: "+e.message+" Use Emergency Save JSON and close duplicate app tabs before retrying.";el.className="summary-box archive-status-error"}
+   return false;
+ }
+}
+
+function buildCurrentReportSnapshot(){
+ const patient=currentPatientInfo();
+ const currentValues=collectCurrentPanelValues();
+ const panels={};
+ (db.labInterpretations||[]).filter(x=>x.date===(v("liDate")||today())).forEach(x=>{if(x.panel)panels[x.panel]=x});
+ panels[currentLabPanel]={
+   panel:currentLabPanel,title:labPanels[currentLabPanel]?.title||currentLabPanel,
+   system:labPanels[currentLabPanel]?.system||"",date:v("liDate")||today(),
+   sex:v("liSex"),facility:v("liFacility"),context:v("liContext"),remarks:v("liRemarks"),
+   patient,patientKey:patient.key,attachment:pendingFiles.li||null,values:currentValues
+ };
+ return {
+   format:"RAJ_HEALTH_360_EMERGENCY_REPORT_BACKUP",
+   appVersion:APP_VERSION,created:new Date().toISOString(),
+   patient,date:v("liDate")||today(),facility:v("liFacility"),attachment:pendingFiles.li||null,
+   currentPanel:currentLabPanel,panels
+ };
+}
+function emergencySaveCurrentReport(reason="manual"){
+ const snapshot=buildCurrentReportSnapshot();snapshot.reason=reason;
+ const blob=new Blob([JSON.stringify(snapshot,null,2)],{type:"application/json"});
+ const a=document.createElement("a");
+ a.href=URL.createObjectURL(blob);
+ const safe=(snapshot.patient.name||snapshot.patient.patientId||"PATIENT").replace(/[^a-z0-9_-]+/gi,"_");
+ a.download=`RAJ_HEALTH_EMERGENCY_${safe}_${snapshot.date}_${Date.now()}.json`;
+ document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),2000);
+ const s=$("archiveSaveStatus");if(s){s.textContent="✓ Emergency JSON saved. Your interpreted data has a recoverable backup.";s.className="archive-status-ok"}
+ return snapshot;
+}
+
 function currentPatientInfo(){
  const name=v("liPatientName")||db.profile?.name||"";
  const patientId=v("liPatientId")||"";
@@ -1861,3 +1958,5 @@ setTimeout(()=>{safeRun("Lab independent buttons",renderLabPanelButtons);safeRun
 if($("liSex"))$("liSex").addEventListener("change",()=>renderLabParameters());
 
 if($("liFacility"))$("liFacility").addEventListener("input",()=>{autoSelectOmegaTemplate();renderLabParameters()});
+
+setTimeout(()=>{if($("reportStorageHealth"))checkReportStorageHealth()},800);

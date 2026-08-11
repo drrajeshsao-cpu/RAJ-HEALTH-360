@@ -198,3 +198,14 @@ Future rule: every release should update this visible version/build label before
 - On supported mobile browsers, Share can send the generated PDF through the native share sheet (including WhatsApp if available).
 - Browser WhatsApp deep links cannot reliably attach a generated PDF automatically on desktop; use Share PDF/native share or download PDF then attach it in WhatsApp.
 - Keeps the visible version label: V6.5 • Build 2026-08-11.
+
+
+## V6.6 Reliable Save — isolated report database
+- Reports no longer share or migrate the attachment IndexedDB schema.
+- New independent report database: `RAJ_HEALTH_360_REPORT_ARCHIVE_V1`.
+- Write verification occurs immediately after each IndexedDB save.
+- Storage Health Test is visible in Lab Interpreters.
+- Save Full Body Report now captures in-memory imported panels even if individual panel save has not yet succeeded.
+- Added Emergency Save JSON. If IndexedDB saving fails, the app automatically downloads a recoverable JSON snapshot so interpreted work is not lost.
+- Successful panel/full-body saves now show explicit confirmation.
+- If storage reports "blocked", close duplicate RAJ HEALTH 360 tabs and retry.

@@ -184,3 +184,6 @@ footer{text-align:center;color:var(--muted);font-size:11px;padding:24px}
 .archive-status-ok{color:#166534;font-weight:900}.archive-status-error{color:#b91c1c;font-weight:900}
 @media(max-width:800px){.patient-report-strip{grid-template-columns:1fr 1fr}.archive-head{align-items:flex-start;flex-direction:column}}
 @media(max-width:520px){.patient-report-strip{grid-template-columns:1fr}}
+
+.storage-health-card{border-left:5px solid #2563eb}
+.emergency-save{border-color:#f59e0b;color:#92400e;background:#fff7ed}
