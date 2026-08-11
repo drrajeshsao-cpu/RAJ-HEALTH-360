@@ -216,3 +216,14 @@ Future rule: every release should update this visible version/build label before
 - PDF/image blob-vault failure no longer prevents report parsing or interpreted-data saving.
 - Keeps selected file metadata and in-memory File object for analysis even when local attachment storage fails.
 - Version badge updated to V6.6.1.
+
+
+## V6.6.2 Attachment + Patient Archive Fix
+- Fresh independent original-file vault: RAJ_HEALTH_360_ATTACHMENT_VAULT_V2.
+- Attachment writes are verified by immediate read-back.
+- Original PDF/Image can be opened and downloaded later.
+- Patient reports no longer default to the clinician name.
+- Patient archive uses Patient Name / ID-UHID / Mobile.
+- Omega report header attempts to auto-fill patient name, age, sex, phone and patient ID.
+- Permanent save warns if patient identity is blank.
+- Separate attachment storage health test added.

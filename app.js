@@ -1,5 +1,5 @@
-const APP_VERSION="V6.6.1";
-const APP_BUILD_DATE="2026-08-11";
+const APP_VERSION="V6.6.2";
+const APP_BUILD_DATE="2026-08-12";
 
 const KEY="raj_health_360_v2";
 const defaultDB={
@@ -520,7 +520,7 @@ async function saveLabInterpretation(){
  try{
    const vals=collectCurrentPanelValues();
    if(!Object.keys(vals).length){alert("No parameters are loaded. Please select a test panel first.");return}
-   const patient=currentPatientInfo();
+   const patient=validatePatientForArchive(); if(!patient)return;
    const existingIdx=v("liEditIndex");
    let existingLocal=existingIdx!=="" ? db.labInterpretations[+existingIdx] : null;
    const id=existingLocal?.archiveId||makeReportId("panel");
@@ -568,7 +568,7 @@ async function saveFullBodyReportArchive(){
  const status=$("archiveSaveStatus");
  if(status){status.textContent="Saving full-body report…";status.className=""}
  try{
-   const patient=currentPatientInfo();
+   const patient=validatePatientForArchive(); if(!patient)return;
    const date=v("liDate")||today();
    const attachmentName=pendingFiles.li?.name||activeImportedAttachmentName||"";
    const panels={};
@@ -670,7 +670,7 @@ async function renderReportArchive(patientOnly=false){
            <button class="action-btn" onclick="whatsAppArchivedReport('${r.id}')">WhatsApp</button>
            <button class="action-btn delete-btn" onclick="removeArchivedReport('${r.id}')">Delete</button>
          </div>
-       </div><div class="archive-body">${chips}${r.attachment?.name?`<p><b>Original report:</b> ${r.attachment.name} ${r.attachment.id?`<button class="local-file-action" onclick="openLocalAttachment('${r.attachment.id}')">Open original</button>`:""}</p>`:""}</div>
+       </div><div class="archive-body">${chips}${r.attachment?.name?`<p><b>Original report:</b> ${r.attachment.name} ${r.attachment.id?`<button class="local-file-action" onclick="openLocalAttachment('${r.attachment.id}')">Open original</button> <button class="local-file-action" onclick="downloadLocalAttachment('${r.attachment.id}')">Download original</button>`:""}</p>`:""}</div>
      </div>`;
    }).join("");
  }catch(e){console.error(e);$("reportArchiveList").innerHTML=`<p class="save-error">Archive could not be loaded: ${e.message}</p>`}
@@ -1201,6 +1201,17 @@ function saveSmartDraftsWithAttachment(){
  return matches;
 }
 
+function autoFillPatientFromReportText(text){
+ const t=String(text||"").replace(/\s+/g," ");
+ const age=t.match(/Age\/Gender\s*[:\-]\s*(\d{1,3})\s*Year\s*\/\s*(Male|Female)/i);
+ const phone=t.match(/Phone No\.?\s*[:\-]\s*(\d{10,12})/i);
+ const pid=t.match(/Patient ID\s*[:\-]\s*([A-Za-z0-9_-]+)/i);
+ const name=t.match(/Name\s*[:\-]\s*(?:Mrs\.|Mr\.|Ms\.|Dr\.)?\s*([A-Za-z .]+?)(?=\s+Age\/Gender)/i);
+ if(name&&$("liPatientName")&&!v("liPatientName"))$("liPatientName").value=name[1].trim();
+ if(age){if($("liPatientAge")&&!v("liPatientAge"))$("liPatientAge").value=age[1];if($("liSex"))$("liSex").value=age[2]}
+ if(phone&&$("liPatientMobile")&&!v("liPatientMobile"))$("liPatientMobile").value=phone[1];
+ if(pid&&$("liPatientId")&&!v("liPatientId"))$("liPatientId").value=pid[1];
+}
 async function analyzeAttachedLabReport(){
  const status=$("liAnalyzeStatus");
  const file=lastLabUploadFile || $("liFile")?.files?.[0] || $("liCamera")?.files?.[0];
@@ -1231,6 +1242,7 @@ async function analyzeAttachedLabReport(){
    }
 
    if($("smartImportText"))$("smartImportText").value=normalizeReportText(text);
+   autoFillPatientFromReportText(text);
    if(!Object.keys(smartImportMapped).length && mode!=="legacy-fuzzy"){
      // Controlled fallback, clearly lower confidence.
      mapReportText(text);
@@ -1385,24 +1397,39 @@ let precisionImportAudit=[];
 
 const FILE_DB_NAME="raj_health_360_files";
 const FILE_STORE="attachments";
+const ATTACHMENT_DB_NAME="RAJ_HEALTH_360_ATTACHMENT_VAULT_V2";
 const REPORT_STORE="lab_reports";
 const REPORT_DB_NAME="RAJ_HEALTH_360_REPORT_ARCHIVE_V1";
 function openFileDB(){
  return new Promise((resolve,reject)=>{
-   const req=indexedDB.open(FILE_DB_NAME,1);
-   req.onupgradeneeded=()=>{
-     const dbi=req.result;
-     if(!dbi.objectStoreNames.contains(FILE_STORE))dbi.createObjectStore(FILE_STORE,{keyPath:"id"});
-   };
-   req.onsuccess=()=>resolve(req.result);
-   req.onerror=()=>reject(req.error||new Error("Attachment database could not open"));
-   req.onblocked=()=>reject(new Error("Attachment database is blocked. Close other RAJ HEALTH 360 tabs and retry."));
+  const req=indexedDB.open(ATTACHMENT_DB_NAME,1);
+  req.onupgradeneeded=()=>{
+   const d=req.result;
+   if(!d.objectStoreNames.contains(FILE_STORE))d.createObjectStore(FILE_STORE,{keyPath:"id"});
+  };
+  req.onsuccess=()=>resolve(req.result);
+  req.onerror=()=>reject(req.error||new Error("Attachment vault could not open"));
+  req.onblocked=()=>reject(new Error("Attachment vault blocked. Close duplicate RAJ HEALTH 360 tabs and retry."));
  });
 }
 async function saveBlobToLocalVault(file){
- const id=`att_${Date.now()}_${Math.random().toString(36).slice(2)}`;const dbi=await openFileDB();
- await new Promise((resolve,reject)=>{const tx=dbi.transaction(FILE_STORE,"readwrite");tx.objectStore(FILE_STORE).put({id,name:file.name,type:file.type,size:file.size,blob:file,created:new Date().toISOString()});tx.oncomplete=resolve;tx.onerror=()=>reject(tx.error)});
- dbi.close();return {id,name:file.name,type:file.type,size:file.size};
+ if(!file)throw new Error("No file selected");
+ const id=`att_${Date.now()}_${Math.random().toString(36).slice(2,8)}`;
+ const dbi=await openFileDB();
+ try{
+  const rec={id,name:file.name,type:file.type||"application/octet-stream",size:file.size,created:new Date().toISOString(),blob:file};
+  await new Promise((resolve,reject)=>{
+   const tx=dbi.transaction(FILE_STORE,"readwrite");
+   tx.objectStore(FILE_STORE).put(rec);
+   tx.oncomplete=resolve;tx.onerror=()=>reject(tx.error||new Error("Attachment write failed"));tx.onabort=()=>reject(tx.error||new Error("Attachment write aborted"));
+  });
+  const verify=await new Promise((resolve,reject)=>{
+   const r=dbi.transaction(FILE_STORE,"readonly").objectStore(FILE_STORE).get(id);
+   r.onsuccess=()=>resolve(r.result);r.onerror=()=>reject(r.error);
+  });
+  if(!verify?.blob)throw new Error("Attachment verification failed");
+  return {id,name:rec.name,type:rec.type,size:rec.size,created:rec.created,stored:true};
+ }finally{dbi.close()}
 }
 async function getLocalAttachment(id){const dbi=await openFileDB();const rec=await new Promise((resolve,reject)=>{const r=dbi.transaction(FILE_STORE,"readonly").objectStore(FILE_STORE).get(id);r.onsuccess=()=>resolve(r.result);r.onerror=()=>reject(r.error)});dbi.close();return rec}
 
@@ -1479,6 +1506,21 @@ async function deleteReportRecord(id){
    });
  } finally {dbi.close()}
 }
+async function checkAttachmentStorageHealth(){
+ const el=$("attachmentStorageHealth");
+ try{
+  if(el)el.textContent="Testing original-file attachment vault…";
+  const f=new File([new Blob(["test"],{type:"text/plain"})],"healthcheck.txt",{type:"text/plain"});
+  const meta=await saveBlobToLocalVault(f);
+  const rec=await getLocalAttachment(meta.id);
+  if(!rec?.blob)throw new Error("Read-back verification failed");
+  if(el){el.textContent="✓ Original PDF/Image attachment vault is working.";el.className="summary-box archive-status-ok"}
+  return true;
+ }catch(e){
+  if(el){el.textContent="✕ Attachment vault not available: "+e.message;el.className="summary-box archive-status-error"}
+  return false;
+ }
+}
 async function checkReportStorageHealth(){
  const el=$("reportStorageHealth");if(el)el.textContent="Testing report archive…";
  try{
@@ -1524,14 +1566,31 @@ function emergencySaveCurrentReport(reason="manual"){
  return snapshot;
 }
 
+async function downloadLocalAttachment(id){
+ try{
+  const rec=await getLocalAttachment(id);
+  if(!rec?.blob){alert("Original report not found in attachment vault.");return}
+  const url=URL.createObjectURL(rec.blob);
+  const a=document.createElement("a");a.href=url;a.download=rec.name||"original_report";a.click();
+  setTimeout(()=>URL.revokeObjectURL(url),2000);
+ }catch(e){alert("Unable to download original report: "+e.message)}
+}
 function currentPatientInfo(){
- const name=v("liPatientName")||db.profile?.name||"";
- const patientId=v("liPatientId")||"";
- const mobile=v("liPatientMobile")||"";
+ const name=(v("liPatientName")||"").trim();
+ const patientId=(v("liPatientId")||"").trim();
+ const mobile=(v("liPatientMobile")||"").trim();
  const age=v("liPatientAge")||"";
- const sex=v("liSex")||db.profile?.sex||"";
- const key=(patientId||mobile||name||"self").trim().toLowerCase().replace(/\\s+/g,"_");
+ const sex=v("liSex")||"";
+ const source=patientId||mobile||name||`unassigned_${v("liDate")||today()}`;
+ const key=source.toLowerCase().replace(/[^a-z0-9]+/g,"_").replace(/^_+|_+$/g,"");
  return {name,patientId,mobile,age,sex,key};
+}
+function validatePatientForArchive(){
+ const p=currentPatientInfo();
+ if(!p.name&&!p.patientId&&!p.mobile){
+  if(!confirm("Patient identity is blank. Enter Patient Name, ID/UHID or Mobile for follow-up. Save as Unassigned anyway?"))return null;
+ }
+ return p;
 }
 function makeReportId(prefix="rpt"){
  return `${prefix}_${Date.now()}_${Math.random().toString(36).slice(2,8)}`;
@@ -1987,4 +2046,4 @@ if($("liSex"))$("liSex").addEventListener("change",()=>renderLabParameters());
 
 if($("liFacility"))$("liFacility").addEventListener("input",()=>{autoSelectOmegaTemplate();renderLabParameters()});
 
-setTimeout(()=>{if($("reportStorageHealth"))checkReportStorageHealth()},800);
+setTimeout(()=>{if($("reportStorageHealth"))checkReportStorageHealth();if($("attachmentStorageHealth"))checkAttachmentStorageHealth()},800);
