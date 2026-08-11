@@ -1,0 +1,9 @@
+{
+  "name": "Raj Personal Health Tracker",
+  "short_name": "Raj Health",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#fffaf0",
+  "theme_color": "#f4b400",
+  "description": "Personal integrated health, Ayurveda and lifestyle tracker"
+}
