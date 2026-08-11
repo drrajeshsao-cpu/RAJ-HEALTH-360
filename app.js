@@ -2,7 +2,7 @@
 const KEY="raj_health_360_v2";
 const defaultDB={
  profile:{name:"",dob:"",sex:"Male",height:"",blood:"",allergy:"",conditions:"",emergency:"",goals:""},
- daily:[],labs:[],imaging:[],medicines:[],therapies:[],mind:[],habits:[],sleep:[],physician:[],experiments:[],preventive:[],vault:[],
+ daily:[],labs:[],imaging:[],medicines:[],therapies:[],mind:[],habits:[],sleep:[],physician:[],experiments:[],preventive:[],vault:[],labInterpretations:[],
  ayurveda:{prakriti:"Vata-Pitta",vikriti:"",agni:"Sama",koshta:"Madhyama",ama:"Absent",bala:"Madhyama",ashtavidha:{},dashavidha:{},dosha:{vata:5,pitta:5,kapha:5,note:""}},
  ritu:{auto:true,ritu:"Varsha",desha:"Sadharana"}, shatkriya:{stage:"Sanchaya",note:""}
 };
@@ -19,9 +19,293 @@ function showView(id){
  window.scrollTo({top:0,behavior:"smooth"})
 }
 document.querySelectorAll(".nav").forEach(x=>x.onclick=()=>showView(x.dataset.view));
-["tdDate","labDate","imgDate","txDate","msDate","slDate","phDate","exStart","pvDue","vlDate"].forEach(id=>{if($(id))$(id).value=today()});
+["tdDate","labDate","imgDate","txDate","msDate","slDate","phDate","exStart","pvDue","vlDate","liDate"].forEach(id=>{if($(id))$(id).value=today()});
 $("themeBtn").onclick=()=>document.body.classList.toggle("dark");
 $("backupBtn").onclick=exportData;
+
+
+const labPanels = {
+ "CBC":{
+  title:"Complete Blood Count (CBC)",system:"Hematology",
+  params:[
+   {id:"hb",name:"Hemoglobin",unit:"g/dL",male:[13,18],female:[12,16],meaning:"Oxygen-carrying protein; low values may indicate anemia, while high values require context such as hydration, altitude or erythrocytosis."},
+   {id:"rbc",name:"RBC count",unit:"million/µL",male:[4.5,5.9],female:[4.1,5.1],meaning:"Red-cell number; interpret with Hb, hematocrit and red-cell indices."},
+   {id:"hct",name:"Hematocrit / PCV",unit:"%",male:[41,53],female:[36,46],meaning:"Percentage of blood volume occupied by red cells; affected by anemia and hydration."},
+   {id:"mcv",name:"MCV",unit:"fL",all:[80,100],meaning:"Average RBC size; low suggests microcytosis, high suggests macrocytosis."},
+   {id:"mch",name:"MCH",unit:"pg",all:[27,33],meaning:"Average hemoglobin amount per red cell."},
+   {id:"mchc",name:"MCHC",unit:"g/dL",all:[32,36],meaning:"Hemoglobin concentration within red cells."},
+   {id:"rdw",name:"RDW",unit:"%",all:[11.5,14.5],meaning:"Variation in RBC size; elevated RDW can support mixed or evolving anemia patterns."},
+   {id:"wbc",name:"Total WBC",unit:"/µL",all:[4000,11000],meaning:"Total leukocyte count; interpret with symptoms and differential."},
+   {id:"neut",name:"Neutrophils",unit:"%",all:[40,70],meaning:"Often rise with acute inflammation/infection or stress; absolute count can be more informative."},
+   {id:"lymph",name:"Lymphocytes",unit:"%",all:[20,40],meaning:"Lymphocyte proportion; interpret with total WBC and absolute lymphocyte count."},
+   {id:"eos",name:"Eosinophils",unit:"%",all:[0,6],meaning:"Can rise in allergy, parasites and selected inflammatory conditions."},
+   {id:"mono",name:"Monocytes",unit:"%",all:[2,8],meaning:"Part of WBC differential; persistent abnormalities need clinical context."},
+   {id:"plt",name:"Platelets",unit:"/µL",all:[150000,450000],meaning:"Primary hemostasis; low or high values require clinical and trend review."}
+  ]
+ },
+ "LFT":{
+  title:"Liver Function / Liver Blood Tests",system:"Liver & Gallbladder",
+  params:[
+   {id:"tbili",name:"Total Bilirubin",unit:"mg/dL",all:[0.2,1.2],meaning:"Bilirubin handling/excretion; fractionation helps when elevated."},
+   {id:"dbili",name:"Direct Bilirubin",unit:"mg/dL",all:[0,0.3],meaning:"Conjugated bilirubin; helps characterize jaundice patterns."},
+   {id:"ast",name:"AST (SGOT)",unit:"U/L",all:[10,40],meaning:"Enzyme found in liver and other tissues; interpret with ALT and clinical context."},
+   {id:"alt",name:"ALT (SGPT)",unit:"U/L",all:[7,56],meaning:"More liver-focused transaminase; elevation suggests hepatocellular injury pattern."},
+   {id:"alp",name:"ALP",unit:"U/L",all:[44,147],meaning:"Can reflect cholestasis or bone turnover; interpret with GGT and context."},
+   {id:"ggt",name:"GGT",unit:"U/L",male:[8,61],female:[5,36],meaning:"Supports hepatobiliary/cholestatic interpretation; affected by alcohol and medications."},
+   {id:"albumin",name:"Albumin",unit:"g/dL",all:[3.5,5.0],meaning:"Synthetic/nutritional marker; low values have hepatic and non-hepatic causes."},
+   {id:"protein",name:"Total Protein",unit:"g/dL",all:[6.0,8.3],meaning:"Albumin plus globulins; interpret alongside albumin and clinical state."}
+  ]
+ },
+ "RFT":{
+  title:"Renal / Kidney Function (RFT-KFT)",system:"Kidney & Uric Acid",
+  params:[
+   {id:"creat",name:"Serum Creatinine",unit:"mg/dL",male:[0.74,1.35],female:[0.59,1.04],meaning:"Filtration-related marker affected by muscle mass, hydration and medications; eGFR adds context."},
+   {id:"egfr",name:"eGFR",unit:"mL/min/1.73m²",all:[90,200],meaning:"Estimated kidney filtration; persistent reduction and albuminuria determine CKD significance."},
+   {id:"urea",name:"Urea",unit:"mg/dL",all:[15,40],meaning:"Affected by kidney function, protein intake, hydration and catabolic state."},
+   {id:"bun",name:"BUN",unit:"mg/dL",all:[7,20],meaning:"Blood urea nitrogen; interpret with creatinine and hydration."},
+   {id:"uric",name:"Uric Acid",unit:"mg/dL",male:[3.4,7.0],female:[2.4,6.0],meaning:"Purine metabolism marker; interpretation depends on gout, kidney function, medicines and trend."},
+   {id:"sodium",name:"Sodium",unit:"mmol/L",all:[135,145],meaning:"Major extracellular electrolyte; abnormalities require volume and medication context."},
+   {id:"potassium",name:"Potassium",unit:"mmol/L",all:[3.5,5.0],meaning:"Important for cardiac and neuromuscular function; significant abnormalities may require urgent review."},
+   {id:"uacr",name:"Urine Albumin/Creatinine Ratio",unit:"mg/g",all:[0,30],meaning:"Albuminuria marker; persistent elevation is important for kidney and cardiovascular risk."}
+  ]
+ },
+ "DIABETES":{
+  title:"Diabetes & Glycemic Panel",system:"Metabolic & Diabetes",
+  params:[
+   {id:"fpg",name:"Fasting Plasma Glucose",unit:"mg/dL",all:[70,99],meaning:"Fasting glycemia; repeated elevation needs diabetes/prediabetes context."},
+   {id:"ppbs",name:"2-hour Postprandial Glucose",unit:"mg/dL",all:[70,139],meaning:"Post-meal glucose response; interpretation depends on timing and diagnostic context."},
+   {id:"hba1c",name:"HbA1c",unit:"%",all:[4.0,5.6],meaning:"Approximate longer-term glycemic exposure; affected by selected hematologic conditions."}
+  ]
+ },
+ "LIPID":{
+  title:"Lipid Profile",system:"Cardiovascular",
+  params:[
+   {id:"tc",name:"Total Cholesterol",unit:"mg/dL",all:[0,199],meaning:"Overall cholesterol; risk interpretation depends more on LDL/non-HDL and total cardiovascular risk."},
+   {id:"ldl",name:"LDL-C",unit:"mg/dL",all:[0,99],meaning:"Primary atherogenic cholesterol target; desired level depends on cardiovascular risk."},
+   {id:"hdl",name:"HDL-C",unit:"mg/dL",male:[40,200],female:[50,200],meaning:"Higher HDL is generally associated with lower risk, but should not be interpreted in isolation."},
+   {id:"tg",name:"Triglycerides",unit:"mg/dL",all:[0,149],meaning:"Affected by meals, alcohol, metabolic health and genetics."},
+   {id:"nonhdl",name:"Non-HDL-C",unit:"mg/dL",all:[0,129],meaning:"Captures cholesterol in atherogenic particles; useful alongside LDL."}
+  ]
+ },
+ "THYROID":{
+  title:"Thyroid Function Tests",system:"Thyroid & Endocrine",
+  params:[
+   {id:"tsh",name:"TSH",unit:"mIU/L",all:[0.4,4.5],meaning:"Primary screening marker in many settings; interpret with free T4 and clinical context."},
+   {id:"ft4",name:"Free T4",unit:"ng/dL",all:[0.9,1.7],meaning:"Free thyroxine; helps classify thyroid dysfunction with TSH."},
+   {id:"ft3",name:"Free T3",unit:"pg/mL",all:[2.3,4.2],meaning:"Useful in selected thyroid contexts; assay ranges vary."},
+   {id:"antiTPO",name:"Anti-TPO Antibody",unit:"IU/mL",all:[0,34],meaning:"Autoimmune thyroid marker; positivity is interpreted with thyroid function and clinical picture."}
+  ]
+ },
+ "BONE":{
+  title:"Bone & Mineral Panel",system:"Bone Health",
+  params:[
+   {id:"calcium",name:"Calcium",unit:"mg/dL",all:[8.6,10.2],meaning:"Interpret with albumin, kidney function, vitamin D and symptoms."},
+   {id:"phos",name:"Phosphorus",unit:"mg/dL",all:[2.5,4.5],meaning:"Bone-mineral and renal physiology marker."},
+   {id:"vitd",name:"25-OH Vitamin D",unit:"ng/mL",all:[30,100],meaning:"Vitamin D status; thresholds and treatment targets vary by guideline and clinical context."},
+   {id:"pth",name:"PTH",unit:"pg/mL",all:[15,65],meaning:"Parathyroid hormone; interpret with calcium, phosphorus, vitamin D and kidney function."}
+  ]
+ },
+ "IRON":{
+  title:"Iron / Hematinic Panel",system:"Hematology",
+  params:[
+   {id:"ferritin",name:"Ferritin",unit:"ng/mL",male:[30,400],female:[13,150],meaning:"Iron storage marker; also rises with inflammation."},
+   {id:"iron",name:"Serum Iron",unit:"µg/dL",all:[60,170],meaning:"Variable marker; best interpreted with TIBC/transferrin saturation and ferritin."},
+   {id:"tibc",name:"TIBC",unit:"µg/dL",all:[240,450],meaning:"Iron-binding capacity; helps characterize iron deficiency patterns."},
+   {id:"b12",name:"Vitamin B12",unit:"pg/mL",all:[200,900],meaning:"Low values may contribute to macrocytosis or neurologic symptoms; borderline values may need context."},
+   {id:"folate",name:"Folate",unit:"ng/mL",all:[4,20],meaning:"Folate status; interpret with CBC and clinical context."}
+  ]
+ },
+ "URINE":{
+  title:"Urine Routine / Urinalysis",system:"Kidney & Urinary",
+  params:[
+   {id:"sg",name:"Specific Gravity",unit:"",all:[1.005,1.030],meaning:"Urine concentration; reflects hydration and concentrating ability."},
+   {id:"ph",name:"Urine pH",unit:"",all:[4.5,8.0],meaning:"Affected by diet, infection and metabolic factors."},
+   {id:"protein",name:"Protein",unit:"semiquant",textNormal:"Negative",meaning:"Proteinuria needs confirmation/quantification when present."},
+   {id:"glucose",name:"Glucose",unit:"semiquant",textNormal:"Negative",meaning:"Urine glucose can occur with hyperglycemia or altered renal threshold."},
+   {id:"ketone",name:"Ketones",unit:"semiquant",textNormal:"Negative",meaning:"May occur with fasting, low-carbohydrate states, vomiting or diabetic ketoacidosis."},
+   {id:"rbc",name:"RBC / HPF",unit:"/HPF",all:[0,2],meaning:"Microscopic hematuria requires context and confirmation."},
+   {id:"pus",name:"Pus cells / WBC",unit:"/HPF",all:[0,5],meaning:"Can suggest urinary inflammation/infection when elevated."}
+  ]
+ }
+};
+let currentLabPanel="CBC";
+
+function refRangeFor(p,sex){
+ if(p.textNormal)return p.textNormal;
+ const r=(sex==="Female"&&p.female)?p.female:(sex==="Male"&&p.male)?p.male:p.all||p.male||p.female;
+ return r?`${r[0]}–${r[1]}`:"Lab-specific";
+}
+function numericRangeFor(p,sex){
+ return (sex==="Female"&&p.female)?p.female:(sex==="Male"&&p.male)?p.male:p.all||null;
+}
+function autoStatus(value,p,sex){
+ if(value===null||value===undefined||String(value).trim()==="")return "Not assessed";
+ if(p.textNormal){
+   const x=String(value).trim().toLowerCase();
+   return (x==="negative"||x==="nil"||x==="absent")?"Normal":"Abnormal";
+ }
+ const num=Number(value); if(Number.isNaN(num))return "Not assessed";
+ const r=numericRangeFor(p,sex); if(!r)return "Not assessed";
+ const [lo,hi]=r;
+ if(num<lo){
+   const delta=(lo-num)/(Math.abs(lo)||1);
+   return delta<=0.10?"Borderline low":"Low";
+ }
+ if(num>hi){
+   const delta=(num-hi)/(Math.abs(hi)||1);
+   return delta<=0.10?"Borderline high":"High";
+ }
+ return "Normal";
+}
+function statusClass(s){
+ if(s==="Normal")return "status-normal";
+ if(s==="High"||s==="Low"||s==="Abnormal")return "status-high";
+ if(s.startsWith("Borderline"))return "status-borderline";
+ return "status-na";
+}
+function selectLabPanel(key){
+ currentLabPanel=key;
+ document.querySelectorAll(".lab-panel-btn").forEach(b=>b.classList.toggle("active",b.dataset.panel===key));
+ renderLabParameters();
+}
+function renderLabPanelButtons(){
+ if(!$("labPanelButtons"))return;
+ $("labPanelButtons").innerHTML=Object.entries(labPanels).map(([k,p])=>`<button class="lab-panel-btn ${k===currentLabPanel?"active":""}" data-panel="${k}" onclick="selectLabPanel('${k}')">${p.title}</button>`).join("");
+}
+function renderLabParameters(existing=null){
+ if(!$("labParameterTable"))return;
+ const panel=labPanels[currentLabPanel],sex=v("liSex")||db.profile.sex||"Male",q=(v("liSearch")||"").toLowerCase();
+ $("labPanelTitle").textContent=panel.title;$("labPanelSystem").textContent=panel.system;$("labPanelCount").textContent=`${panel.params.length} parameters`;
+ const previous=existing||{};
+ let rows=panel.params.filter(p=>(p.name+" "+p.meaning).toLowerCase().includes(q)).map(p=>{
+   const old=previous[p.id]||{};
+   const ref=old.ref||refRangeFor(p,sex);
+   const val=old.value??"";
+   const stat=old.status||autoStatus(val,p,sex);
+   return `<tr>
+    <td><div class="param-name">${p.name}</div><div class="param-meaning">${p.meaning}</div></td>
+    <td>${p.unit||""}</td>
+    <td><input class="range-input" id="ref_${p.id}" value="${ref}"></td>
+    <td><input class="result-input" id="val_${p.id}" value="${val}" oninput="updateParamStatus('${p.id}')"></td>
+    <td><select class="status-select ${statusClass(stat)}" id="status_${p.id}" onchange="this.className='status-select '+statusClass(this.value)">
+      ${["Not assessed","Normal","Borderline low","Low","Borderline high","High","Abnormal"].map(s=>`<option ${s===stat?"selected":""}>${s}</option>`).join("")}
+    </select></td>
+    <td><input id="remark_${p.id}" value="${old.remark||""}" placeholder="Remark"></td>
+   </tr>`;
+ }).join("");
+ $("labParameterTable").innerHTML=`<div class="lab-param-table"><table><thead><tr><th>Parameter & meaning</th><th>Unit</th><th>Reference range</th><th>Your value</th><th>Status</th><th>Remark</th></tr></thead><tbody>${rows}</tbody></table></div>`;
+}
+function updateParamStatus(id){
+ const p=labPanels[currentLabPanel].params.find(x=>x.id===id);if(!p)return;
+ const sel=$("status_"+id),value=v("val_"+id),sex=v("liSex")||"Male";
+ sel.value=autoStatus(value,p,sex);sel.className="status-select "+statusClass(sel.value);
+}
+function markAllNotAssessed(){
+ labPanels[currentLabPanel].params.forEach(p=>{const s=$("status_"+p.id);if(s&&!v("val_"+p.id)){s.value="Not assessed";s.className="status-select status-na"}});
+}
+function collectCurrentPanelValues(){
+ const out={};
+ labPanels[currentLabPanel].params.forEach(p=>{
+   if(!$("status_"+p.id))return;
+   out[p.id]={name:p.name,unit:p.unit,value:v("val_"+p.id),ref:v("ref_"+p.id),status:v("status_"+p.id),remark:v("remark_"+p.id),meaning:p.meaning};
+ });
+ return out;
+}
+function saveLabInterpretation(){
+ const obj={panel:currentLabPanel,title:labPanels[currentLabPanel].title,system:labPanels[currentLabPanel].system,date:v("liDate"),sex:v("liSex"),facility:v("liFacility"),context:v("liContext"),remarks:v("liRemarks"),attachment:pendingFiles.li||null,values:collectCurrentPanelValues()};
+ const idx=v("liEditIndex");if(idx!=="")db.labInterpretations[+idx]=obj;else db.labInterpretations.unshift(obj);
+ resetLabInterpretation();persist()
+}
+function editLabInterpretation(i){
+ const x=db.labInterpretations[i];showView("labcentre");currentLabPanel=x.panel||"CBC";renderLabPanelButtons();
+ $("liDate").value=x.date||today();$("liSex").value=x.sex||"Male";$("liFacility").value=x.facility||"";$("liContext").value=x.context||"";$("liRemarks").value=x.remarks||"";$("liEditIndex").value=i;
+ renderLabParameters(x.values||{});
+}
+function deleteLabInterpretation(i){if(confirm("Delete this interpreted panel?")){db.labInterpretations.splice(i,1);persist()}}
+function resetLabInterpretation(){
+ ["liFacility","liContext","liRemarks","liEditIndex","liSearch"].forEach(id=>{if($(id))$(id).value=""});
+ if($("liDate"))$("liDate").value=today();pendingFiles.li=null;if($("liFileName"))$("liFileName").textContent="";renderLabParameters()
+}
+function generateCurrentPanelSummary(){
+ if(!$("currentPanelSummary"))return;
+ const vals=collectCurrentPanelValues(),panel=labPanels[currentLabPanel],abn=Object.values(vals).filter(x=>!["Normal","Not assessed"].includes(x.status)),normal=Object.values(vals).filter(x=>x.status==="Normal"),na=Object.values(vals).filter(x=>x.status==="Not assessed");
+ let lines=[`${panel.title}: ${abn.length} flagged • ${normal.length} within selected range • ${na.length} not assessed.`];
+ if(abn.length)lines.push("Flagged parameters:\n• "+abn.map(x=>`${x.name}: ${x.value||"-"} ${x.unit||""} — ${x.status}`).join("\n• "));
+ if(currentLabPanel==="CBC")lines.push(cbcPattern(vals));
+ if(currentLabPanel==="LFT")lines.push(lftPattern(vals));
+ if(currentLabPanel==="RFT")lines.push(rftPattern(vals));
+ if(currentLabPanel==="THYROID")lines.push(thyroidPattern(vals));
+ if(currentLabPanel==="DIABETES")lines.push(diabetesPattern(vals));
+ if(currentLabPanel==="LIPID")lines.push(lipidPattern(vals));
+ lines.push("Interpretation is a decision-support summary. Confirm with the report’s own reference intervals, symptoms, medicines and trends.");
+ $("currentPanelSummary").textContent=lines.filter(Boolean).join("\n\n");
+}
+function numVal(vals,id){const x=Number(vals[id]?.value);return Number.isFinite(x)?x:null}
+function cbcPattern(vs){
+ let out=[],hb=numVal(vs,"hb"),mcv=numVal(vs,"mcv"),wbc=numVal(vs,"wbc"),plt=numVal(vs,"plt");
+ if(hb!==null && ["Low","Borderline low"].includes(vs.hb.status)){
+   if(mcv!==null&&mcv<80)out.push("CBC pattern: low Hb with microcytosis — consider an iron-deficiency/thalassemia-pattern differential in appropriate context.");
+   else if(mcv!==null&&mcv>100)out.push("CBC pattern: low Hb with macrocytosis — B12/folate, medicines, liver/thyroid and other causes may need correlation.");
+   else out.push("CBC pattern: low Hb with normocytic indices — correlate with renal, inflammatory, bleeding and other causes.");
+ }
+ if(wbc!==null&&vs.wbc.status==="High")out.push("Leukocytosis pattern: review differential count, symptoms, infection/inflammation, stress and medicines.");
+ if(plt!==null&&vs.plt.status==="Low")out.push("Thrombocytopenia flag: confirm count/trend and review bleeding risk and causes.");
+ return out.join("\n");
+}
+function lftPattern(vs){
+ let alt=numVal(vs,"alt"),ast=numVal(vs,"ast"),alp=numVal(vs,"alp"),ggt=numVal(vs,"ggt"),tb=numVal(vs,"tbili"),out=[];
+ if((alt!==null&&alt>56)||(ast!==null&&ast>40))out.push("Transaminase-predominant elevation suggests a hepatocellular injury pattern; magnitude, persistence and clinical cause matter.");
+ if(alp!==null&&alp>147 && (ggt===null||ggt>61))out.push("ALP/GGT-predominant elevation may suggest a cholestatic/hepatobiliary pattern; correlate with bilirubin and imaging when indicated.");
+ if(tb!==null&&tb>1.2)out.push("Bilirubin is elevated; fractionation and clinical jaundice context help characterize the pattern.");
+ return out.join("\n");
+}
+function rftPattern(vs){
+ let e=numVal(vs,"egfr"),cr=numVal(vs,"creat"),uacr=numVal(vs,"uacr"),k=numVal(vs,"potassium"),out=[];
+ if(e!==null&&e<60)out.push("eGFR below 60 is important if persistent; chronic kidney disease classification also uses duration and albuminuria.");
+ if(uacr!==null&&uacr>=30)out.push("Albuminuria is elevated; persistence and eGFR together guide kidney-risk assessment.");
+ if(cr!==null&&["High","Borderline high"].includes(vs.creat.status))out.push("Creatinine is above the selected range; review previous baseline, hydration, muscle mass and medicines.");
+ if(k!==null&&(k<3.0||k>5.5))out.push("Potassium is substantially abnormal and may require prompt clinical reassessment depending on context.");
+ return out.join("\n");
+}
+function thyroidPattern(vs){
+ let tsh=numVal(vs,"tsh"),ft4=numVal(vs,"ft4"),out=[];
+ if(tsh!==null&&ft4!==null){
+   if(tsh>4.5&&ft4>=0.9&&ft4<=1.7)out.push("TSH high with free T4 in range can fit a subclinical hypothyroid biochemical pattern; repeat/persistence and clinical context matter.");
+   if(tsh>4.5&&ft4<0.9)out.push("High TSH with low free T4 supports a primary hypothyroid biochemical pattern.");
+   if(tsh<0.4&&ft4>1.7)out.push("Low TSH with high free T4 supports a thyrotoxic biochemical pattern.");
+ }
+ return out.join("\n");
+}
+function diabetesPattern(vs){
+ let f=numVal(vs,"fpg"),a=numVal(vs,"hba1c"),out=[];
+ if(f!==null&&f>=126)out.push("Fasting glucose is in a diabetes-range value if truly fasting; diagnosis generally requires appropriate confirmation unless clinical circumstances establish it.");
+ else if(f!==null&&f>=100)out.push("Fasting glucose is above the typical normal range and falls in an impaired-fasting-glycemia range.");
+ if(a!==null&&a>=6.5)out.push("HbA1c is in a diabetes-range value; correlate with confirmation and conditions that may alter HbA1c accuracy.");
+ else if(a!==null&&a>=5.7)out.push("HbA1c is in a prediabetes-range value.");
+ return out.join("\n");
+}
+function lipidPattern(vs){
+ let l=numVal(vs,"ldl"),tg=numVal(vs,"tg"),out=[];
+ if(l!==null&&l>=190)out.push("LDL-C is markedly elevated; cardiovascular risk assessment and secondary-cause review are important.");
+ else if(l!==null&&l>=130)out.push("LDL-C is elevated; treatment target depends on overall cardiovascular risk, not this value alone.");
+ if(tg!==null&&tg>=500)out.push("Triglycerides are very high; pancreatitis risk becomes clinically relevant.");
+ return out.join("\n");
+}
+function renderSavedLabPanels(){
+ if(!$("savedLabPanels"))return;
+ const q=(v("savedLabSearch")||"").toLowerCase();
+ const rows=db.labInterpretations.map((x,i)=>({x,i})).filter(({x})=>JSON.stringify(x).toLowerCase().includes(q));
+ if(!rows.length){$("savedLabPanels").innerHTML='<p class="muted">No interpreted panels saved yet.</p>';return}
+ $("savedLabPanels").innerHTML=rows.map(({x,i})=>{
+   const vals=Object.values(x.values||{}),abn=vals.filter(v=>!["Normal","Not assessed"].includes(v.status));
+   const chips=vals.filter(v=>v.value!==""&&v.value!=null).slice(0,18).map(v=>`<span class="param-chip ${["Normal"].includes(v.status)?"ok":"abn"}">${v.name}: ${v.value} ${v.unit||""} (${v.status})</span>`).join("");
+   return `<div class="saved-panel">
+    <div class="saved-panel-head"><div><b>${x.title}</b><small style="display:block;color:var(--muted)">${x.date||""} • ${x.sex||""} • ${x.facility||""}</small></div>
+    <div><span class="pill ${abn.length?"red":"green"}">${abn.length} flagged</span> <button class="action-btn edit-btn" onclick="editLabInterpretation(${i})">Edit</button><button class="action-btn delete-btn" onclick="deleteLabInterpretation(${i})">Delete</button></div></div>
+    <div class="saved-panel-body">${chips||'<span class="muted">No numeric results entered.</span>'}${x.attachment?.name?`<p><b>Attachment:</b> ${x.attachment.name}</p>`:""}${x.remarks?`<p><b>Remarks:</b> ${x.remarks}</p>`:""}</div>
+   </div>`;
+ }).join("");
+}
 
 const systems=[
 ["Cardiovascular","BP, pulse, lipids, ECG, symptoms, vascular risk"],
@@ -43,7 +327,8 @@ const systems=[
 ["Mental Health","Stress, mood, attention, burnout, sleep"],
 ["Social Health","Connection, support, work-life balance, loneliness"]
 ];
-$("systemGrid").innerHTML=systems.map(s=>`<article class="card systemcard"><h3>${s[0]}</h3><p>${s[1]}</p><span class="mini">Track via Today • Labs • Imaging • Medicines • Timeline</span></article>`).join("");
+const systemPanelMap={"Cardiovascular":"LIPID","Metabolic & Diabetes":"DIABETES","Kidney & Uric Acid":"RFT","Liver & Gallbladder":"LFT","Bone Health":"BONE","Thyroid & Endocrine":"THYROID"};
+$("systemGrid").innerHTML=systems.map(s=>`<article class="card systemcard"><h3>${s[0]}</h3><p>${s[1]}</p><span class="mini">Track via Today • Labs • Imaging • Medicines • Timeline</span>${systemPanelMap[s[0]]?`<button class="ghost" style="margin-top:10px;position:relative;z-index:3" onclick="showView('labcentre');selectLabPanel('${systemPanelMap[s[0]]}')">Open ${systemPanelMap[s[0]]} tests →</button>`:""}</article>`).join("");
 
 const habitDefs=[
 ["Sleep","Target consistency, duration and recovery quality."],
@@ -101,10 +386,10 @@ function calcSleepDuration(){
 function fileMetaFromInput(id,key){
  const f=$(id)?.files?.[0]; if(!f)return;
  pendingFiles[key]={name:f.name,type:f.type,size:f.size};
- const label={td:"tdFileName",ayu:"ayuFileName",lab:"labFileName",img:"imgFileName",med:"medFileName",tx:"txFileName",vl:"vlFileName"}[key];
+ const label={td:"tdFileName",ayu:"ayuFileName",lab:"labFileName",img:"imgFileName",med:"medFileName",tx:"txFileName",vl:"vlFileName",li:"liFileName"}[key];
  if($(label))$(label).textContent=`Selected: ${f.name} (${Math.round(f.size/1024)} KB)`;
 }
-[["tdFile","td"],["tdCamera","td"],["ayuFile","ayu"],["ayuCamera","ayu"],["labFile","lab"],["labCamera","lab"],["imgFile","img"],["imgCamera","img"],["medFile","med"],["medCamera","med"],["txFile","tx"],["txCamera","tx"],["vlFile","vl"],["vlCamera","vl"]].forEach(([id,key])=>{if($(id))$(id).addEventListener("change",()=>fileMetaFromInput(id,key))});
+[["tdFile","td"],["tdCamera","td"],["ayuFile","ayu"],["ayuCamera","ayu"],["labFile","lab"],["labCamera","lab"],["imgFile","img"],["imgCamera","img"],["medFile","med"],["medCamera","med"],["txFile","tx"],["txCamera","tx"],["vlFile","vl"],["vlCamera","vl"],["liFile","li"],["liCamera","li"]].forEach(([id,key])=>{if($(id))$(id).addEventListener("change",()=>fileMetaFromInput(id,key))});
 
 function saveToday(){
  const obj={date:v("tdDate"),weight:n("tdWeight"),sbp:n("tdSBP"),dbp:n("tdDBP"),sugar:n("tdSugar"),
@@ -326,7 +611,7 @@ function saveVault(){
 }
 function editVault(i){let x=db.vault[i];showView("vault");let m={vlDate:"date",vlType:"type",vlSystem:"system",vlTitle:"title",vlSummary:"summary"};Object.entries(m).forEach(([id,k])=>$(id).value=x[k]??"");$("vlEditIndex").value=i}
 function deleteVault(i){if(confirm("Delete vault item?")){db.vault.splice(i,1);persist()}}
-function resetVaultForm(){["vlSystem","vlTitle","vlSummary","vlEditIndex"].forEach(id=>{if($(id))$(id).value=""});if($("vlDate"))$("vlDate").value=today();pendingFiles.vl=null;if($("vlFileName"))$("vlFileName").textContent=""}
+function resetVaultForm(){["vlSystem","vlTitle","vlSummary","vlEditIndex"].forEach(id=>{if($(id))$(id).value=""});if($("vlDate"))$("vlDate").value=today(); if($("liDate"))$("liDate").value=today();pendingFiles.vl=null;if($("vlFileName"))$("vlFileName").textContent=""}
 function renderVault(){
  if(!$("vaultTable"))return;let q=(v("vaultSearch")||"").toLowerCase();
  let rows=db.vault.map((x,i)=>({...x,file:x.attachment?.name||"",act:`<button class="action-btn edit-btn" onclick="editVault(${i})">Edit</button><button class="action-btn delete-btn" onclick="deleteVault(${i})">Delete</button>`}))
@@ -449,6 +734,7 @@ function getTimeline(){
  db.sleep.forEach(x=>a.push({date:x.date,type:"Sleep",text:`Sleep ${x.hours||"-"} h • quality ${x.quality||"-"}/10 • stress ${x.stress||"-"}/10`}));
  db.physician.forEach(x=>a.push({date:x.date,type:"Physician",text:`Work ${x.work||"-"} h • fatigue ${x.fatigue||"-"}/10 • exhaustion ${x.exhaust||"-"}/10`}));
  db.experiments.forEach(x=>a.push({date:x.start,type:"Experiment",text:`${x.name}: ${x.baseline||"-"} → ${x.latest||"-"} • ${x.status}`}));
+ db.labInterpretations.forEach(x=>{let flagged=Object.values(x.values||{}).filter(v=>!["Normal","Not assessed"].includes(v.status)).length;a.push({date:x.date,type:"Lab Panel",text:`${x.title} • ${flagged} flagged parameter(s)`})});
  return a.sort((x,y)=>(y.date||"").localeCompare(x.date||""))
 }
 function renderTimeline(){
@@ -492,6 +778,8 @@ function renderTables(){
  if($("dailyTable"))$("dailyTable").innerHTML=table(db.daily.map((x,i)=>({...x,sl:`${x.sleepStart||"-"}→${x.sleepEnd||"-"} (${x.sleep||"-"}h)`,att:x.attachment?.name||"",act:`<button class="action-btn edit-btn" onclick="editToday(${i})">Edit</button><button class="action-btn delete-btn" onclick="deleteToday(${i})">Delete</button>`})),[["Date","date"],["Sleep","sl"],["BP",x=>`${x.sbp||"-"}/${x.dbp||"-"}`],["Exercise",x=>`${x.exercise||0} min`],["Peace",x=>`${x.peace||0}/10`],["Attachment","att"],["Action","act"]]);
  if($("habitTable"))$("habitTable").innerHTML=table(db.habits.map((x,i)=>({...x,when:`${x.start||"-"}→${x.end||"-"}`,act:`<button class="action-btn edit-btn" onclick="editHabit(${i})">Edit</button><button class="action-btn delete-btn" onclick="deleteHabit(${i})">Delete</button>`})),[["Date","date"],["Habit","habit"],["Time","when"],["Duration",x=>`${x.duration||0} min`],["Status","status"],["Quality",x=>`${x.quality||0}/10`],["Action","act"]]);
 }
-function renderAll(){applyAutoRitu();renderForms();renderDashboard();renderRitu();renderInvestigations();renderTables();renderSleep();renderPhysician();renderExperiments();renderPreventive();renderVault();renderTimeline();generateDailySummary();generateAyurvedaSummary();generateInvestigationSummary();generateHabitSummary()}
-if($("hbDate"))$("hbDate").value=today(); if($("slDate"))$("slDate").value=today(); if($("phDate"))$("phDate").value=today(); if($("exStart"))$("exStart").value=today(); if($("pvDue"))$("pvDue").value=today(); if($("vlDate"))$("vlDate").value=today();
+function renderAll(){applyAutoRitu();renderForms();renderDashboard();renderRitu();renderInvestigations();renderTables();renderSleep();renderPhysician();renderExperiments();renderPreventive();renderVault();renderLabPanelButtons();renderLabParameters();renderSavedLabPanels();renderTimeline();generateDailySummary();generateAyurvedaSummary();generateInvestigationSummary();generateHabitSummary()}
+if($("hbDate"))$("hbDate").value=today(); if($("slDate"))$("slDate").value=today(); if($("phDate"))$("phDate").value=today(); if($("exStart"))$("exStart").value=today(); if($("pvDue"))$("pvDue").value=today(); if($("vlDate"))$("vlDate").value=today(); if($("liDate"))$("liDate").value=today();
 renderAll();
+
+if($("liSex"))$("liSex").addEventListener("change",()=>renderLabParameters());

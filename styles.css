@@ -67,3 +67,26 @@ footer{text-align:center;color:var(--muted);font-size:11px;padding:24px}
 .vault-category-grid button:hover{background:var(--mint);color:var(--brand2)}
 @media(max-width:1100px){.ai-role-grid{grid-template-columns:repeat(2,1fr)}.preventive-buckets{grid-template-columns:repeat(2,1fr)}}
 @media(max-width:700px){.attention-list,.ai-role-grid,.preventive-buckets{grid-template-columns:1fr}}
+
+.diagnostic-launch{display:flex;justify-content:space-between;align-items:center;gap:18px;background:linear-gradient(135deg,#eefaf7,#ffffff);border-left:5px solid var(--brand)}
+.diagnostic-launch h3{margin:5px 0 6px}.diagnostic-launch p{margin:0;color:var(--muted);max-width:850px}
+.lab-layout{display:grid;grid-template-columns:240px 1fr;gap:14px}
+.lab-sidebar{position:sticky;top:90px;align-self:start;max-height:75vh;overflow:auto}
+.lab-panel-buttons{display:grid;gap:7px}
+.lab-panel-btn{border:1px solid var(--line);background:var(--surface2);color:var(--ink);padding:10px 11px;border-radius:10px;text-align:left;font-weight:800;cursor:pointer;font-size:12px}
+.lab-panel-btn.active{background:var(--mint);border-color:#84c9bb;color:var(--brand2)}
+.lab-toolbar{display:flex;justify-content:space-between;gap:10px;align-items:center;margin:12px 0}
+.lab-param-table{overflow:auto}
+.lab-param-table table{min-width:1050px}
+.result-input,.range-input,.status-select{min-width:105px}
+.param-name{font-weight:850;color:var(--ink)}
+.param-meaning{font-size:10px;color:var(--muted);max-width:240px;line-height:1.35}
+.status-normal{color:#15803d;font-weight:900}.status-high,.status-low{color:#b91c1c;font-weight:900}.status-borderline{color:#b45309;font-weight:900}.status-na{color:var(--muted);font-weight:800}
+.saved-panel{border:1px solid var(--line);border-radius:14px;margin:10px 0;overflow:hidden}
+.saved-panel-head{display:flex;justify-content:space-between;gap:10px;padding:12px 14px;background:var(--surface2);align-items:center}
+.saved-panel-body{padding:12px 14px}
+.param-chip{display:inline-block;border:1px solid var(--line);border-radius:999px;padding:4px 8px;margin:3px;font-size:10px}
+.param-chip.abn{background:var(--redbg);color:var(--red);border-color:#f3c2bd}
+.param-chip.ok{background:#eaf8ef;color:#166534;border-color:#bde6c8}
+@media(max-width:900px){.lab-layout{grid-template-columns:1fr}.lab-sidebar{position:static;max-height:none}.lab-panel-buttons{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:700px){.diagnostic-launch{align-items:flex-start;flex-direction:column}.lab-panel-buttons{grid-template-columns:1fr}.lab-toolbar{align-items:stretch;flex-direction:column}}

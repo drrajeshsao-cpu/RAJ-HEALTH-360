@@ -31,6 +31,7 @@
     <button class="nav" data-view="today">✓ Today</button>
     <button class="nav" data-view="sleepcentre">☾ Sleep Centre</button>
     <button class="nav" data-view="modern">✚ Modern Health</button>
+    <button class="nav" data-view="labcentre">◉ Lab Interpreters</button>
     <button class="nav" data-view="ayurveda">ॐ Ayurveda</button>
     <button class="nav" data-view="ritu">☀ Ritu Intelligence</button>
     <button class="nav" data-view="shatkriya">⟲ Shatkriyakala</button>
@@ -204,9 +205,94 @@
 
 <section id="modern" class="view">
  <div class="pagehead compact"><div><span class="eyebrow">MODERN MEDICINE</span><h2>Whole-body clinical monitoring</h2><p>System-based symptoms, diagnoses, screening and risk factors.</p></div></div>
+ 
+ <div class="diagnostic-launch card">
+   <div>
+     <span class="eyebrow">CLINICAL DIAGNOSTICS INTELLIGENCE</span>
+     <h3>Choose a body system → select tests → enter your report values → interpret trends.</h3>
+     <p>Typical adult reference intervals are pre-filled for convenience. Always compare with the laboratory’s own printed reference range and clinical context.</p>
+   </div>
+   <button class="primary" onclick="showView('labcentre')">Open Lab Interpreters →</button>
+ </div>
+
  <div id="systemGrid" class="grid3"></div>
 </section>
 
+
+
+<section id="labcentre" class="view">
+ <div class="pagehead compact">
+  <div>
+   <span class="eyebrow">CLINICAL DIAGNOSTICS CENTRE</span>
+   <h2>System-wise Tests & Smart Interpreters</h2>
+   <p>Select a panel, enter values from your report, attach the original PDF/image, and save a date-wise interpreted record.</p>
+  </div>
+ </div>
+
+ <div class="alertbar warn">
+  Reference intervals shown here are typical adult examples, not universal laboratory cut-offs. The lab report’s own range, age, sex, pregnancy status, medicines, hydration, altitude, acute illness and assay method can change interpretation.
+ </div>
+
+ <div class="lab-layout">
+  <aside class="card lab-sidebar">
+   <h3>Test Panels</h3>
+   <div id="labPanelButtons" class="lab-panel-buttons"></div>
+  </aside>
+
+  <div>
+   <article class="card">
+    <div class="cardtitle">
+      <div><span class="eyebrow" id="labPanelSystem">SYSTEM</span><h3 id="labPanelTitle">Complete Blood Count (CBC)</h3></div>
+      <span class="pill teal" id="labPanelCount">0 parameters</span>
+    </div>
+
+    <div class="formgrid four">
+      <label>Test date<input id="liDate" type="date"></label>
+      <label>Sex for reference<select id="liSex"><option>Male</option><option>Female</option></select></label>
+      <label>Laboratory / facility<input id="liFacility" placeholder="Lab / hospital name"></label>
+      <label>Clinical context<input id="liContext" placeholder="Routine / fasting / symptoms / follow-up..."></label>
+    </div>
+
+    <div class="attachment-box">
+      <div><b>Attach original report</b><small>PDF, image or direct camera capture.</small></div>
+      <div class="attach-actions">
+        <label class="filebtn">📎 File / PDF<input type="file" id="liFile" accept="image/*,.pdf"></label>
+        <label class="filebtn">📷 Camera<input type="file" id="liCamera" accept="image/*" capture="environment"></label>
+      </div>
+      <div id="liFileName" class="file-name"></div>
+    </div>
+
+    <div class="lab-toolbar">
+      <input class="search" id="liSearch" placeholder="Search parameter..." oninput="renderLabParameters()">
+      <button class="ghost" onclick="markAllNotAssessed()">Mark blank as Not assessed</button>
+    </div>
+
+    <div id="labParameterTable"></div>
+
+    <label>Overall report remarks<textarea id="liRemarks" placeholder="Symptoms, comparison with previous report, physician note, reasons for change..."></textarea></label>
+    <input type="hidden" id="liEditIndex">
+    <div class="buttons">
+      <button class="primary" onclick="saveLabInterpretation()">Save Interpreted Panel</button>
+      <button class="ghost" onclick="resetLabInterpretation()">Clear</button>
+      <button class="ghost" onclick="generateCurrentPanelSummary()">Generate Panel Summary ✦</button>
+    </div>
+   </article>
+
+   <article class="card">
+    <div class="cardtitle"><h3>Current Panel Auto Interpretation</h3><span class="pill teal">Pattern-based</span></div>
+    <div id="currentPanelSummary" class="summary-box">Enter values to generate a concise panel interpretation.</div>
+   </article>
+  </div>
+ </div>
+
+ <article class="card">
+   <div class="cardtitle">
+     <h3>Saved Diagnostic Panels</h3>
+     <input class="search" id="savedLabSearch" placeholder="Search CBC, Hb, creatinine, uric acid..." oninput="renderSavedLabPanels()">
+   </div>
+   <div id="savedLabPanels"></div>
+ </article>
+</section>
 
 <section id="ayurveda" class="view">
  <div class="pagehead compact"><div><span class="eyebrow">AYURVEDA CORE</span><h2>Rogi–Roga Assessment</h2><p>“स्वस्थस्य स्वास्थ्य रक्षणं” begins with observing your own constitution, agni, bala and changing dosha state.</p></div></div>

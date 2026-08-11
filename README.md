@@ -74,3 +74,21 @@ This build makes previously planned professional features clearly visible in the
 - Search remains active alongside category filters
 
 No login/authentication code was added or modified.
+
+
+## V5 Diagnostic Intelligence
+- Dedicated Lab Interpreters page
+- System cards can launch relevant diagnostic panels
+- CBC interpreter with Hb/RBC/Hct/MCV/MCH/MCHC/RDW/WBC differential/platelets
+- LFT interpreter
+- RFT/KFT interpreter with creatinine, eGFR, urea/BUN, uric acid, electrolytes, urine ACR
+- Diabetes, lipid, thyroid, bone/mineral, iron/hematinic and urinalysis panels
+- Male/female typical adult reference ranges where relevant
+- Automatic Normal / Borderline Low / Low / Borderline High / High / Not Assessed status
+- Manual reference-range and status override
+- Parameter-specific meaning and remarks
+- Date-wise saved interpreted panels
+- PDF/image/camera attachment metadata
+- Pattern summaries for CBC/LFT/RFT/thyroid/diabetes/lipids
+
+Important: built-in reference intervals are examples. The laboratory's own reference interval and clinical context should override defaults.
