@@ -147,3 +147,14 @@ Critical usability fixes:
 - Recognized results create VERIFY drafts for all matching panels.
 - The best matched panel opens immediately with values visible and interpretation generated.
 - Every imported value is labeled: "Smart-imported; verify with original report."
+
+
+## V6.3 Full-Body Panel Sync
+Fixes the key issue where the PDF was successfully read and multiple panels were created, but switching from CBC to LFT/RFT/Thyroid opened blank forms.
+
+New behavior:
+- After one full-body report is analyzed, every detected panel keeps its own imported values.
+- Clicking CBC, LFT, RFT/KFT, Thyroid, Lipid, Diabetes, Iron, Vitamins, etc. automatically loads the matching smart-imported draft for the same report.
+- Panel buttons show how many values were imported.
+- Added Full Body Report Summary with detected panel count, total mapped tests and flagged results.
+- Smart-imported values remain labeled for verification against the original report.

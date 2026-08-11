@@ -396,20 +396,57 @@ function statusClass(s){
  if(s.startsWith("Borderline"))return "status-borderline";
  return "status-na";
 }
+
+function getImportedDraftForPanel(panelKey){
+ const date=v("liDate")||activeImportedDate||today();
+ const attachmentName=pendingFiles.li?.name||activeImportedAttachmentName||"";
+ let candidates=db.labInterpretations.filter(x=>x.smartImported===true && x.panel===panelKey);
+ if(attachmentName) candidates=candidates.filter(x=>x.attachment?.name===attachmentName);
+ if(date){
+   const dated=candidates.filter(x=>x.date===date);
+   if(dated.length)candidates=dated;
+ }
+ return candidates[0]||null;
+}
+
+function countFilledValues(values){
+ return Object.values(values||{}).filter(x=>x.value!==""&&x.value!==null&&x.value!==undefined).length;
+}
+
 function selectLabPanel(key){
  if(!labPanels[key]){console.error("Unknown lab panel",key);return}
  currentLabPanel=key;
  if($("liSearch"))$("liSearch").value="";
  document.querySelectorAll(".lab-panel-btn").forEach(b=>b.classList.toggle("active",b.dataset.panel===key));
  document.querySelectorAll("#labPanelStaticGrid button").forEach(b=>b.classList.toggle("active",b.getAttribute("onclick")?.includes(`'${key}'`)));
- renderLabParameters();
- if($("labCentreStatus"))$("labCentreStatus").textContent=`${labPanels[key].title} loaded — ${labPanels[key].params.length} parameters ready.`;
+
+ const draft=getImportedDraftForPanel(key);
+ if(draft){
+   if($("liDate"))$("liDate").value=draft.date||today();
+   if($("liSex"))$("liSex").value=draft.sex||$("liSex").value;
+   if($("liFacility"))$("liFacility").value=draft.facility||$("liFacility").value;
+   if($("liContext"))$("liContext").value=draft.context||"Smart imported full report — VERIFY";
+   if($("liRemarks"))$("liRemarks").value=draft.remarks||"";
+   if($("liLabTemplate") && draft.referenceTemplate)$("liLabTemplate").value=draft.referenceTemplate;
+   renderLabParameters(draft.values||{});
+   generateCurrentPanelSummary();
+   const filled=countFilledValues(draft.values);
+   if($("labCentreStatus"))$("labCentreStatus").textContent=`${labPanels[key].title} loaded from imported report — ${filled} value(s) auto-filled. VERIFY with original report.`;
+ } else {
+   renderLabParameters();
+   generateCurrentPanelSummary();
+   if($("labCentreStatus"))$("labCentreStatus").textContent=`${labPanels[key].title} loaded — no smart-imported values found for this report.`;
+ }
 }
 function renderLabPanelButtons(){
  if(!$("labPanelButtons"))return;
  const group=v("profileGroupFilter")||"All";
  const entries=Object.entries(labPanels).filter(([k,p])=>group==="All"||(p.group||"Core")===group);
- $("labPanelButtons").innerHTML=entries.map(([k,p])=>`<button class="lab-panel-btn ${k===currentLabPanel?"active":""}" data-panel="${k}" onclick="selectLabPanel('${k}')">${p.title}<span class="panel-group-label">${p.group||"Core"} • ${p.params.length} tests</span></button>`).join("");
+ $("labPanelButtons").innerHTML=entries.map(([k,p])=>{
+   const draft=getImportedDraftForPanel(k);
+   const filled=draft?countFilledValues(draft.values):0;
+   return `<button class="lab-panel-btn ${k===currentLabPanel?"active":""}" data-panel="${k}" onclick="selectLabPanel('${k}')">${p.title}<span class="panel-group-label">${p.group||"Core"} • ${p.params.length} tests${filled?` • ${filled} imported`:""}</span></button>`;
+ }).join("");
 }
 function renderLabParameters(existing=null){
  if(!$("labParameterTable"))return;
@@ -468,12 +505,12 @@ function saveLabInterpretation(){
    const idx=v("liEditIndex");if(idx!=="")db.labInterpretations[+idx]=obj;else db.labInterpretations.unshift(obj);
    localStorage.setItem(KEY,JSON.stringify(db));
    if($("liSaveStatus")){$("liSaveStatus").textContent=`Saved: ${obj.title} • ${obj.date}${obj.attachment?.name?` • attachment ${obj.attachment.name}`:""}`;$("liSaveStatus").className="file-name save-ok"}
-   renderSavedLabPanels();renderTimeline();generateCurrentPanelSummary();
+   renderSavedLabPanels();generateFullBodySummary();renderTimeline();generateCurrentPanelSummary();
    $("liEditIndex").value="";
  }catch(e){console.error("Panel save failed",e);if($("liSaveStatus")){$("liSaveStatus").textContent="Save failed: "+e.message;$("liSaveStatus").className="file-name save-error"}alert("Unable to save this panel. Please refresh and try again.")}
 }
 function editLabInterpretation(i){
- const x=db.labInterpretations[i];showView("labcentre");currentLabPanel=x.panel||"CBC";renderLabPanelButtons();
+ const x=db.labInterpretations[i]; activeImportedAttachmentName=x.attachment?.name||activeImportedAttachmentName; activeImportedDate=x.date||activeImportedDate;showView("labcentre");currentLabPanel=x.panel||"CBC";renderLabPanelButtons();
  $("liDate").value=x.date||today();$("liSex").value=x.sex||"Male";if($("liLabTemplate"))$("liLabTemplate").value=x.referenceTemplate||"omega";$("liFacility").value=x.facility||"";$("liContext").value=x.context||"";$("liRemarks").value=x.remarks||"";$("liEditIndex").value=i;
  renderLabParameters(x.values||{});
 }
@@ -715,6 +752,8 @@ async function analyzeAttachedLabReport(){
    else text=await extractImageText(file);
    if($("smartImportText"))$("smartImportText").value=normalizeReportText(text);
    mapReportText(text);
+   activeImportedAttachmentName=pendingFiles.li?.name||file.name||"";
+   activeImportedDate=v("liDate")||today();
    const matches=saveSmartDraftsWithAttachment();
    if(!matches.length){
      if(status)status.textContent="Report was read, but no known test values were mapped. Try Smart Import text preview above.";
@@ -727,12 +766,54 @@ async function analyzeAttachedLabReport(){
    renderLabParameters(best.values);
    generateCurrentPanelSummary();
    renderSavedLabPanels();
+   renderLabPanelButtons();
+   generateFullBodySummary();
    if(status)status.textContent=`✓ ${Object.keys(smartImportMapped).length} values recognized; ${matches.length} panel(s) created. Showing ${best.panel.title} with ${best.count} auto-filled value(s). VERIFY before use.`;
    if($("liSaveStatus"))$("liSaveStatus").textContent="Smart-imported; verify with original report.";
  }catch(e){
    console.error(e);
    if(status)status.textContent=`Analysis failed: ${e.message}`;
  }
+}
+
+
+function panelSummaryText(record){
+ const vals=Object.values(record.values||{});
+ const assessed=vals.filter(x=>x.value!==""&&x.value!==null&&x.value!==undefined);
+ const flagged=assessed.filter(x=>!["Normal","Not assessed"].includes(x.status));
+ const normal=assessed.filter(x=>x.status==="Normal");
+ return {
+   assessed:assessed.length,
+   flagged:flagged.length,
+   normal:normal.length,
+   flaggedText:flagged.slice(0,8).map(x=>`${x.name}: ${x.value} ${x.unit||""} — ${x.status}`).join("; ")
+ };
+}
+
+function generateFullBodySummary(){
+ if(!$("fullBodySummary"))return;
+ const attachmentName=pendingFiles.li?.name||activeImportedAttachmentName||"";
+ const date=v("liDate")||activeImportedDate||"";
+ let records=db.labInterpretations.filter(x=>x.smartImported===true);
+ if(attachmentName)records=records.filter(x=>x.attachment?.name===attachmentName);
+ if(date){
+   const dated=records.filter(x=>x.date===date);
+   if(dated.length)records=dated;
+ }
+ const seen=new Set();
+ records=records.filter(x=>{if(seen.has(x.panel))return false;seen.add(x.panel);return true});
+ if(!records.length){
+   $("fullBodySummary").textContent="No smart-imported full-body panel records found yet.";
+   return;
+ }
+ let totalAssessed=0,totalFlagged=0,lines=[];
+ records.forEach(r=>{
+   const s=panelSummaryText(r);
+   totalAssessed+=s.assessed;totalFlagged+=s.flagged;
+   lines.push(`${r.title}: ${s.assessed} result(s) imported • ${s.flagged} flagged${s.flaggedText?`\n  ↳ ${s.flaggedText}`:""}`);
+ });
+ $("fullBodySummary").textContent=
+ `Imported report: ${attachmentName||"Current report"}\nDate: ${date||"Not specified"}\nPanels detected: ${records.length}\nTotal mapped results: ${totalAssessed}\nFlagged / borderline / abnormal: ${totalFlagged}\n\n${lines.join("\n\n")}\n\nAll smart-imported values must be verified against the original report before clinical use.`;
 }
 
 async function runSmartImport(){
@@ -851,6 +932,8 @@ $("autoRitu").onchange=()=>{db.ritu.auto=$("autoRitu").checked;applyAutoRitu();p
 function saveProfile(){db.profile={name:v("pName"),dob:v("pDob"),sex:v("pSex"),height:n("pHeight"),blood:v("pBlood"),allergy:v("pAllergy"),conditions:v("pConditions"),emergency:v("pEmergency"),goals:v("pGoals")};persist()}
 let pendingFiles={};
 let lastLabUploadFile=null;
+let activeImportedAttachmentName="";
+let activeImportedDate="";
 
 const FILE_DB_NAME="raj_health_360_files";
 const FILE_STORE="attachments";
