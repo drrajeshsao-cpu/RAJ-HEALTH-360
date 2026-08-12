@@ -1,7 +1,7 @@
 {
   "id": "./",
-  "name": "RAJ HEALTH 360",
-  "short_name": "R360",
+  "name": "RAJ HEALTH 360 V7.6 Adaptive Routine",
+  "short_name": "RAJ HEALTH 360",
   "description": "Personal and family integrated health tracker combining modern medicine, Ayurveda, lifestyle, mind and spiritual health.",
   "start_url": "./?source=pwa",
   "scope": "./",

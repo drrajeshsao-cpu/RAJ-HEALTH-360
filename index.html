@@ -48,7 +48,7 @@
 <header class="top">
   <div class="brand responsive-brand">
     <div class="logo">R360</div>
-    <div><h1>RAJ HEALTH 360</h1><div class="version-badge">Version V7.5 • Build 2026-08-12</div><p>Modern Medicine × Ayurveda × Lifestyle × Mind × Spiritual Health</p></div>
+    <div><h1>RAJ HEALTH 360</h1><div class="version-badge">Version V7.6 • Build 2026-08-12</div><p>Modern Medicine × Ayurveda × Lifestyle × Mind × Spiritual Health</p></div>
   </div>
   <div class="top-actions responsive-top-actions">
     <button class="install-pwa-btn" id="installPwaBtn" onclick="installPwaApp()" hidden>⬇ Install App</button>
@@ -70,6 +70,7 @@
     <button class="nav active" data-view="dashboard">⌂ Dashboard</button>
     <button class="nav" data-view="family">👨‍👩‍👧‍👦 Family Health Hub</button>
     <button class="nav" data-view="today">✓ Today</button>
+    <button class="nav" data-view="routine">⏱ Routine Protocol</button>
     <button class="nav" data-view="sleepcentre">☾ Sleep Centre</button>
     <button class="nav" data-view="modern">✚ Modern Health</button>
     <button class="nav" data-view="labcentre">◉ Lab Interpreters</button>
@@ -169,6 +170,34 @@
   </div>
 
   
+
+  <article class="routine-mode-strip card">
+    <div class="routine-mode-main">
+      <div>
+        <span class="eyebrow">ADAPTIVE DAILY ROUTINE</span>
+        <h3><span id="dashRoutineIcon">●</span> <span id="dashRoutineMode">Standard Protocol</span></h3>
+        <p id="dashRoutinePeriod" class="muted">Fixed daily protocol active.</p>
+      </div>
+      <div class="routine-goal-mini">
+        <b id="dashStandardDays">--</b><span>Standard days YTD</span>
+        <small>Goal: 350 / 365</small>
+      </div>
+    </div>
+    <div class="routine-switch-row">
+      <select id="dashRoutineSelect">
+        <option value="standard">Standard Protocol</option>
+        <option value="home">Home Visit</option>
+        <option value="travel">Travelling</option>
+        <option value="exams">Exams</option>
+        <option value="fasting">Fasting / Ekadashi</option>
+        <option value="function">Festival / Function / Celebration</option>
+        <option value="illness">Illness / Recovery</option>
+      </select>
+      <button class="primary" onclick="openRoutineSwitchFromDashboard()">Switch Mode</button>
+      <button class="ghost" onclick="showView('routine')">Protocol Centre →</button>
+    </div>
+  </article>
+
 <div class="dashboard-quick-actions">
   <button onclick="showView('today')"><span>✓</span><b>Today</b><small>Daily check-in</small></button>
   <button onclick="showView('family')"><span>👨‍👩‍👧‍👦</span><b>Family</b><small>Switch member</small></button>
@@ -289,6 +318,81 @@
  <article class="card"><div class="cardtitle"><h3>Recent Daily Records</h3><span class="pill teal">Editable</span></div><div id="dailyTable"></div></article>
 </section>
 
+
+
+<section id="routine" class="view">
+  <div class="pagehead">
+    <div>
+      <span class="eyebrow">ADAPTIVE ROUTINE PROTOCOL</span>
+      <h2>Protect the baseline. Plan the exceptions.</h2>
+      <p>Your fixed daily routine remains the default. Home visits, travel, examinations, fasting, family functions and illness are recorded as time-limited routine variations rather than hidden deviations.</p>
+    </div>
+    <div class="score-ring"><strong id="routineYearPct">--</strong><span>Standard days % YTD</span></div>
+  </div>
+
+  <div class="routine-principle">
+    <b>Annual target: ≥ 350 Standard Protocol Days / 365</b>
+    <span>Special-mode days are tracked separately so you can distinguish unavoidable context from controllable drift. During illness, safety and recovery take priority over rigid schedule adherence.</span>
+  </div>
+
+  <div class="grid2 routine-control-grid">
+    <article class="card">
+      <div class="cardtitle"><div><span class="eyebrow">CURRENT MODE</span><h3 id="routineCurrentTitle">Standard Protocol</h3></div><span class="pill teal" id="routineCurrentBadge">Active</span></div>
+      <div id="routineCurrentDetails" class="summary-box"></div>
+      <div class="routine-template-card" id="routineTemplatePreview"></div>
+      <div class="buttons"><button class="primary" onclick="returnToStandardToday()">Return to Standard Today</button></div>
+    </article>
+
+    <article class="card">
+      <div class="cardtitle"><div><span class="eyebrow">TEMPORARY MODE SWITCH</span><h3>Schedule a changed routine</h3></div><span class="pill amber">Date-wise</span></div>
+      <div class="formgrid two">
+        <label>Mode<select id="routineModeSelect" onchange="renderRoutineTemplateEditor()">
+          <option value="home">Home Visit</option><option value="travel">Travelling</option><option value="exams">Exams</option><option value="fasting">Fasting / Ekadashi</option><option value="function">Festival / Function / Celebration</option><option value="illness">Illness / Recovery</option>
+        </select></label>
+        <label>Reason / context<input id="routineReason" placeholder="e.g. Raipur → Nagpur train journey"></label>
+        <label>Start date<input id="routineStart" type="date"></label>
+        <label>End date<input id="routineEnd" type="date"></label>
+      </div>
+      <label>Special note<textarea id="routineNote" placeholder="Timing, Parana, journey, exam, family-function or recovery notes..."></textarea></label>
+      <div class="buttons"><button class="primary" onclick="saveRoutinePeriod()">Activate / Schedule Mode</button><button class="ghost" onclick="clearRoutineSwitchForm()">Clear</button></div>
+    </article>
+  </div>
+
+  <article class="card routine-template-editor">
+    <div class="cardtitle"><div><span class="eyebrow">MODE-SPECIFIC PROTOCOL</span><h3>Edit the selected mode's practical targets</h3></div><span class="pill teal">Reusable</span></div>
+    <div class="formgrid four">
+      <label>Wake target<input id="routineTplWake"></label>
+      <label>Sleep target<input id="routineTplSleep"></label>
+      <label>Meal pattern<input id="routineTplMeals"></label>
+      <label>Priority / focus<input id="routineTplFocus"></label>
+    </div>
+    <div class="buttons"><button class="primary" onclick="saveRoutineTemplate()">Save Mode Protocol</button></div>
+  </article>
+
+  <article class="card">
+    <div class="cardtitle"><div><span class="eyebrow">TRAYOPASTAMBHA DAILY CHECK</span><h3>Ahara • Nidra • Brahmacharya / self-regulation</h3></div><span class="pill teal">Daily</span></div>
+    <div class="formgrid four">
+      <label>Date<input id="routineCheckDate" type="date"></label>
+      <label>Ahara adherence %<input id="routineAhara" type="number" min="0" max="100" placeholder="0–100"></label>
+      <label>Nidra adherence %<input id="routineNidra" type="number" min="0" max="100" placeholder="0–100"></label>
+      <label>Brahmacharya / self-regulation %<input id="routineBrahma" type="number" min="0" max="100" placeholder="0–100"></label>
+    </div>
+    <label>Daily note<textarea id="routineCheckNote" placeholder="What helped or disturbed the routine today?"></textarea></label>
+    <div class="buttons"><button class="primary" onclick="saveRoutineDailyCheck()">Save Daily Routine Check</button></div>
+    <div id="routineDailySummary" class="summary-box"></div>
+  </article>
+
+  <article class="card">
+    <div class="cardtitle"><div><span class="eyebrow">ROUTINE ADHERENCE ANALYTICS</span><h3>How much of life stayed on the fixed protocol?</h3></div><span class="pill teal">Auto</span></div>
+    <div id="routineAnalyticsGrid" class="routine-analytics-grid"></div>
+    <div class="routine-target-track"><div class="track"><div id="routineGoalBar" class="fill"></div></div><small id="routineGoalText"></small></div>
+  </article>
+
+  <article class="card">
+    <div class="cardtitle"><div><span class="eyebrow">MODE HISTORY</span><h3>Temporary routine variations</h3></div></div>
+    <div class="table-wrap"><table id="routineHistoryTable"></table></div>
+  </article>
+</section>
 
 <section id="sleepcentre" class="view">
  <div class="pagehead compact"><div><span class="eyebrow">RECOVERY INTELLIGENCE</span><h2>Sleep Centre</h2><p>Sleep timing, duration, quality and contributing habits — not just total hours.</p></div></div>
@@ -1035,7 +1139,7 @@
 <script src="https://www.gstatic.com/firebasejs/12.10.0/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/12.10.0/firebase-storage-compat.js"></script>
 <script src="app.js"></script>
-<div id="appVersionText" class="app-version-footer">RAJ HEALTH 360 V7.5 • Build 2026-08-12</div>
+<div id="appVersionText" class="app-version-footer">RAJ HEALTH 360 V7.6 • Build 2026-08-12</div>
 <nav class="mobile-bottom-nav" aria-label="Quick navigation">
   <button onclick="showView('dashboard')"><span>⌂</span><small>Home</small></button>
   <button onclick="showView('family')"><span>👨‍👩‍👧</span><small>Family</small></button>

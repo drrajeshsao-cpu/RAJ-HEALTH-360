@@ -309,3 +309,15 @@ Future rule: every release should update this visible version/build label before
 - Adds an Install App button driven by Chrome's `beforeinstallprompt` event when available.
 - Does not change Firebase Authentication, Firestore sync, Family Health Hub, SLAIE or health-data storage logic.
 - Version V7.5 • Build 2026-08-12.
+
+
+## V7.6 Adaptive Routine Protocol
+- Standard Protocol is the baseline; temporary context-specific modes are stored as dated exceptions.
+- Modes: Home Visit, Travelling, Exams, Fasting/Ekadashi, Festival/Function/Celebration, Illness/Recovery.
+- Each special period has editable start/end date, reason and note, and automatically falls back to Standard after the end date.
+- Dashboard shows the active routine mode and Standard Protocol days YTD against a configurable 350/365 goal.
+- Monthly, quarterly, half-yearly and yearly routine-variation analytics.
+- Editable schedule targets for wake, sleep, meals and mode-specific focus.
+- Daily Trayopastambha check: Ahara, Nidra and Brahmacharya/self-regulation adherence.
+- Routine protocol is stored separately for each Family Health Hub member and included in existing Firebase cloud sync.
+- Existing Firebase login, SLAIE, PWA installability and health records remain unchanged.

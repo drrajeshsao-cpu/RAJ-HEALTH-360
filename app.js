@@ -1,4 +1,4 @@
-const APP_VERSION="V7.5";
+const APP_VERSION="V7.6";
 const APP_BUILD_DATE="2026-08-12";
 
 const KEY="raj_health_360_v2";
@@ -6,6 +6,15 @@ const defaultDB={
  profile:{name:"",dob:"",sex:"Male",height:"",blood:"",allergy:"",conditions:"",emergency:"",goals:""},
  familyMembers:[],memberRecords:{},activeMemberId:"self",
  reportArchiveIndex:[],
+ routineProtocol:{goalStandardDays:350,trackingStart:"",periods:[],dailyChecks:[],templates:{
+  standard:{wake:"Your fixed target",sleep:"Your fixed target",meals:"Your usual fixed meal protocol",focus:"Dinacharya • Ahara • Nidra • Brahmacharya"},
+  home:{wake:"Earlier / household-compatible",sleep:"Earlier / household-compatible",meals:"Breakfast + lunch + snack + dinner as available",focus:"Keep core practices; adapt timing to home-visit setting"},
+  travel:{wake:"Route-dependent",sleep:"Journey-dependent",meals:"Plan around route, stations/restaurants and safe availability",focus:"Protect hydration, sleep opportunity and essential routine"},
+  exams:{wake:"Aim by sunrise when Brahma Muhurta is not feasible",sleep:"May be later during study period",meals:"Usually 2 main meals; keep timing as regular as feasible",focus:"Study priority with sleep/recovery protection"},
+  fasting:{wake:"Brahma Muhurta target",sleep:"Flexible but protect adequate rest",meals:"Fast / vrata plan; Parana as per selected observance",focus:"Puja • japa • Parana window • recovery"},
+  function:{wake:"Situation-dependent",sleep:"Function/family-event dependent",meals:"Available family/function meals with mindful choices",focus:"Maintain essentials despite crowd, travel and altered timing"},
+  illness:{wake:"Recovery-dependent",sleep:"Rest/recovery priority",meals:"As tolerated / clinically appropriate",focus:"Recovery first; resume baseline progressively"}
+ }},
  daily:[],labs:[],imaging:[],medicines:[],therapies:[],mind:[],habits:[],sleep:[],physician:[],experiments:[],preventive:[],vault:[],labInterpretations:[],
  ayurveda:{prakriti:"Vata-Pitta",vikriti:"",agni:"Sama",koshta:"Madhyama",ama:"Absent",bala:"Madhyama",ashtavidha:{},dashavidha:{},dosha:{vata:5,pitta:5,kapha:5,note:""}},
  ritu:{auto:true,ritu:"Varsha",desha:"Sadharana"}, shatkriya:{stage:"Sanchaya",note:""}
@@ -18,7 +27,7 @@ const n=id=>Number(v(id))||0;
 const today=()=>new Date().toISOString().slice(0,10);
 
 const FAMILY_RECORD_KEYS=[
- "profile","reportArchiveIndex","daily","labs","imaging","medicines","therapies","mind","habits","sleep","physician","experiments","preventive","vault","labInterpretations",
+ "profile","reportArchiveIndex","routineProtocol","daily","labs","imaging","medicines","therapies","mind","habits","sleep","physician","experiments","preventive","vault","labInterpretations",
  "ayurveda","ritu","shatkriya"
 ];
 
@@ -29,7 +38,15 @@ function emptyMemberRecord(meta={}){
    name:meta.name||"",dob:meta.dob||"",sex:meta.sex||"Male",height:"",blood:meta.blood||"",
    allergy:"",conditions:"",emergency:meta.mobile||"",goals:""
   },
-  reportArchiveIndex:[],daily:[],labs:[],imaging:[],medicines:[],therapies:[],mind:[],habits:[],sleep:[],physician:[],experiments:[],preventive:[],vault:[],labInterpretations:[],
+  reportArchiveIndex:[],routineProtocol:{goalStandardDays:350,trackingStart:"",periods:[],dailyChecks:[],templates:{
+  standard:{wake:"Your fixed target",sleep:"Your fixed target",meals:"Your usual fixed meal protocol",focus:"Dinacharya • Ahara • Nidra • Brahmacharya"},
+  home:{wake:"Earlier / household-compatible",sleep:"Earlier / household-compatible",meals:"Breakfast + lunch + snack + dinner as available",focus:"Keep core practices; adapt timing to home-visit setting"},
+  travel:{wake:"Route-dependent",sleep:"Journey-dependent",meals:"Plan around route, stations/restaurants and safe availability",focus:"Protect hydration, sleep opportunity and essential routine"},
+  exams:{wake:"Aim by sunrise when Brahma Muhurta is not feasible",sleep:"May be later during study period",meals:"Usually 2 main meals; keep timing as regular as feasible",focus:"Study priority with sleep/recovery protection"},
+  fasting:{wake:"Brahma Muhurta target",sleep:"Flexible but protect adequate rest",meals:"Fast / vrata plan; Parana as per selected observance",focus:"Puja • japa • Parana window • recovery"},
+  function:{wake:"Situation-dependent",sleep:"Function/family-event dependent",meals:"Available family/function meals with mindful choices",focus:"Maintain essentials despite crowd, travel and altered timing"},
+  illness:{wake:"Recovery-dependent",sleep:"Rest/recovery priority",meals:"As tolerated / clinically appropriate",focus:"Recovery first; resume baseline progressively"}
+ }},daily:[],labs:[],imaging:[],medicines:[],therapies:[],mind:[],habits:[],sleep:[],physician:[],experiments:[],preventive:[],vault:[],labInterpretations:[],
   ayurveda:{prakriti:"",vikriti:"",agni:"",koshta:"",ama:"",bala:"",ashtavidha:{},dashavidha:{},dosha:{vata:5,pitta:5,kapha:5,note:""}},
   ritu:{auto:true,ritu:"Varsha",desha:"Sadharana"},shatkriya:{stage:"Sanchaya",note:""}
  };
@@ -168,6 +185,112 @@ function useActiveMemberInLab(){
  if($("liFacility")&&!v("liFacility"))$("liFacility").value="";
 }
 
+
+const ROUTINE_MODES={
+ standard:{label:"Standard Protocol",icon:"✓"},
+ home:{label:"Home Visit",icon:"⌂"},
+ travel:{label:"Travelling",icon:"✈"},
+ exams:{label:"Exams",icon:"✎"},
+ fasting:{label:"Fasting / Ekadashi",icon:"ॐ"},
+ function:{label:"Festival / Function / Celebration",icon:"✦"},
+ illness:{label:"Illness / Recovery",icon:"♡"}
+};
+let routineEditingId=null;
+function routineBlank(){return cloneData(defaultDB.routineProtocol)}
+function ensureRoutineProtocol(){
+ if(!db.routineProtocol||typeof db.routineProtocol!=="object")db.routineProtocol=routineBlank();
+ db.routineProtocol.goalStandardDays=Number(db.routineProtocol.goalStandardDays)||350;
+ db.routineProtocol.trackingStart=db.routineProtocol.trackingStart||today();
+ db.routineProtocol.periods=Array.isArray(db.routineProtocol.periods)?db.routineProtocol.periods:[];
+ db.routineProtocol.dailyChecks=Array.isArray(db.routineProtocol.dailyChecks)?db.routineProtocol.dailyChecks:[];
+ db.routineProtocol.templates=Object.assign({},routineBlank().templates,db.routineProtocol.templates||{});
+}
+function isoLocal(d=new Date()){const x=new Date(d.getTime()-d.getTimezoneOffset()*60000);return x.toISOString().slice(0,10)}
+function dateObj(s){return new Date(s+"T12:00:00")}
+function addDaysIso(s,n){const d=dateObj(s);d.setDate(d.getDate()+n);return isoLocal(d)}
+function routinePeriodForDate(ds){
+ ensureRoutineProtocol();
+ const matches=db.routineProtocol.periods.filter(p=>p.mode!=="standard"&&p.start<=ds&&(!p.end||p.end>=ds));
+ matches.sort((a,b)=>(b.createdAt||0)-(a.createdAt||0));
+ return matches[0]||null;
+}
+function routineModeForDate(ds){const p=routinePeriodForDate(ds);return p?.mode||"standard"}
+function currentRoutinePeriod(){return routinePeriodForDate(today())}
+function routineModeMeta(mode){return ROUTINE_MODES[mode]||ROUTINE_MODES.standard}
+function daysInclusive(a,b){if(!a||!b)return 0;return Math.max(0,Math.round((dateObj(b)-dateObj(a))/86400000)+1)}
+function clearRoutineSwitchForm(){routineEditingId=null;["routineReason","routineNote"].forEach(id=>{if($(id))$(id).value=""});if($("routineStart"))$("routineStart").value=today();if($("routineEnd"))$("routineEnd").value=today()}
+function openRoutineSwitchFromDashboard(){
+ const mode=v("dashRoutineSelect")||"standard";
+ if(mode==="standard"){showView("routine");returnToStandardToday();return}
+ showView("routine");if($("routineModeSelect"))$("routineModeSelect").value=mode;renderRoutineTemplateEditor();setTimeout(()=>$("routineReason")?.focus(),100)
+}
+function saveRoutinePeriod(){
+ ensureRoutineProtocol();const mode=v("routineModeSelect"),start=v("routineStart"),end=v("routineEnd");
+ if(!mode||mode==="standard"){alert("Choose a temporary special mode.");return}
+ if(!start||!end){alert("Please enter both start and end dates so the app can automatically return to Standard Protocol.");return}
+ if(end<start){alert("End date cannot be before start date.");return}
+ const existing=routineEditingId?db.routineProtocol.periods.find(x=>x.id===routineEditingId):null;
+ const p={id:existing?.id||("rp_"+Date.now()),mode,start,end,reason:v("routineReason").trim(),note:v("routineNote").trim(),createdAt:existing?.createdAt||Date.now(),updatedAt:Date.now()};
+ if(existing){Object.assign(existing,p)}else db.routineProtocol.periods.unshift(p);
+ routineEditingId=null;persist();clearRoutineSwitchForm();showView("routine");
+}
+function returnToStandardToday(){
+ ensureRoutineProtocol();const td=today();let changed=false;
+ db.routineProtocol.periods=db.routineProtocol.periods.filter(p=>{
+  if(p.start<=td&&(!p.end||p.end>=td)){
+   const newEnd=addDaysIso(td,-1);changed=true;
+   if(newEnd<p.start)return false;p.end=newEnd;
+  }
+  return true;
+ });
+ if(changed)persist();else renderRoutineProtocol();
+}
+function deleteRoutinePeriod(id){if(!confirm("Delete this routine variation record?"))return;db.routineProtocol.periods=db.routineProtocol.periods.filter(x=>x.id!==id);persist()}
+function editRoutinePeriod(id){
+ const p=db.routineProtocol.periods.find(x=>x.id===id);if(!p)return;showView("routine");
+ routineEditingId=id;$("routineModeSelect").value=p.mode;$("routineStart").value=p.start;$("routineEnd").value=p.end||"";$("routineReason").value=p.reason||"";$("routineNote").value=p.note||"";
+ renderRoutineTemplateEditor();
+}
+function renderRoutineTemplateEditor(){ensureRoutineProtocol();const mode=v("routineModeSelect")||"home",t=db.routineProtocol.templates[mode]||{};[["routineTplWake","wake"],["routineTplSleep","sleep"],["routineTplMeals","meals"],["routineTplFocus","focus"]].forEach(([id,k])=>{if($(id)&&document.activeElement!==$(id))$(id).value=t[k]||""})}
+function saveRoutineTemplate(){ensureRoutineProtocol();const mode=v("routineModeSelect")||"home";db.routineProtocol.templates[mode]={wake:v("routineTplWake"),sleep:v("routineTplSleep"),meals:v("routineTplMeals"),focus:v("routineTplFocus")};persist()}
+function saveRoutineDailyCheck(){
+ ensureRoutineProtocol();const date=v("routineCheckDate")||today();const clamp=x=>Math.max(0,Math.min(100,Number(x)||0));
+ const row={date,mode:routineModeForDate(date),ahara:clamp(v("routineAhara")),nidra:clamp(v("routineNidra")),brahma:clamp(v("routineBrahma")),note:v("routineCheckNote").trim(),updatedAt:Date.now()};
+ row.overall=Math.round((row.ahara+row.nidra+row.brahma)/3);
+ const i=db.routineProtocol.dailyChecks.findIndex(x=>x.date===date);if(i>=0)db.routineProtocol.dailyChecks[i]=row;else db.routineProtocol.dailyChecks.unshift(row);persist()
+}
+function routineRangeStats(start,end){
+ ensureRoutineProtocol();const td=today();if(start<db.routineProtocol.trackingStart)start=db.routineProtocol.trackingStart;if(end>td)end=td;if(start>end)return {elapsed:0,standard:0,changed:0,pct:0,modes:{}};
+ let d=start,elapsed=0,standard=0,modes={};
+ while(d<=end){const m=routineModeForDate(d);elapsed++;if(m==="standard")standard++;else modes[m]=(modes[m]||0)+1;d=addDaysIso(d,1)}
+ return {elapsed,standard,changed:elapsed-standard,pct:elapsed?Math.round(standard*1000/elapsed)/10:0,modes};
+}
+function periodBounds(kind){
+ const d=new Date(),y=d.getFullYear(),m=d.getMonth();let s,e;
+ if(kind==="month"){s=new Date(y,m,1);e=new Date(y,m+1,0)}
+ if(kind==="quarter"){const q=Math.floor(m/3)*3;s=new Date(y,q,1);e=new Date(y,q+3,0)}
+ if(kind==="half"){const h=m<6?0:6;s=new Date(y,h,1);e=new Date(y,h+6,0)}
+ if(kind==="year"){s=new Date(y,0,1);e=new Date(y,11,31)}
+ return [isoLocal(s),isoLocal(e)]
+}
+function routineStatsCard(label,kind){const [s,e]=periodBounds(kind),st=routineRangeStats(s,e);return `<div class="routine-stat-card"><span>${label}</span><b>${st.standard}/${st.elapsed}</b><strong>${st.pct}% Standard</strong><small>${st.changed} variation day(s)</small></div>`}
+function renderRoutineProtocol(){
+ if(!$("routineCurrentTitle"))return;ensureRoutineProtocol();const td=today(),p=currentRoutinePeriod(),mode=p?.mode||"standard",meta=routineModeMeta(mode),tpl=db.routineProtocol.templates[mode]||{};
+ $("routineCurrentTitle").textContent=meta.icon+" "+meta.label;$("routineCurrentBadge").textContent=p?`${daysInclusive(td,p.end)} day(s) remaining`:"Baseline active";
+ $("routineCurrentDetails").textContent=p?`${p.start} → ${p.end}${p.reason?" • "+p.reason:""}${p.note?"\n"+p.note:""}`:"No temporary variation is active today. The fixed Standard Protocol is the default.";
+ $("routineTemplatePreview").innerHTML=`<div><b>Wake</b><span>${tpl.wake||"—"}</span></div><div><b>Sleep</b><span>${tpl.sleep||"—"}</span></div><div><b>Meals</b><span>${tpl.meals||"—"}</span></div><div><b>Focus</b><span>${tpl.focus||"—"}</span></div>`;
+ const [ys,ye]=periodBounds("year"),yst=routineRangeStats(ys,ye);$("routineYearPct").textContent=yst.pct?yst.pct+"%":"--";
+ $("routineAnalyticsGrid").innerHTML=routineStatsCard("This month","month")+routineStatsCard("This quarter","quarter")+routineStatsCard("Half year","half")+routineStatsCard("Year to date","year");
+ const annualProgress=Math.min(100,Math.round(yst.standard/350*100));$("routineGoalBar").style.width=annualProgress+"%";$("routineGoalText").textContent=`Tracking since ${db.routineProtocol.trackingStart} • ${yst.standard} Standard Protocol day(s) recorded in the tracked YTD window • full-year target: 350 / 365.`;
+ const checks=db.routineProtocol.dailyChecks||[],latest=checks[0];$("routineDailySummary").textContent=latest?`${latest.date} • ${routineModeMeta(latest.mode).label} • Ahara ${latest.ahara}% • Nidra ${latest.nidra}% • Brahmacharya/self-regulation ${latest.brahma}% • Overall ${latest.overall}%${latest.note?" • "+latest.note:""}`:"No daily Trayopastambha check saved yet.";
+ $("routineHistoryTable").innerHTML=table(db.routineProtocol.periods.map(x=>({...x,modeLabel:routineModeMeta(x.mode).label,days:daysInclusive(x.start,x.end),act:`<button class="action-btn edit-btn" onclick="editRoutinePeriod('${x.id}')">Edit</button><button class="action-btn delete-btn" onclick="deleteRoutinePeriod('${x.id}')">Delete</button>`})),[["Mode","modeLabel"],["Start","start"],["End","end"],["Days","days"],["Reason","reason"],["Note","note"],["Action","act"]]);
+ renderRoutineTemplateEditor();renderRoutineDashboard();
+}
+function renderRoutineDashboard(){
+ if(!$("dashRoutineMode"))return;ensureRoutineProtocol();const p=currentRoutinePeriod(),mode=p?.mode||"standard",meta=routineModeMeta(mode);$("dashRoutineIcon").textContent=meta.icon;$("dashRoutineMode").textContent=meta.label;$("dashRoutinePeriod").textContent=p?`${p.start} → ${p.end} • ${daysInclusive(today(),p.end)} day(s) remaining${p.reason?" • "+p.reason:""}`:"Fixed daily protocol active — no temporary variation today.";
+ const [s,e]=periodBounds("year"),st=routineRangeStats(s,e);$("dashStandardDays").textContent=st.standard;$("dashRoutineSelect").value=mode;
+}
+
 function persist(){
  syncActiveMemberRecord();
  localStorage.setItem(KEY,JSON.stringify(db));
@@ -175,6 +298,7 @@ function persist(){
  scheduleCloudSync();
 }
 initializeFamilyHub();
+ensureRoutineProtocol();
 
 function showView(id){
  document.querySelectorAll(".view").forEach(x=>x.classList.remove("active"));$(id).classList.add("active");
@@ -182,7 +306,7 @@ function showView(id){
  window.scrollTo({top:0,behavior:"smooth"})
 }
 document.querySelectorAll(".nav").forEach(x=>x.onclick=()=>showView(x.dataset.view));
-["tdDate","labDate","imgDate","txDate","msDate","slDate","phDate","exStart","pvDue","vlDate","liDate"].forEach(id=>{if($(id))$(id).value=today()});
+["routineStart","routineEnd","routineCheckDate","tdDate","labDate","imgDate","txDate","msDate","slDate","phDate","exStart","pvDue","vlDate","liDate"].forEach(id=>{if($(id))$(id).value=today()});
 $("themeBtn").onclick=()=>document.body.classList.toggle("dark");
 $("backupBtn").onclick=exportData;
 
@@ -2365,7 +2489,7 @@ function renderTables(){
 }
 function safeRun(name,fn){try{fn()}catch(e){console.error(`RAJ HEALTH 360: ${name} failed`,e);if(name.includes("Lab")&&$("labCentreStatus"))$("labCentreStatus").textContent=`Diagnostic module recovered from an error: ${e.message}`}}
 function renderAll(){
- safeRun("Family Hub",renderFamilyHub);
+ safeRun("Family Hub",renderFamilyHub);safeRun("Routine Protocol",renderRoutineProtocol);
  safeRun("Ritu auto",applyAutoRitu);safeRun("Forms",renderForms);safeRun("Dashboard",renderDashboard);safeRun("Ritu",renderRitu);safeRun("Investigations",renderInvestigations);safeRun("Tables",renderTables);safeRun("Sleep",renderSleep);safeRun("Physician",renderPhysician);safeRun("Experiments",renderExperiments);safeRun("Preventive",renderPreventive);safeRun("Vault",renderVault);
  safeRun("Lab panel buttons",renderLabPanelButtons);safeRun("Lab parameters",()=>renderLabParameters());safeRun("Saved Lab panels",renderSavedLabPanels);
  safeRun("Timeline",renderTimeline);safeRun("Daily summary",generateDailySummary);safeRun("Ayurveda summary",generateAyurvedaSummary);safeRun("Investigation summary",generateInvestigationSummary);safeRun("Habit summary",generateHabitSummary);
