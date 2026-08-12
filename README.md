@@ -321,3 +321,13 @@ Future rule: every release should update this visible version/build label before
 - Daily Trayopastambha check: Ahara, Nidra and Brahmacharya/self-regulation adherence.
 - Routine protocol is stored separately for each Family Health Hub member and included in existing Firebase cloud sync.
 - Existing Firebase login, SLAIE, PWA installability and health records remain unchanged.
+
+
+## V7.7 Lifestyle & Routine Statement
+- Bank-statement style routine history for 1/2/3 weeks, 1/2/3/6/9/12 months, 2 years and custom date ranges.
+- Counts Standard Protocol, Home Visit, Travelling, Exams, Fasting/Ekadashi, Festival/Function/Celebration and Illness/Recovery days.
+- Date-wise ledger includes reason/context and Trayopastambha adherence when a daily check exists.
+- Annual archive supports opening any recorded year for next-year planning.
+- Print / Save PDF, CSV export and WhatsApp/system share are included.
+- Uses the active family member's routine record and existing cloud sync; login/PWA architecture is unchanged.
+- Version V7.7 • Build 2026-08-12.

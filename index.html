@@ -48,7 +48,7 @@
 <header class="top">
   <div class="brand responsive-brand">
     <div class="logo">R360</div>
-    <div><h1>RAJ HEALTH 360</h1><div class="version-badge">Version V7.6 • Build 2026-08-12</div><p>Modern Medicine × Ayurveda × Lifestyle × Mind × Spiritual Health</p></div>
+    <div><h1>RAJ HEALTH 360</h1><div class="version-badge">Version V7.7 • Build 2026-08-12</div><p>Modern Medicine × Ayurveda × Lifestyle × Mind × Spiritual Health</p></div>
   </div>
   <div class="top-actions responsive-top-actions">
     <button class="install-pwa-btn" id="installPwaBtn" onclick="installPwaApp()" hidden>⬇ Install App</button>
@@ -71,6 +71,7 @@
     <button class="nav" data-view="family">👨‍👩‍👧‍👦 Family Health Hub</button>
     <button class="nav" data-view="today">✓ Today</button>
     <button class="nav" data-view="routine">⏱ Routine Protocol</button>
+    <button class="nav" data-view="routinestatement">📊 Lifestyle Statement</button>
     <button class="nav" data-view="sleepcentre">☾ Sleep Centre</button>
     <button class="nav" data-view="modern">✚ Modern Health</button>
     <button class="nav" data-view="labcentre">◉ Lab Interpreters</button>
@@ -320,6 +321,7 @@
 
 
 
+\n<section id="routinestatement" class="view">\n  <div class="pagehead compact">\n    <div>\n      <span class="eyebrow">LIFESTYLE & ROUTINE STATEMENT</span>\n      <h2>Your routine history, like a health bank statement.</h2>\n      <p>Review Standard Protocol and special-routine days across weeks, months and years. Use the record to understand unavoidable vs avoidable deviations and plan the next year.</p>\n    </div>\n    <div class="score-ring"><strong id="rsStandardPct">--</strong><span>Standard days</span></div>\n  </div>\n\n  <article class="card statement-controls">\n    <div class="cardtitle"><div><span class="eyebrow">STATEMENT PERIOD</span><h3>Select duration</h3></div><span class="pill teal" id="rsPeriodLabel">Last 30 days</span></div>\n    <div class="period-buttons">\n      <button data-days="7" onclick="setRoutineStatementRange(7,this)">1 Week</button>\n      <button data-days="14" onclick="setRoutineStatementRange(14,this)">2 Weeks</button>\n      <button data-days="21" onclick="setRoutineStatementRange(21,this)">3 Weeks</button>\n      <button data-days="30" class="active" onclick="setRoutineStatementRange(30,this)">1 Month</button>\n      <button data-days="60" onclick="setRoutineStatementRange(60,this)">2 Months</button>\n      <button data-days="90" onclick="setRoutineStatementRange(90,this)">3 Months</button>\n      <button data-days="180" onclick="setRoutineStatementRange(180,this)">6 Months</button>\n      <button data-days="270" onclick="setRoutineStatementRange(270,this)">9 Months</button>\n      <button data-days="365" onclick="setRoutineStatementRange(365,this)">12 Months</button>\n      <button data-days="730" onclick="setRoutineStatementRange(730,this)">2 Years</button>\n    </div>\n    <div class="formgrid two custom-range">\n      <label>From<input id="rsFrom" type="date" onchange="renderRoutineStatement()"></label>\n      <label>To<input id="rsTo" type="date" onchange="renderRoutineStatement()"></label>\n    </div>\n    <div class="buttons">\n      <button class="primary" onclick="renderRoutineStatement()">Generate Statement</button>\n      <button class="ghost" onclick="printRoutineStatement()">🖨 Print / Save PDF</button>\n      <button class="ghost" onclick="downloadRoutineStatementCSV()">⬇ CSV</button>\n      <button class="ghost" onclick="shareRoutineStatement()">🟢 Share / WhatsApp</button>\n    </div>\n  </article>\n\n  <div class="statement-metrics">\n    <div class="metric-card"><span>Tracked days</span><b id="rsTracked">0</b></div>\n    <div class="metric-card"><span>Standard Protocol</span><b id="rsStandard">0</b><small>Annual target ≥ 350</small></div>\n    <div class="metric-card"><span>Changed routine</span><b id="rsChanged">0</b></div>\n    <div class="metric-card"><span>Ahara average</span><b id="rsAhara">--</b></div>\n    <div class="metric-card"><span>Nidra average</span><b id="rsNidra">--</b></div>\n    <div class="metric-card"><span>Brahmacharya average</span><b id="rsBrahma">--</b></div>\n  </div>\n\n  <article class="card">\n    <div class="cardtitle"><div><span class="eyebrow">MODE-WISE SUMMARY</span><h3>How many days were spent in each routine?</h3></div></div>\n    <div id="rsModeSummary" class="mode-summary-grid"></div>\n  </article>\n\n  <div class="grid2">\n    <article class="card"><div class="cardtitle"><div><span class="eyebrow">DEVIATION ANALYSIS</span><h3>What changed?</h3></div></div><div id="rsDeviation" class="summary-box"></div></article>\n    <article class="card"><div class="cardtitle"><div><span class="eyebrow">NEXT-YEAR PLANNING</span><h3>What should be planned?</h3></div></div><div id="rsPlanning" class="summary-box"></div></article>\n  </div>\n\n  <article class="card">\n    <div class="cardtitle"><div><span class="eyebrow">DATE-WISE LEDGER</span><h3>Routine statement</h3></div><input id="rsSearch" class="search" placeholder="Search mode / reason / note" oninput="renderRoutineStatementTable()"></div>\n    <div class="statement-table-wrap"><table><thead><tr><th>Date</th><th>Mode</th><th>Reason / Context</th><th>Ahara</th><th>Nidra</th><th>Brahmacharya</th><th>Overall</th><th>Note</th></tr></thead><tbody id="rsTableBody"></tbody></table></div>\n  </article>\n\n  <article class="card">\n    <div class="cardtitle"><div><span class="eyebrow">ANNUAL ARCHIVE</span><h3>Year-to-year lifestyle history</h3></div></div>\n    <div id="rsYearArchive" class="year-archive-grid"></div>\n  </article>\n</section>\n
 <section id="routine" class="view">
   <div class="pagehead">
     <div>
@@ -1139,7 +1141,7 @@
 <script src="https://www.gstatic.com/firebasejs/12.10.0/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/12.10.0/firebase-storage-compat.js"></script>
 <script src="app.js"></script>
-<div id="appVersionText" class="app-version-footer">RAJ HEALTH 360 V7.6 • Build 2026-08-12</div>
+<div id="appVersionText" class="app-version-footer">RAJ HEALTH 360 V7.7 • Build 2026-08-12</div>
 <nav class="mobile-bottom-nav" aria-label="Quick navigation">
   <button onclick="showView('dashboard')"><span>⌂</span><small>Home</small></button>
   <button onclick="showView('family')"><span>👨‍👩‍👧</span><small>Family</small></button>
