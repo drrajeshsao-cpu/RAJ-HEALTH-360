@@ -1,5 +1,5 @@
-const APP_VERSION="V7.7";
-const APP_BUILD_DATE="2026-08-12";
+const APP_VERSION="V8.0 FINAL STABLE";
+const APP_BUILD_DATE="2026-08-13";
 
 const KEY="raj_health_360_v2";
 const defaultDB={
@@ -15,19 +15,20 @@ const defaultDB={
   function:{wake:"Situation-dependent",sleep:"Function/family-event dependent",meals:"Available family/function meals with mindful choices",focus:"Maintain essentials despite crowd, travel and altered timing"},
   illness:{wake:"Recovery-dependent",sleep:"Rest/recovery priority",meals:"As tolerated / clinically appropriate",focus:"Recovery first; resume baseline progressively"}
  }},
- daily:[],labs:[],imaging:[],medicines:[],therapies:[],mind:[],habits:[],sleep:[],physician:[],experiments:[],preventive:[],vault:[],labInterpretations:[],
+ daily:[],labs:[],imaging:[],medicines:[],therapies:[],mind:[],habits:[],sleep:[],physician:[],experiments:[],preventive:[],vault:[],labInterpretations:[],bodyHealth:[],
  ayurveda:{prakriti:"Vata-Pitta",vikriti:"",agni:"Sama",koshta:"Madhyama",ama:"Absent",bala:"Madhyama",ashtavidha:{},dashavidha:{},dosha:{vata:5,pitta:5,kapha:5,note:""}},
  ritu:{auto:true,ritu:"Varsha",desha:"Sadharana"}, shatkriya:{stage:"Sanchaya",note:""}
 };
+const cloneSafeDefault=x=>JSON.parse(JSON.stringify(x));
 let db=Object.assign({},defaultDB,JSON.parse(localStorage.getItem(KEY)||"{}"));
-for(const k of Object.keys(defaultDB)) if(db[k]===undefined) db[k]=defaultDB[k];
+for(const k of Object.keys(defaultDB)) if(db[k]===undefined) db[k]=cloneSafeDefault(defaultDB[k]);
 const $=id=>document.getElementById(id);
 const v=id=>$(id)?.value??"";
 const n=id=>Number(v(id))||0;
 const today=()=>new Date().toISOString().slice(0,10);
 
 const FAMILY_RECORD_KEYS=[
- "profile","reportArchiveIndex","routineProtocol","daily","labs","imaging","medicines","therapies","mind","habits","sleep","physician","experiments","preventive","vault","labInterpretations",
+ "profile","reportArchiveIndex","routineProtocol","daily","labs","imaging","medicines","therapies","mind","habits","sleep","physician","experiments","preventive","vault","labInterpretations","bodyHealth",
  "ayurveda","ritu","shatkriya"
 ];
 
@@ -46,7 +47,7 @@ function emptyMemberRecord(meta={}){
   fasting:{wake:"Brahma Muhurta target",sleep:"Flexible but protect adequate rest",meals:"Fast / vrata plan; Parana as per selected observance",focus:"Puja • japa • Parana window • recovery"},
   function:{wake:"Situation-dependent",sleep:"Function/family-event dependent",meals:"Available family/function meals with mindful choices",focus:"Maintain essentials despite crowd, travel and altered timing"},
   illness:{wake:"Recovery-dependent",sleep:"Rest/recovery priority",meals:"As tolerated / clinically appropriate",focus:"Recovery first; resume baseline progressively"}
- }},daily:[],labs:[],imaging:[],medicines:[],therapies:[],mind:[],habits:[],sleep:[],physician:[],experiments:[],preventive:[],vault:[],labInterpretations:[],
+ }},daily:[],labs:[],imaging:[],medicines:[],therapies:[],mind:[],habits:[],sleep:[],physician:[],experiments:[],preventive:[],vault:[],labInterpretations:[],bodyHealth:[],
   ayurveda:{prakriti:"",vikriti:"",agni:"",koshta:"",ama:"",bala:"",ashtavidha:{},dashavidha:{},dosha:{vata:5,pitta:5,kapha:5,note:""}},
   ritu:{auto:true,ritu:"Varsha",desha:"Sadharana"},shatkriya:{stage:"Sanchaya",note:""}
  };
@@ -320,6 +321,7 @@ ensureRoutineProtocol();
 function showView(id){
  document.querySelectorAll(".view").forEach(x=>x.classList.remove("active"));$(id).classList.add("active");
  document.querySelectorAll(".nav").forEach(x=>x.classList.toggle("active",x.dataset.view===id));
+ if(id==="bodyhealth")setTimeout(renderBodyHealth,0);
  window.scrollTo({top:0,behavior:"smooth"})
 }
 document.querySelectorAll(".nav").forEach(x=>x.onclick=()=>showView(x.dataset.view));
@@ -2329,6 +2331,28 @@ function renderPreventive(){
  let now=today(), due=db.preventive.filter(x=>x.status!=="Completed").sort((a,b)=>(a.due||"").localeCompare(b.due||"")).slice(0,6);
  $("preventiveSummary").textContent=due.length?due.map(x=>`${x.due||"No date"} — ${x.item} [${x.priority}]`).join("\n"):"No due preventive items recorded."; classifyPreventiveBuckets();
 }
+
+// ===================== V8.0 MY BODY HEALTH =====================
+const BODY_HEALTH_AREAS=[
+["hair_scalp","Hair & Scalp","🧑‍🦱","External","Skin / appendages"],["skin","Skin","🧴","External","Skin"],["face","Face","🙂","External","Skin / sensory"],["eyes","Eyes & Vision","👁","Organ","Sensory"],["ears","Ears & Hearing","👂","Organ","Sensory"],["nose_sinus","Nose & Sinuses","👃","External","ENT"],["mouth_teeth","Mouth, Teeth & Gums","🦷","External","Oral"],["throat_voice","Throat & Voice","🗣","External","ENT"],["brain","Brain & Cognition","🧠","Organ","Neurologic"],["thyroid","Thyroid","🦋","Organ","Endocrine"],["heart","Heart & Circulation","❤️","Organ","Cardiovascular"],["lungs","Lungs & Breathing","🫁","Organ","Respiratory"],["liver","Liver","🟤","Organ","Hepatobiliary"],["gallbladder","Gallbladder & Biliary","🟢","Organ","Hepatobiliary"],["stomach","Stomach & Upper GI","🥣","Organ","Digestive"],["intestine","Intestine & Bowel","➰","Organ","Digestive"],["pancreas","Pancreas & Glucose","🧪","Organ","Endocrine / digestive"],["kidneys","Kidneys & Urinary","🫘","Organ","Renal / urinary"],["bladder","Bladder & Urinary Function","💧","Organ","Urinary"],["reproductive","Reproductive / Sexual Health","⚕","System","Reproductive"],["immune","Immune / Allergy","🛡","System","Immune"],["metabolic","Metabolic Health","⚙","System","Metabolic"],["neck_cervical","Neck & Cervical Spine","🦴","MSK","Musculoskeletal"],["shoulders","Shoulders","🏋","MSK","Musculoskeletal"],["elbows","Elbows & Forearms","💪","MSK","Musculoskeletal"],["hands","Hands, Wrists & Fingers","✋","MSK","Musculoskeletal / neurologic"],["thoracic","Thoracic Spine & Chest Wall","🦴","MSK","Musculoskeletal"],["lumbar","Low Back & Lumbar Spine","🦴","MSK","Musculoskeletal / neurologic"],["si_pelvis","SI Joint & Pelvis","🦴","MSK","Musculoskeletal"],["hips","Hips","🦵","MSK","Musculoskeletal"],["knees","Knees","🦵","MSK","Musculoskeletal"],["ankles","Ankles","🦶","MSK","Musculoskeletal"],["feet","Feet & Toes","🦶","MSK","Musculoskeletal / neurologic"],["bones","Bone Health","🦴","System","Skeletal"],["muscle","Muscle, Strength & Sarcopenia","💪","System","Muscular"],["balance","Balance, Gait & Falls","🚶","System","Functional"],["sleep","Sleep & Recovery","🌙","System","Recovery"]
+].map(x=>({id:x[0],name:x[1],icon:x[2],category:x[3],system:x[4]}));
+let bodyHealthFilter="All",currentBodyHealthArea="hair_scalp";
+function ensureBodyHealth(){if(!Array.isArray(db.bodyHealth))db.bodyHealth=[]}
+function bodyHealthRecord(id){ensureBodyHealth();return db.bodyHealth.find(x=>x.areaId===id)||null}
+function setBodyHealthFilter(f,b){bodyHealthFilter=f;document.querySelectorAll("[data-bhfilter]").forEach(x=>x.classList.toggle("active",x===b));renderBodyHealthIndex()}
+function selectBodyHealthArea(id){currentBodyHealthArea=id;renderBodyHealthEditor();renderBodyHealthIndex();if(innerWidth<900)document.querySelector(".bh-editor-card")?.scrollIntoView({behavior:"smooth",block:"start"})}
+function renderBodyHealthIndex(){const el=$("bhIndexList");if(!el)return;const q=(v("bhSearch")||"").toLowerCase();el.innerHTML=BODY_HEALTH_AREAS.filter(a=>(bodyHealthFilter==="All"||a.category===bodyHealthFilter)&&`${a.name} ${a.system}`.toLowerCase().includes(q)).map(a=>{const r=bodyHealthRecord(a.id),s=r?.status||"Not assessed",c=/Needs attention|Active disease|Under evaluation|Urgent|High priority/i.test(`${s} ${r?.priority||""}`)?"attn":/Healthy|Resolved|Improving|Stable/i.test(s)?"good":"neutral";return `<button class="bh-index-item ${a.id===currentBodyHealthArea?"active":""}" onclick="selectBodyHealthArea('${a.id}')"><span class="bh-icon">${a.icon}</span><span><b>${a.name}</b><small>${a.system}</small></span><i class="${c}"></i></button>`}).join("")}
+function renderBodyHealthEditor(){const a=BODY_HEALTH_AREAS.find(x=>x.id===currentBodyHealthArea)||BODY_HEALTH_AREAS[0],r=bodyHealthRecord(a.id)||{};$("bhAreaTitle").textContent=`${a.icon} ${a.name}`;$("bhCategoryLabel").textContent=`${a.category.toUpperCase()} • ${a.system.toUpperCase()}`;$("bhAreaStatusPill").textContent=r.status||"Not assessed";const map={Status:"status",Priority:"priority",Severity:"severity",Reviewed:"reviewed",Problem:"problem",Findings:"findings",CurrentCare:"currentCare",Evidence:"evidence",FuturePlan:"futurePlan",Safety:"safety",Outcome:"outcome",Duration:"duration",Benefit:"benefit",Harm:"harm",OutcomeNote:"outcomeNote"};Object.keys(map).forEach(k=>{const el=$("bh"+k);if(!el)return;let val=r[map[k]];if(val==null)val={Status:"Not assessed",Priority:"Routine",Severity:"None",Reviewed:today(),Outcome:"Not assessed yet"}[k]??"";el.value=val})}
+function saveBodyHealthArea(){ensureBodyHealth();const a=BODY_HEALTH_AREAS.find(x=>x.id===currentBodyHealthArea),g=id=>(v(id)||"").trim();const rec={areaId:a.id,areaName:a.name,category:a.category,system:a.system,status:v("bhStatus"),priority:v("bhPriority"),severity:v("bhSeverity"),reviewed:v("bhReviewed")||today(),problem:g("bhProblem"),findings:g("bhFindings"),currentCare:g("bhCurrentCare"),evidence:g("bhEvidence"),futurePlan:g("bhFuturePlan"),safety:g("bhSafety"),outcome:v("bhOutcome"),duration:g("bhDuration"),benefit:v("bhBenefit"),harm:v("bhHarm"),outcomeNote:g("bhOutcomeNote"),updatedAt:new Date().toISOString()};const i=db.bodyHealth.findIndex(x=>x.areaId===a.id);i>=0?db.bodyHealth[i]=rec:db.bodyHealth.push(rec);persist();$("bhSaveStatus").textContent=`✓ ${a.name} saved for ${getActiveMember()?.name||"active member"}.`;renderBodyHealth()}
+function profileAge(){const d=new Date(db.profile?.dob);if(!db.profile?.dob||isNaN(d))return null;const t=new Date();let a=t.getFullYear()-d.getFullYear(),m=t.getMonth()-d.getMonth();if(m<0||(m===0&&t.getDate()<d.getDate()))a--;return a}
+function riskText(){return `${db.profile?.conditions||""} ${db.profile?.goals||""} ${(db.labs||[]).map(x=>JSON.stringify(x)).join(" ")}`.toLowerCase()}
+function renderBodyHealthAgeRisk(){const el=$("bhAgeRisk");if(!el)return;const age=profileAge(),r=riskText(),has=(...w)=>w.some(x=>r.includes(x)),c=[],add=(i,t,w,a,f="")=>c.push({i,t,w,a,f});add("❤️","Heart & vascular health",age!=null&&age>=40?"Cardiovascular risk deserves progressively more structured attention with age, but is driven by the total risk profile.":"Build a lifelong cardiovascular baseline.","Track BP, weight/waist, activity and verified lipid/glucose results; discuss formal risk estimation when appropriate.",age!=null&&age>=40?"focus":"");add("👁","Eyes & vision",age!=null&&age>=40?"Age-related eye disease becomes more relevant after 40; individual risk and symptoms still matter.":"Vision protection matters at every age.","Keep periodic comprehensive eye care; seek earlier review for symptoms or diabetes.",age!=null&&age>=40?"focus":"");add("🫘","Kidney protection",has("diabetes","hypertension","high blood pressure","heart disease","kidney")?"Recorded cardiometabolic/renal risk factors can increase CKD risk.":"Kidney prevention is closely linked to BP and metabolic health.","Review BP/diabetes control and clinician-directed kidney blood/urine testing when risk warrants.",has("diabetes","hypertension","kidney")?"focus":"");add("🟤","Liver / metabolic health",has("obesity","overweight","diabetes","fatty liver","nafld","masld","triglycer")?"Recorded metabolic factors can raise fatty-liver risk.":"Healthy weight, diet and activity support liver health.","Track weight/waist and verified liver data; avoid unverified potentially hepatotoxic supplements.",has("obesity","diabetes","fatty liver")?"focus":"");add("🦴","Bone, muscle & mobility",age!=null&&age>=50?"Bone loss, osteoarthritis, muscle loss and fall consequences deserve progressively more attention with age.":"Musculoskeletal health matters across the life course.","Maintain strength, mobility, weight-bearing activity and assess fracture risk when clinically indicated.",age!=null&&age>=50?"focus":"");add("🧠","Brain, hearing & function",age!=null&&age>=60?"Cognition, hearing, mobility and multiple conditions benefit from integrated review in later life.":"Brain health is linked to vascular, metabolic, sleep, activity and mental health.","Track memory, hearing, mood, gait/balance and vascular risk; investigate meaningful change.",age!=null&&age>=60?"focus":"");$("bhAgeRiskTitle").textContent=`Preventive attention map${age!=null?` • Age ${age}`:" • DOB not entered"}`;el.innerHTML=c.map(x=>`<div class="age-risk-item ${x.f}"><span>${x.i}</span><div><b>${x.t}</b><p>${x.w}</p><small>${x.a}</small></div></div>`).join("")}
+function renderBodyHealthTable(){const el=$("bhSummaryGrid");if(!el)return;const f=v("bhStatusFilter")||"All statuses";el.innerHTML=BODY_HEALTH_AREAS.map(a=>({a,r:bodyHealthRecord(a.id)})).filter(({r})=>{const s=r?.status||"Not assessed",p=r?.priority||"";return f==="All statuses"||f==="Needs attention"&&/Needs attention|High priority|Urgent/i.test(`${s} ${p}`)||f==="Active / evaluation"&&/Active disease|Under evaluation|Post-treatment/i.test(s)||f==="Stable / healthy"&&/Healthy|Stable|Improving|Resolved/i.test(s)}).map(({a,r})=>{const s=r?.status||"Not assessed",p=r?.priority||"Routine",tone=/Urgent|High priority|Active disease|Needs attention/i.test(`${p} ${s}`)?"red":/Healthy|Improving|Resolved|Stable/i.test(s)?"green":"blue";return `<button class="bh-summary-card ${tone}" onclick="selectBodyHealthArea('${a.id}')"><span>${a.icon}</span><div><b>${a.name}</b><small>${s}</small><em>${p}${r?.reviewed?" • "+r.reviewed:""}</em></div></button>`}).join("")}
+function renderBodyHealth(){ensureBodyHealth();if(!$("bhIndexList"))return;renderBodyHealthIndex();renderBodyHealthEditor();renderBodyHealthTable();renderBodyHealthAgeRisk();const a=BODY_HEALTH_AREAS.map(x=>bodyHealthRecord(x.id)).filter(Boolean);$("bhHealthyCount").textContent=a.filter(r=>/Healthy|Stable|Improving|Resolved/i.test(r.status||"")).length;$("bhAttentionCount").textContent=`${a.filter(r=>/Needs attention|Active disease|Under evaluation|High priority|Urgent/i.test(`${r.status||""} ${r.priority||""}`)).length} need attention`}
+function bodyHealthSummaryText(){const a=BODY_HEALTH_AREAS.find(x=>x.id===currentBodyHealthArea),r=bodyHealthRecord(currentBodyHealthArea);return `RAJ HEALTH 360 — My Body Health\nMember: ${getActiveMember()?.name||"Self"}\nArea: ${a?.name||"-"}\nStatus: ${r?.status||"Not assessed"}\nPriority: ${r?.priority||"Routine"}\nProblem: ${r?.problem||"-"}\nFindings: ${r?.findings||"-"}\nCurrent care: ${r?.currentCare||"-"}\nEvidence: ${r?.evidence||"-"}\nFuture plan: ${r?.futurePlan||"-"}\nOutcome: ${r?.outcome||"Not assessed yet"}\nDuration: ${r?.duration||"-"}\nBenefit/Harm: ${r?.benefit||"-"}/${r?.harm||"-"}\nOutcome note: ${r?.outcomeNote||"-"}`}
+async function copyBodyHealthSummary(){const t=bodyHealthSummaryText();try{await navigator.clipboard.writeText(t);$("bhSaveStatus").textContent="✓ Body Health summary copied."}catch(e){prompt("Copy summary",t)}}
+function printBodyHealth(){window.print()}
+function openBodyHealthVault(){showView("vault")}
 
 let vaultTypeFilter="All";
 function setVaultFilter(type){vaultTypeFilter=type;renderVault()}

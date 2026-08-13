@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#0f766e">
+<meta name="theme-color" content="#123a73">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
@@ -12,7 +12,7 @@
 <link rel="icon" type="image/png" sizes="64x64" href="favicon-64.png">
 <title>RAJ HEALTH 360 — Integrated Personal Health Intelligence</title>
 <link rel="manifest" href="manifest.json">
-<link rel="stylesheet" href="styles.css">
+<link rel="stylesheet" href="styles.css?v=8.0">
 </head>
 <body>
 
@@ -48,7 +48,7 @@
 <header class="top">
   <div class="brand responsive-brand">
     <div class="logo">R360</div>
-    <div><h1>RAJ HEALTH 360</h1><div class="version-badge">Version V7.7 • Build 2026-08-12</div><p>Modern Medicine × Ayurveda × Lifestyle × Mind × Spiritual Health</p></div>
+    <div><h1>RAJ HEALTH 360</h1><div class="version-badge">Version V8.0 FINAL STABLE • Build 2026-08-13</div><p>Modern Medicine × Ayurveda × Lifestyle × Mind × Spiritual Health</p></div>
   </div>
   <div class="top-actions responsive-top-actions">
     <button class="install-pwa-btn" id="installPwaBtn" onclick="installPwaApp()" hidden>⬇ Install App</button>
@@ -86,6 +86,7 @@
     <button class="nav" data-view="mind">☯ Mind • Social • Spiritual</button>
     <button class="nav" data-view="experiments">⚗ My Health Experiments</button>
     <button class="nav" data-view="preventive">◷ Preventive Calendar</button>
+    <button class="nav" data-view="bodyhealth">🫀 My Body Health</button>
     <button class="nav" data-view="vault">▣ Health Vault</button>
     <button class="nav" data-view="timeline">↗ Cause–Effect Timeline</button>
     <button class="nav" data-view="ai">✦ AI Health Review</button>
@@ -204,7 +205,8 @@
   <button onclick="showView('family')"><span>👨‍👩‍👧‍👦</span><b>Family</b><small>Switch member</small></button>
   <button onclick="showView('labcentre')"><span>🧪</span><b>SLAIE Labs</b><small>AutoRead reports</small></button>
   <button onclick="showView('medicines')"><span>Rx</span><b>Medicines</b><small>Current therapy</small></button>
-  <button onclick="showView('vault')"><span>▣</span><b>Health Vault</b><small>Reports & files</small></button>
+  <button onclick="showView('bodyhealth');renderBodyHealth()"><span>🫀</span><b>My Body Health</b><small>Head-to-toe care</small></button>
+<button onclick="showView('vault')"><span>▣</span><b>Health Vault</b><small>Reports & files</small></button>
   <button onclick="showView('ai')"><span>✦</span><b>AI Review</b><small>Integrated insight</small></button>
 </div>
 
@@ -321,7 +323,21 @@
 
 
 
-\n<section id="routinestatement" class="view">\n  <div class="pagehead compact">\n    <div>\n      <span class="eyebrow">LIFESTYLE & ROUTINE STATEMENT</span>\n      <h2>Your routine history, like a health bank statement.</h2>\n      <p>Review Standard Protocol and special-routine days across weeks, months and years. Use the record to understand unavoidable vs avoidable deviations and plan the next year.</p>\n    </div>\n    <div class="score-ring"><strong id="rsStandardPct">--</strong><span>Standard days</span></div>\n  </div>\n\n  <article class="card statement-controls">\n    <div class="cardtitle"><div><span class="eyebrow">STATEMENT PERIOD</span><h3>Select duration</h3></div><span class="pill teal" id="rsPeriodLabel">Last 30 days</span></div>\n    <div class="period-buttons">\n      <button data-days="7" onclick="setRoutineStatementRange(7,this)">1 Week</button>\n      <button data-days="14" onclick="setRoutineStatementRange(14,this)">2 Weeks</button>\n      <button data-days="21" onclick="setRoutineStatementRange(21,this)">3 Weeks</button>\n      <button data-days="30" class="active" onclick="setRoutineStatementRange(30,this)">1 Month</button>\n      <button data-days="60" onclick="setRoutineStatementRange(60,this)">2 Months</button>\n      <button data-days="90" onclick="setRoutineStatementRange(90,this)">3 Months</button>\n      <button data-days="180" onclick="setRoutineStatementRange(180,this)">6 Months</button>\n      <button data-days="270" onclick="setRoutineStatementRange(270,this)">9 Months</button>\n      <button data-days="365" onclick="setRoutineStatementRange(365,this)">12 Months</button>\n      <button data-days="730" onclick="setRoutineStatementRange(730,this)">2 Years</button>\n    </div>\n    <div class="formgrid two custom-range">\n      <label>From<input id="rsFrom" type="date" onchange="renderRoutineStatement()"></label>\n      <label>To<input id="rsTo" type="date" onchange="renderRoutineStatement()"></label>\n    </div>\n    <div class="buttons">\n      <button class="primary" onclick="renderRoutineStatement()">Generate Statement</button>\n      <button class="ghost" onclick="printRoutineStatement()">🖨 Print / Save PDF</button>\n      <button class="ghost" onclick="downloadRoutineStatementCSV()">⬇ CSV</button>\n      <button class="ghost" onclick="shareRoutineStatement()">🟢 Share / WhatsApp</button>\n    </div>\n  </article>\n\n  <div class="statement-metrics">\n    <div class="metric-card"><span>Tracked days</span><b id="rsTracked">0</b></div>\n    <div class="metric-card"><span>Standard Protocol</span><b id="rsStandard">0</b><small>Annual target ≥ 350</small></div>\n    <div class="metric-card"><span>Changed routine</span><b id="rsChanged">0</b></div>\n    <div class="metric-card"><span>Ahara average</span><b id="rsAhara">--</b></div>\n    <div class="metric-card"><span>Nidra average</span><b id="rsNidra">--</b></div>\n    <div class="metric-card"><span>Brahmacharya average</span><b id="rsBrahma">--</b></div>\n  </div>\n\n  <article class="card">\n    <div class="cardtitle"><div><span class="eyebrow">MODE-WISE SUMMARY</span><h3>How many days were spent in each routine?</h3></div></div>\n    <div id="rsModeSummary" class="mode-summary-grid"></div>\n  </article>\n\n  <div class="grid2">\n    <article class="card"><div class="cardtitle"><div><span class="eyebrow">DEVIATION ANALYSIS</span><h3>What changed?</h3></div></div><div id="rsDeviation" class="summary-box"></div></article>\n    <article class="card"><div class="cardtitle"><div><span class="eyebrow">NEXT-YEAR PLANNING</span><h3>What should be planned?</h3></div></div><div id="rsPlanning" class="summary-box"></div></article>\n  </div>\n\n  <article class="card">\n    <div class="cardtitle"><div><span class="eyebrow">DATE-WISE LEDGER</span><h3>Routine statement</h3></div><input id="rsSearch" class="search" placeholder="Search mode / reason / note" oninput="renderRoutineStatementTable()"></div>\n    <div class="statement-table-wrap"><table><thead><tr><th>Date</th><th>Mode</th><th>Reason / Context</th><th>Ahara</th><th>Nidra</th><th>Brahmacharya</th><th>Overall</th><th>Note</th></tr></thead><tbody id="rsTableBody"></tbody></table></div>\n  </article>\n\n  <article class="card">\n    <div class="cardtitle"><div><span class="eyebrow">ANNUAL ARCHIVE</span><h3>Year-to-year lifestyle history</h3></div></div>\n    <div id="rsYearArchive" class="year-archive-grid"></div>\n  </article>\n</section>\n
+
+<section id="routinestatement" class="view">\n  <div class="pagehead compact">\n    <div>\n      <span class="eyebrow">LIFESTYLE & ROUTINE STATEMENT</span>\n      <h2>Your routine history, like a health bank statement.</h2>\n      <p>Review Standard Protocol and special-routine days across weeks, months and years. Use the record to understand unavoidable vs avoidable deviations and plan the next year.</p>\n    </div>\n    <div class="score-ring"><strong id="rsStandardPct">--</strong><span>Standard days</span></div>\n  </div>
+
+  <article class="card statement-controls">\n    <div class="cardtitle"><div><span class="eyebrow">STATEMENT PERIOD</span><h3>Select duration</h3></div><span class="pill teal" id="rsPeriodLabel">Last 30 days</span></div>\n    <div class="period-buttons">\n      <button data-days="7" onclick="setRoutineStatementRange(7,this)">1 Week</button>\n      <button data-days="14" onclick="setRoutineStatementRange(14,this)">2 Weeks</button>\n      <button data-days="21" onclick="setRoutineStatementRange(21,this)">3 Weeks</button>\n      <button data-days="30" class="active" onclick="setRoutineStatementRange(30,this)">1 Month</button>\n      <button data-days="60" onclick="setRoutineStatementRange(60,this)">2 Months</button>\n      <button data-days="90" onclick="setRoutineStatementRange(90,this)">3 Months</button>\n      <button data-days="180" onclick="setRoutineStatementRange(180,this)">6 Months</button>\n      <button data-days="270" onclick="setRoutineStatementRange(270,this)">9 Months</button>\n      <button data-days="365" onclick="setRoutineStatementRange(365,this)">12 Months</button>\n      <button data-days="730" onclick="setRoutineStatementRange(730,this)">2 Years</button>\n    </div>\n    <div class="formgrid two custom-range">\n      <label>From<input id="rsFrom" type="date" onchange="renderRoutineStatement()"></label>\n      <label>To<input id="rsTo" type="date" onchange="renderRoutineStatement()"></label>\n    </div>\n    <div class="buttons">\n      <button class="primary" onclick="renderRoutineStatement()">Generate Statement</button>\n      <button class="ghost" onclick="printRoutineStatement()">🖨 Print / Save PDF</button>\n      <button class="ghost" onclick="downloadRoutineStatementCSV()">⬇ CSV</button>\n      <button class="ghost" onclick="shareRoutineStatement()">🟢 Share / WhatsApp</button>\n    </div>\n  </article>
+
+  <div class="statement-metrics">\n    <div class="metric-card"><span>Tracked days</span><b id="rsTracked">0</b></div>\n    <div class="metric-card"><span>Standard Protocol</span><b id="rsStandard">0</b><small>Annual target ≥ 350</small></div>\n    <div class="metric-card"><span>Changed routine</span><b id="rsChanged">0</b></div>\n    <div class="metric-card"><span>Ahara average</span><b id="rsAhara">--</b></div>\n    <div class="metric-card"><span>Nidra average</span><b id="rsNidra">--</b></div>\n    <div class="metric-card"><span>Brahmacharya average</span><b id="rsBrahma">--</b></div>\n  </div>
+
+  <article class="card">\n    <div class="cardtitle"><div><span class="eyebrow">MODE-WISE SUMMARY</span><h3>How many days were spent in each routine?</h3></div></div>\n    <div id="rsModeSummary" class="mode-summary-grid"></div>\n  </article>
+
+  <div class="grid2">\n    <article class="card"><div class="cardtitle"><div><span class="eyebrow">DEVIATION ANALYSIS</span><h3>What changed?</h3></div></div><div id="rsDeviation" class="summary-box"></div></article>\n    <article class="card"><div class="cardtitle"><div><span class="eyebrow">NEXT-YEAR PLANNING</span><h3>What should be planned?</h3></div></div><div id="rsPlanning" class="summary-box"></div></article>\n  </div>
+
+  <article class="card">\n    <div class="cardtitle"><div><span class="eyebrow">DATE-WISE LEDGER</span><h3>Routine statement</h3></div><input id="rsSearch" class="search" placeholder="Search mode / reason / note" oninput="renderRoutineStatementTable()"></div>\n    <div class="statement-table-wrap"><table><thead><tr><th>Date</th><th>Mode</th><th>Reason / Context</th><th>Ahara</th><th>Nidra</th><th>Brahmacharya</th><th>Overall</th><th>Note</th></tr></thead><tbody id="rsTableBody"></tbody></table></div>\n  </article>
+
+  <article class="card">\n    <div class="cardtitle"><div><span class="eyebrow">ANNUAL ARCHIVE</span><h3>Year-to-year lifestyle history</h3></div></div>\n    <div id="rsYearArchive" class="year-archive-grid"></div>\n  </article>\n</section>
+
 <section id="routine" class="view">
   <div class="pagehead">
     <div>
@@ -987,8 +1003,23 @@
 </section>
 
 
+<section id="bodyhealth" class="view">
+<div class="pagehead body-health-hero"><div><span class="eyebrow">HEAD-TO-TOE • ORGAN-BY-ORGAN HEALTH</span><h2>My Body Health</h2><p>Maintain one living health record for every body region and major organ: present status, problems, current care, investigations, treatment, future plan and measured outcome.</p><div class="body-hero-badges"><span>Active-member specific</span><span>Preventive-first</span><span>Outcome tracked</span><span>Clinician-reviewed</span></div></div><div class="body-health-score"><strong id="bhHealthyCount">0</strong><span>areas stable / healthy</span><small id="bhAttentionCount">0 need attention</small></div></div>
+<article class="card body-health-safety"><b>Clinical safety:</b> This workspace organizes self/clinician-entered observations and care plans. Age alone does not diagnose disease. Screening and prevention should be individualized by symptoms, risk factors, family history, examination and clinician guidance.</article>
+<div class="body-health-layout">
+<aside class="card body-health-index"><div class="cardtitle"><div><span class="eyebrow">BODY MAP INDEX</span><h3>Choose area</h3></div></div><input id="bhSearch" class="search" placeholder="Search hair / eye / heart / liver..." oninput="renderBodyHealthIndex()"><div class="bh-index-tabs"><button class="active" data-bhfilter="All" onclick="setBodyHealthFilter('All',this)">All</button><button data-bhfilter="External" onclick="setBodyHealthFilter('External',this)">External</button><button data-bhfilter="Organ" onclick="setBodyHealthFilter('Organ',this)">Organs</button><button data-bhfilter="MSK" onclick="setBodyHealthFilter('MSK',this)">MSK</button><button data-bhfilter="System" onclick="setBodyHealthFilter('System',this)">Systems</button></div><div id="bhIndexList" class="bh-index-list"></div></aside>
+<section class="body-health-main">
+<article class="card bh-editor-card"><div class="cardtitle"><div><span class="eyebrow" id="bhCategoryLabel">BODY AREA</span><h3 id="bhAreaTitle">Select a body area</h3></div><span class="pill blue" id="bhAreaStatusPill">Not assessed</span></div>
+<div class="formgrid four"><label>Status<select id="bhStatus"><option>Not assessed</option><option>Healthy / no current concern</option><option>Stable chronic issue</option><option>Improving</option><option>Needs attention</option><option>Under evaluation</option><option>Active disease / problem</option><option>Post-treatment follow-up</option><option>Resolved</option></select></label><label>Priority<select id="bhPriority"><option>Routine</option><option>Watch</option><option>Discuss at next visit</option><option>High priority</option><option>Urgent clinical review</option></select></label><label>Severity<select id="bhSeverity"><option>None</option><option>Mild</option><option>Moderate</option><option>Severe</option><option>Very severe</option><option>Not graded</option></select></label><label>Last reviewed<input id="bhReviewed" type="date"></label></div>
+<div class="formgrid two"><label>Current problem / diagnosis / concern<textarea id="bhProblem" placeholder="Example: Hair fall, premature greying; or no current concern"></textarea></label><label>Symptoms / findings / functional impact<textarea id="bhFindings"></textarea></label><label>Current care / treatment<textarea id="bhCurrentCare" placeholder="Medicines, Ayurveda, supplements, procedures, diet, exercise, self-care."></textarea></label><label>Investigations / evidence<textarea id="bhEvidence"></textarea></label><label>Next / future plan<textarea id="bhFuturePlan"></textarea></label><label>Safety / contraindication / watch-outs<textarea id="bhSafety"></textarea></label></div>
+<div class="outcome-panel"><div class="cardtitle"><div><span class="eyebrow">TREATMENT / CARE OUTCOME</span><h3>What changed after intervention?</h3></div></div><div class="formgrid four"><label>Outcome<select id="bhOutcome"><option>Not assessed yet</option><option>Much improved</option><option>Improved</option><option>Stable</option><option>No meaningful change</option><option>Worse</option><option>Resolved</option><option>Recurrence</option><option>Stopped due to adverse effect</option><option>Stopped / changed plan</option></select></label><label>Duration of care<input id="bhDuration" placeholder="e.g. 8 weeks / 3 months"></label><label>Benefit score 0–10<input id="bhBenefit" type="number" min="0" max="10"></label><label>Harm / side-effect score 0–10<input id="bhHarm" type="number" min="0" max="10"></label></div><label>Outcome note<textarea id="bhOutcomeNote" placeholder="What improved, what did not, what should change next time?"></textarea></label></div>
+<div class="buttons bh-actions"><button class="primary" onclick="saveBodyHealthArea()">💾 Save Body Health</button><button class="ghost" onclick="openBodyHealthVault()">▣ Open Health Vault</button><button class="ghost" onclick="copyBodyHealthSummary()">📋 Copy Summary</button><button class="ghost" onclick="printBodyHealth()">🖨 Print / Save PDF</button></div><div id="bhSaveStatus" class="summary-box">Select an area, document verified information, then save.</div></article>
+<article class="card age-risk-card"><div class="cardtitle"><div><span class="eyebrow">AGE + RISK-AWARE PREVENTION</span><h3 id="bhAgeRiskTitle">Preventive attention map</h3></div><button class="ghost" onclick="renderBodyHealthAgeRisk()">↻ Refresh</button></div><div id="bhAgeRisk" class="age-risk-grid"></div><div class="evidence-note">Planning aid only — not an automatic diagnosis or blanket screening order. Age is combined with recorded risk factors and clinician judgement.</div></article>
+<article class="card"><div class="cardtitle"><div><span class="eyebrow">WHOLE-BODY SNAPSHOT</span><h3>What needs attention now?</h3></div><select id="bhStatusFilter" onchange="renderBodyHealthTable()"><option>All statuses</option><option>Needs attention</option><option>Active / evaluation</option><option>Stable / healthy</option></select></div><div id="bhSummaryGrid" class="bh-summary-grid"></div></article>
+</section></div></section>
 <section id="vault" class="view">
- <div class="pagehead compact"><div><span class="eyebrow">PERSONAL HEALTH RECORD</span><h2>Health Vault</h2><p>One searchable index for Reports, Prescriptions, X-Ray, CT, MRI, USG, ECG, Photos, Ayurveda assessments, Panchakarma records, Blood Donation, Vaccination, Dental and Eye records.</p></div></div>
+ <div class="pagehead compact"><div><span class="eyebrow">PERSONAL HEALTH RECORD</span><h2>Health Vault</h2><p>One searchable index for Reports, Prescriptions, X-Ray, CT, MRI, USG, ECG, Photos, Ayurveda assessments, Panchakarma records, Blood Donation, Vaccination, Dental and Eye records.</p></div><div class="vault-head-actions"><button class="primary body-health-launch" onclick="showView('bodyhealth');renderBodyHealth()">🫀 My Body Health</button></div></div>
+<div class="info-strip body-health-strip"><b>My Body Health</b><span>Head-to-toe body-part and internal-organ status, current care, treatment plan, outcomes and age/risk-aware prevention — linked to the active family member.</span><button class="ghost" onclick="showView('bodyhealth');renderBodyHealth()">Open</button></div>
  <article class="card">
   <div class="formgrid four">
    <label>Date<input id="vlDate" type="date"></label>
@@ -1140,7 +1171,7 @@
 <script src="https://www.gstatic.com/firebasejs/12.10.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/12.10.0/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/12.10.0/firebase-storage-compat.js"></script>
-<script src="app.js"></script>
+<script src="app.js?v=8.0"></script>
 <div id="appVersionText" class="app-version-footer">RAJ HEALTH 360 V7.7 • Build 2026-08-12</div>
 <nav class="mobile-bottom-nav" aria-label="Quick navigation">
   <button onclick="showView('dashboard')"><span>⌂</span><small>Home</small></button>

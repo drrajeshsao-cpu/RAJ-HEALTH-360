@@ -1,0 +1,19 @@
+RAJ HEALTH 360 — V8.0 FINAL STABLE / FREEZE CANDIDATE
+Build: 2026-08-13
+
+FINAL CHANGES
+- Removed visible literal \n\n artifact.
+- Added Health Vault -> My Body Health.
+- Added 37 head-to-toe body/organ/system areas.
+- Tracks status, priority, severity, findings, current care, evidence, future plan, safety, duration, outcome, benefit/harm and feedback.
+- Added age + risk-aware preventive attention map. Age alone never diagnoses disease.
+- Added whole-body snapshot, copy summary and Print/Save PDF.
+- Added bodyHealth to family-member isolation so each family member has a separate record.
+- Preserved Firebase login/cloud architecture and existing V7.7 data model.
+- Changed visual identity to Deep Medical Blue + Aqua + White to distinguish it from SAO Workplace.
+- Responsive mobile/tablet/laptop/desktop polish.
+- Freeze after regression testing.
+
+Evidence framework: WHO healthy ageing & musculoskeletal health; NIH/NIA ageing, vision, cognition, bone/falls; AHA/NHLBI cardiovascular prevention; NIDDK kidney, diabetes/metabolic and fatty-liver prevention.
+
+FREEZE RULE: Future changes only for verified bugs/data safety, critical medical-reference corrections, or necessary platform/security compatibility.
