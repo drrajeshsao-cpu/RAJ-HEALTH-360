@@ -331,3 +331,14 @@ Future rule: every release should update this visible version/build label before
 - Print / Save PDF, CSV export and WhatsApp/system share are included.
 - Uses the active family member's routine record and existing cloud sync; login/PWA architecture is unchanged.
 - Version V7.7 • Build 2026-08-12.
+
+
+## V8.0.1 Mobile Compatibility Fix — 2026-08-13
+- Targeted responsive correction for Version 8 FINAL STABLE.
+- Prevents page-level horizontal shifting on mobile.
+- Header uses a stable two-row layout with internally scrollable action pills.
+- Navigation is contained within its own horizontal ribbon.
+- Dashboard hero and V8 routine/body-health panels stay inside viewport width.
+- Wide tables scroll internally rather than widening the app.
+- Bottom navigation and AI Copilot are repositioned for safe mobile access.
+- Firebase authentication, cloud sync, Family Health Hub, SLAIE, routine logic and health-data logic are unchanged.

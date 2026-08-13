@@ -1,4 +1,4 @@
-const CACHE_NAME='raj-health-360-v8-final-stable';
+const CACHE_NAME='raj-health-360-v8-0-1-mobile';
 const APP_SHELL = [
   './', './index.html', './styles.css', './app.js', './manifest.json',
   './icon-192.png', './icon-512.png', './icon-maskable-192.png', './icon-maskable-512.png',

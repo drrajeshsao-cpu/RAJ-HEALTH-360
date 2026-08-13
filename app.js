@@ -1,4 +1,4 @@
-const APP_VERSION="V8.0 FINAL STABLE";
+const APP_VERSION="V8.0.1";
 const APP_BUILD_DATE="2026-08-13";
 
 const KEY="raj_health_360_v2";
